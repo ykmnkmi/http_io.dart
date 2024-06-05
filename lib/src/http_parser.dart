@@ -2,14 +2,50 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import 'dart:async';
-import 'dart:typed_data';
+part of '../http.dart';
 
-import 'char_code.dart';
-import 'http_exception.dart';
-import 'http_headers_impl.dart';
-import 'http_incoming.dart';
-import 'http_status.dart';
+// Global constants.
+class _Const {
+  // Bytes for "HTTP".
+  static const HTTP = [72, 84, 84, 80];
+  // Bytes for "HTTP/1.".
+  static const HTTP1DOT = [72, 84, 84, 80, 47, 49, 46];
+  // Bytes for "HTTP/1.0".
+  static const HTTP10 = [72, 84, 84, 80, 47, 49, 46, 48];
+  // Bytes for "HTTP/1.1".
+  static const HTTP11 = [72, 84, 84, 80, 47, 49, 46, 49];
+
+  static const bool T = true;
+  static const bool F = false;
+  // Loopup-map for the following characters: '()<>@,;:\\"/[]?={} \t'.
+  static const SEPARATOR_MAP = [
+    F, F, F, F, F, F, F, F, F, T, F, F, F, F, F, F, F, F, F, F, F, F, F, F, //
+    F, F, F, F, F, F, F, F, T, F, T, F, F, F, F, F, T, T, F, F, T, F, F, T, //
+    F, F, F, F, F, F, F, F, F, F, T, T, T, T, T, T, T, F, F, F, F, F, F, F, //
+    F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, T, T, T, F, F, //
+    F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, //
+    F, F, F, T, F, T, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, //
+    F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, //
+    F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, //
+    F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, //
+    F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, //
+    F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F
+  ];
+}
+
+// Frequently used character codes.
+class _CharCode {
+  static const int HT = 9;
+  static const int LF = 10;
+  static const int CR = 13;
+  static const int SP = 32;
+  static const int COMMA = 44;
+  static const int SLASH = 47;
+  static const int ZERO = 48;
+  static const int ONE = 49;
+  static const int COLON = 58;
+  static const int SEMI_COLON = 59;
+}
 
 // States of the HTTP parser state machine.
 class _State {
@@ -27,17 +63,17 @@ class _State {
   static const int HEADER_FIELD = 11;
   static const int HEADER_VALUE_START = 12;
   static const int HEADER_VALUE = 13;
-  static const int HEADER_VALUE_FOLDING_OR_ENDING = 14;
+  static const int HEADER_VALUE_FOLD_OR_END_CR = 14;
   static const int HEADER_VALUE_FOLD_OR_END = 15;
   static const int HEADER_ENDING = 16;
 
   static const int CHUNK_SIZE_STARTING_CR = 17;
-  static const int CHUNK_SIZE_STARTING_LF = 18;
+  static const int CHUNK_SIZE_STARTING = 18;
   static const int CHUNK_SIZE = 19;
   static const int CHUNK_SIZE_EXTENSION = 20;
   static const int CHUNK_SIZE_ENDING = 21;
   static const int CHUNKED_BODY_DONE_CR = 22;
-  static const int CHUNKED_BODY_DONE_LF = 23;
+  static const int CHUNKED_BODY_DONE = 23;
   static const int BODY = 24;
   static const int CLOSED = 25;
   static const int UPGRADED = 26;
@@ -66,22 +102,22 @@ class _MessageType {
 ///
 /// It does so by overriding pause/resume, so that once the
 /// _HttpDetachedStreamSubscription is resumed, it'll deliver the data before
-/// resuming the underlaying subscription.
+/// resuming the underlying subscription.
 class _HttpDetachedStreamSubscription implements StreamSubscription<Uint8List> {
   final StreamSubscription<Uint8List> _subscription;
-  Uint8List _injectData;
+  Uint8List? _injectData;
+  void Function(Uint8List data)? _userOnData;
   bool _isCanceled = false;
-  int _pauseCount = 1;
-  Function _userOnData;
   bool _scheduled = false;
+  int _pauseCount = 1;
 
   _HttpDetachedStreamSubscription(
       this._subscription, this._injectData, this._userOnData);
 
   bool get isPaused => _subscription.isPaused;
 
-  Future<T> asFuture<T>([T futureValue]) =>
-      _subscription.asFuture<T>(futureValue);
+  Future<T> asFuture<T>([T? futureValue]) =>
+      _subscription.asFuture<T>(futureValue as T);
 
   Future cancel() {
     _isCanceled = true;
@@ -89,20 +125,20 @@ class _HttpDetachedStreamSubscription implements StreamSubscription<Uint8List> {
     return _subscription.cancel();
   }
 
-  void onData(void handleData(Uint8List data)) {
+  void onData(void Function(Uint8List data)? handleData) {
     _userOnData = handleData;
     _subscription.onData(handleData);
   }
 
-  void onDone(void handleDone()) {
+  void onDone(void Function()? handleDone) {
     _subscription.onDone(handleDone);
   }
 
-  void onError(Function handleError) {
+  void onError(Function? handleError) {
     _subscription.onError(handleError);
   }
 
-  void pause([Future resumeSignal]) {
+  void pause([Future? resumeSignal]) {
     if (_injectData == null) {
       _subscription.pause(resumeSignal);
     } else {
@@ -129,45 +165,45 @@ class _HttpDetachedStreamSubscription implements StreamSubscription<Uint8List> {
     scheduleMicrotask(() {
       _scheduled = false;
       if (_pauseCount > 0 || _isCanceled) return;
-      var data = _injectData;
+      var data = _injectData!;
       _injectData = null;
       // To ensure that 'subscription.isPaused' is false, we resume the
       // subscription here. This is fine as potential events are delayed.
       _subscription.resume();
-      if (_userOnData != null) {
-        _userOnData(data);
-      }
+      _userOnData?.call(data);
     });
   }
 }
 
-class HttpDetachedIncoming extends Stream<Uint8List> {
-  final StreamSubscription<Uint8List> subscription;
-  final Uint8List bufferedData;
+class _HttpDetachedIncoming extends Stream<Uint8List> {
+  final StreamSubscription<Uint8List>? _subscription;
+  final Uint8List? _bufferedData;
 
-  HttpDetachedIncoming(this.subscription, this.bufferedData);
+  _HttpDetachedIncoming(this._subscription, this._bufferedData);
 
-  StreamSubscription<Uint8List> listen(void onData(Uint8List event),
-      {Function onError, void onDone(), bool cancelOnError}) {
+  StreamSubscription<Uint8List> listen(void Function(Uint8List event)? onData,
+      {Function? onError, void Function()? onDone, bool? cancelOnError}) {
+    var subscription = this._subscription;
     if (subscription != null) {
       subscription
         ..onData(onData)
         ..onError(onError)
         ..onDone(onDone);
-      if (bufferedData == null) {
+      if (_bufferedData == null) {
         return subscription..resume();
       }
-      return _HttpDetachedStreamSubscription(subscription, bufferedData, onData)
+      return _HttpDetachedStreamSubscription(
+          subscription, _bufferedData, onData)
         ..resume();
     } else {
-      // TODO(26379): add test for this branch.
-      return Stream<Uint8List>.fromIterable([bufferedData]).listen(onData,
-          onError: onError, onDone: onDone, cancelOnError: cancelOnError);
+      return Stream<Uint8List>.fromIterable([_bufferedData ?? Uint8List(0)])
+          .listen(onData,
+              onError: onError, onDone: onDone, cancelOnError: cancelOnError);
     }
   }
 }
 
-/// HTTP parser which parses the data stream given to consume.
+/// HTTP parser which parses the data stream given to [consume].
 ///
 /// If an HTTP parser error occurs, the parser will signal an error to either
 /// the current _HttpIncoming or the _parser itself.
@@ -185,76 +221,86 @@ class HttpDetachedIncoming extends Stream<Uint8List> {
 /// upgrading to. These bytes cannot be processed by the HTTP parser
 /// and should be handled according to whatever protocol is being
 /// upgraded to.
-class HttpParser extends Stream<HttpIncoming> {
+class _HttpParser extends Stream<_HttpIncoming> {
   // State.
   bool _parserCalled = false;
 
   // The data that is currently being parsed.
-  Uint8List _buffer;
-  int _index;
+  Uint8List? _buffer;
+  int _index = -1;
 
+  // Whether a HTTP request is being parsed (as opposed to a response).
   final bool _requestParser;
-  int _state;
-  int _httpVersionIndex;
-  int _messageType;
+  int _state = _State.START;
+  int? _httpVersionIndex;
+  int _messageType = _MessageType.UNDETERMINED;
   int _statusCode = 0;
   int _statusCodeLength = 0;
   final List<int> _method = [];
-  final List<int> _uri_or_reason_phrase = [];
+  final List<int> _uriOrReasonPhrase = [];
   final List<int> _headerField = [];
   final List<int> _headerValue = [];
+  static const _headerTotalSizeLimit = 1024 * 1024;
+  int _headersReceivedSize = 0;
 
-  int _httpVersion;
+  int _httpVersion = _HttpVersion.UNDETERMINED;
   int _transferLength = -1;
-  bool _persistentConnection;
-  bool _connectionUpgrade;
-  bool _chunked;
+  bool _persistentConnection = false;
+  bool _connectionUpgrade = false;
+  bool _chunked = false;
 
   bool _noMessageBody = false;
   int _remainingContent = -1;
+  bool _contentLength = false;
+  bool _transferEncoding = false;
+  bool connectMethod = false;
 
-  HttpHeadersImpl _headers;
+  _HttpHeaders? _headers;
+
+  // The limit for parsing chunk size
+  static const _chunkSizeLimit = 0x7FFFFFFF;
 
   // The current incoming connection.
-  HttpIncoming _incoming;
-  StreamSubscription<Uint8List> _socketSubscription;
+  _HttpIncoming? _incoming;
+  StreamSubscription<Uint8List>? _socketSubscription;
   bool _paused = true;
   bool _bodyPaused = false;
-  StreamController<HttpIncoming> _controller;
-  StreamController<Uint8List> _bodyController;
+  final StreamController<_HttpIncoming> _controller;
+  StreamController<Uint8List>? _bodyController;
 
-  factory HttpParser.requestParser() {
-    return HttpParser._(true);
+  factory _HttpParser.requestParser() {
+    return _HttpParser._(true);
   }
 
-  factory HttpParser.responseParser() {
-    return HttpParser._(false);
+  factory _HttpParser.responseParser() {
+    return _HttpParser._(false);
   }
 
-  HttpParser._(this._requestParser) {
-    _controller = StreamController<HttpIncoming>(
-        sync: true,
-        onListen: () {
-          _paused = false;
-        },
-        onPause: () {
-          _paused = true;
-          _pauseStateChanged();
-        },
-        onResume: () {
-          _paused = false;
-          _pauseStateChanged();
-        },
-        onCancel: () {
-          if (_socketSubscription != null) {
-            _socketSubscription.cancel();
-          }
-        });
+  _HttpParser._(this._requestParser)
+      : _controller = StreamController<_HttpIncoming>(sync: true) {
+    _controller
+      ..onListen = () {
+        _paused = false;
+      }
+      ..onPause = () {
+        _paused = true;
+        _pauseStateChanged();
+      }
+      ..onResume = () {
+        _paused = false;
+        _pauseStateChanged();
+      }
+      ..onCancel = () {
+        _socketSubscription?.cancel();
+      };
     _reset();
   }
 
-  StreamSubscription<HttpIncoming> listen(void onData(HttpIncoming event),
-      {Function onError, void onDone(), bool cancelOnError}) {
+  StreamSubscription<_HttpIncoming> listen(
+      void Function(_HttpIncoming event)? onData,
+      {Function? onError,
+      void Function()? onDone,
+      bool? cancelOnError}) {
     return _controller.stream.listen(onData,
         onError: onError, onDone: onDone, cancelOnError: cancelOnError);
   }
@@ -273,8 +319,13 @@ class HttpParser extends Stream<HttpIncoming> {
     try {
       _doParse();
     } catch (e, s) {
-      _state = _State.FAILURE;
-      _reportError(e, s);
+      if (_state >= _State.CHUNK_SIZE_STARTING_CR && _state <= _State.BODY) {
+        _state = _State.FAILURE;
+        _reportBodyError(e, s);
+      } else {
+        _state = _State.FAILURE;
+        _reportHttpError(e, s);
+      }
     }
   }
 
@@ -282,9 +333,23 @@ class HttpParser extends Stream<HttpIncoming> {
   // parsing and return. This will be in case of either an upgrade
   // request or a request or response with an empty body.
   bool _headersEnd() {
-    _headers.mutable = false;
+    var headers = _headers!;
+    // If method is CONNECT, response parser should ignore any Content-Length or
+    // Transfer-Encoding header fields in a successful response.
+    // [RFC 7231](https://tools.ietf.org/html/rfc7231#section-4.3.6)
+    if (!_requestParser &&
+        _statusCode >= 200 &&
+        _statusCode < 300 &&
+        connectMethod) {
+      _transferLength = -1;
+      headers.chunkedTransferEncoding = false;
+      _chunked = false;
+      headers.removeAll(HttpHeaders.contentLengthHeader);
+      headers.removeAll(HttpHeaders.transferEncodingHeader);
+    }
+    headers._mutable = false;
 
-    _transferLength = _headers.contentLength;
+    _transferLength = headers.contentLength;
     // Ignore the Content-Length header if Transfer-Encoding
     // is chunked (RFC 2616 section 4.4)
     if (_chunked) _transferLength = -1;
@@ -301,30 +366,28 @@ class HttpParser extends Stream<HttpIncoming> {
       _state = _State.UPGRADED;
       _transferLength = 0;
     }
-    _createIncoming(_transferLength);
+    var incoming = _createIncoming(_transferLength);
     if (_requestParser) {
-      _incoming.method = String.fromCharCodes(_method);
-      _incoming.uri = Uri.parse(String.fromCharCodes(_uri_or_reason_phrase));
+      incoming.method = String.fromCharCodes(_method);
+      incoming.uri = Uri.parse(String.fromCharCodes(_uriOrReasonPhrase));
     } else {
-      _incoming.statusCode = _statusCode;
-      _incoming.reasonPhrase = String.fromCharCodes(_uri_or_reason_phrase);
+      incoming.statusCode = _statusCode;
+      incoming.reasonPhrase = String.fromCharCodes(_uriOrReasonPhrase);
     }
     _method.clear();
-    _uri_or_reason_phrase.clear();
+    _uriOrReasonPhrase.clear();
     if (_connectionUpgrade) {
-      _incoming.upgraded = true;
+      incoming.upgraded = true;
       _parserCalled = false;
-      var tmp = _incoming;
       _closeIncoming();
-      _controller.add(tmp);
+      _controller.add(incoming);
       return true;
     }
     if (_transferLength == 0 ||
         (_messageType == _MessageType.RESPONSE && _noMessageBody)) {
       _reset();
-      var tmp = _incoming;
       _closeIncoming();
-      _controller.add(tmp);
+      _controller.add(incoming);
       return false;
     } else if (_chunked) {
       _state = _State.CHUNK_SIZE;
@@ -338,7 +401,7 @@ class HttpParser extends Stream<HttpIncoming> {
       _state = _State.BODY;
     }
     _parserCalled = false;
-    _controller.add(_incoming);
+    _controller.add(incoming);
     return true;
   }
 
@@ -351,6 +414,10 @@ class HttpParser extends Stream<HttpIncoming> {
   // Request-Line    = Method SP Request-URI SP HTTP-Version CRLF
   // Status-Line     = HTTP-Version SP Status-Code SP Reason-Phrase CRLF
   // message-header  = field-name ":" [ field-value ]
+  //
+  // Per section 19.3 "Tolerant Applications" CRLF treats LF as a terminator
+  // and leading CR is ignored. Use of standalone CR is not allowed.
+
   void _doParse() {
     assert(!_parserCalled);
     _parserCalled = true;
@@ -361,7 +428,7 @@ class HttpParser extends Stream<HttpIncoming> {
       throw HttpException("Data on failed connection");
     }
     while (_buffer != null &&
-        _index < _buffer.length &&
+        _index < _buffer!.length &&
         _state != _State.FAILURE &&
         _state != _State.UPGRADED) {
       // Depending on _incoming, we either break on _bodyPaused or _paused.
@@ -370,19 +437,21 @@ class HttpParser extends Stream<HttpIncoming> {
         _parserCalled = false;
         return;
       }
-      int byte = _buffer[_index++];
+      int index = _index;
+      int byte = _buffer![index];
+      _index = index + 1;
       switch (_state) {
         case _State.START:
-          if (byte == Const.HTTP[0]) {
+          if (byte == _Const.HTTP[0]) {
             // Start parsing method or HTTP version.
             _httpVersionIndex = 1;
             _state = _State.METHOD_OR_RESPONSE_HTTP_VERSION;
           } else {
             // Start parsing method.
-            if (!CharCode.isTokenChar(byte)) {
+            if (!_isTokenChar(byte)) {
               throw HttpException("Invalid request method");
             }
-            _method.add(byte);
+            _addWithValidation(_method, byte);
             if (!_requestParser) {
               throw HttpException("Invalid response line");
             }
@@ -391,28 +460,29 @@ class HttpParser extends Stream<HttpIncoming> {
           break;
 
         case _State.METHOD_OR_RESPONSE_HTTP_VERSION:
-          if (_httpVersionIndex < Const.HTTP.length &&
-              byte == Const.HTTP[_httpVersionIndex]) {
+          var httpVersionIndex = _httpVersionIndex!;
+          if (httpVersionIndex < _Const.HTTP.length &&
+              byte == _Const.HTTP[httpVersionIndex]) {
             // Continue parsing HTTP version.
-            _httpVersionIndex++;
-          } else if (_httpVersionIndex == Const.HTTP.length &&
-              byte == CharCode.SLASH) {
+            _httpVersionIndex = httpVersionIndex + 1;
+          } else if (httpVersionIndex == _Const.HTTP.length &&
+              byte == _CharCode.SLASH) {
             // HTTP/ parsed. As method is a token this cannot be a
             // method anymore.
-            _httpVersionIndex++;
+            _httpVersionIndex = httpVersionIndex + 1;
             if (_requestParser) {
               throw HttpException("Invalid request line");
             }
             _state = _State.RESPONSE_HTTP_VERSION;
           } else {
             // Did not parse HTTP version. Expect method instead.
-            for (int i = 0; i < _httpVersionIndex; i++) {
-              _method.add(Const.HTTP[i]);
+            for (int i = 0; i < httpVersionIndex; i++) {
+              _addWithValidation(_method, _Const.HTTP[i]);
             }
-            if (byte == CharCode.SP) {
+            if (byte == _CharCode.SP) {
               _state = _State.REQUEST_LINE_URI;
             } else {
-              _method.add(byte);
+              _addWithValidation(_method, byte);
               _httpVersion = _HttpVersion.UNDETERMINED;
               if (!_requestParser) {
                 throw HttpException("Invalid response line");
@@ -423,105 +493,113 @@ class HttpParser extends Stream<HttpIncoming> {
           break;
 
         case _State.RESPONSE_HTTP_VERSION:
-          if (_httpVersionIndex < Const.HTTP1DOT.length) {
+          var httpVersionIndex = _httpVersionIndex!;
+          if (httpVersionIndex < _Const.HTTP1DOT.length) {
             // Continue parsing HTTP version.
-            _expect(byte, Const.HTTP1DOT[_httpVersionIndex]);
-            _httpVersionIndex++;
-          } else if (_httpVersionIndex == Const.HTTP1DOT.length &&
-              byte == CharCode.ONE) {
+            _expect(byte, _Const.HTTP1DOT[httpVersionIndex]);
+            _httpVersionIndex = httpVersionIndex + 1;
+          } else if (httpVersionIndex == _Const.HTTP1DOT.length &&
+              byte == _CharCode.ONE) {
             // HTTP/1.1 parsed.
             _httpVersion = _HttpVersion.HTTP11;
             _persistentConnection = true;
-            _httpVersionIndex++;
-          } else if (_httpVersionIndex == Const.HTTP1DOT.length &&
-              byte == CharCode.ZERO) {
+            _httpVersionIndex = httpVersionIndex + 1;
+          } else if (httpVersionIndex == _Const.HTTP1DOT.length &&
+              byte == _CharCode.ZERO) {
             // HTTP/1.0 parsed.
             _httpVersion = _HttpVersion.HTTP10;
             _persistentConnection = false;
-            _httpVersionIndex++;
-          } else if (_httpVersionIndex == Const.HTTP1DOT.length + 1) {
-            _expect(byte, CharCode.SP);
+            _httpVersionIndex = httpVersionIndex + 1;
+          } else if (httpVersionIndex == _Const.HTTP1DOT.length + 1) {
+            _expect(byte, _CharCode.SP);
             // HTTP version parsed.
             _state = _State.RESPONSE_LINE_STATUS_CODE;
           } else {
-            throw HttpException("Invalid response line");
+            throw HttpException(
+                "Invalid response line, failed to parse HTTP version");
           }
           break;
 
         case _State.REQUEST_LINE_METHOD:
-          if (byte == CharCode.SP) {
+          if (byte == _CharCode.SP) {
             _state = _State.REQUEST_LINE_URI;
           } else {
-            if (Const.SEPARATOR_MAP[byte] ||
-                byte == CharCode.CR ||
-                byte == CharCode.LF) {
+            if (_Const.SEPARATOR_MAP[byte] ||
+                byte == _CharCode.CR ||
+                byte == _CharCode.LF) {
               throw HttpException("Invalid request method");
             }
-            _method.add(byte);
+            _addWithValidation(_method, byte);
           }
           break;
 
         case _State.REQUEST_LINE_URI:
-          if (byte == CharCode.SP) {
-            if (_uri_or_reason_phrase.isEmpty) {
-              throw HttpException("Invalid request URI");
+          if (byte == _CharCode.SP) {
+            if (_uriOrReasonPhrase.isEmpty) {
+              throw HttpException("Invalid request, empty URI");
             }
             _state = _State.REQUEST_LINE_HTTP_VERSION;
             _httpVersionIndex = 0;
           } else {
-            if (byte == CharCode.CR || byte == CharCode.LF) {
-              throw HttpException("Invalid request URI");
+            if (byte == _CharCode.CR || byte == _CharCode.LF) {
+              throw HttpException("Invalid request, unexpected $byte in URI");
             }
-            _uri_or_reason_phrase.add(byte);
+            _addWithValidation(_uriOrReasonPhrase, byte);
           }
           break;
 
         case _State.REQUEST_LINE_HTTP_VERSION:
-          if (_httpVersionIndex < Const.HTTP1DOT.length) {
-            _expect(byte, Const.HTTP11[_httpVersionIndex]);
-            _httpVersionIndex++;
-          } else if (_httpVersionIndex == Const.HTTP1DOT.length) {
-            if (byte == CharCode.ONE) {
+          var httpVersionIndex = _httpVersionIndex!;
+          if (httpVersionIndex < _Const.HTTP1DOT.length) {
+            _expect(byte, _Const.HTTP11[httpVersionIndex]);
+            _httpVersionIndex = httpVersionIndex + 1;
+          } else if (_httpVersionIndex == _Const.HTTP1DOT.length) {
+            if (byte == _CharCode.ONE) {
               // HTTP/1.1 parsed.
               _httpVersion = _HttpVersion.HTTP11;
               _persistentConnection = true;
-              _httpVersionIndex++;
-            } else if (byte == CharCode.ZERO) {
+              _httpVersionIndex = httpVersionIndex + 1;
+            } else if (byte == _CharCode.ZERO) {
               // HTTP/1.0 parsed.
               _httpVersion = _HttpVersion.HTTP10;
               _persistentConnection = false;
-              _httpVersionIndex++;
+              _httpVersionIndex = httpVersionIndex + 1;
             } else {
-              throw HttpException("Invalid response line");
+              throw HttpException("Invalid response, invalid HTTP version");
             }
           } else {
-            if (byte == CharCode.CR) {
+            if (byte == _CharCode.CR) {
               _state = _State.REQUEST_LINE_ENDING;
-            } else {
-              _expect(byte, CharCode.LF);
-              _messageType = _MessageType.REQUEST;
-              _state = _State.HEADER_START;
+            } else if (byte == _CharCode.LF) {
+              _state = _State.REQUEST_LINE_ENDING;
+              _index = _index - 1; // Make the new state see the LF again.
             }
           }
           break;
 
         case _State.REQUEST_LINE_ENDING:
-          _expect(byte, CharCode.LF);
+          _expect(byte, _CharCode.LF);
           _messageType = _MessageType.REQUEST;
           _state = _State.HEADER_START;
           break;
 
         case _State.RESPONSE_LINE_STATUS_CODE:
-          if (byte == CharCode.SP) {
+          if (byte == _CharCode.SP) {
             _state = _State.RESPONSE_LINE_REASON_PHRASE;
-          } else if (byte == CharCode.CR) {
-            // Some HTTP servers does not follow the spec. and send
-            // \r\n right after the status code.
+          } else if (byte == _CharCode.CR) {
+            // Some HTTP servers do not follow the spec and send
+            // \r?\n right after the status code.
             _state = _State.RESPONSE_LINE_ENDING;
+          } else if (byte == _CharCode.LF) {
+            _state = _State.RESPONSE_LINE_ENDING;
+            _index = _index - 1; // Make the new state see the LF again.
           } else {
             _statusCodeLength++;
-            if ((byte < 0x30 && 0x39 < byte) || _statusCodeLength > 3) {
-              throw HttpException("Invalid response status code");
+            if (byte < 0x30 || byte > 0x39) {
+              throw HttpException("Invalid response status code with $byte");
+            } else if (_statusCodeLength > 3) {
+              throw HttpException(
+                  "Invalid response, status code is over 3 digits");
             } else {
               _statusCode = _statusCode * 10 + byte - 0x30;
             }
@@ -529,100 +607,122 @@ class HttpParser extends Stream<HttpIncoming> {
           break;
 
         case _State.RESPONSE_LINE_REASON_PHRASE:
-          if (byte == CharCode.CR) {
+          if (byte == _CharCode.CR) {
             _state = _State.RESPONSE_LINE_ENDING;
+          } else if (byte == _CharCode.LF) {
+            _state = _State.RESPONSE_LINE_ENDING;
+            _index = _index - 1; // Make the new state see the LF again.
           } else {
-            if (byte == CharCode.CR || byte == CharCode.LF) {
-              throw HttpException("Invalid response reason phrase");
-            }
-            _uri_or_reason_phrase.add(byte);
+            _addWithValidation(_uriOrReasonPhrase, byte);
           }
           break;
 
         case _State.RESPONSE_LINE_ENDING:
-          _expect(byte, CharCode.LF);
-          _messageType = _MessageType.RESPONSE;
-          if (_statusCode < 100 || _statusCode > 599) {
-            throw HttpException("Invalid response status code");
-          } else {
-            // Check whether this response will never have a body.
-            if (_statusCode <= 199 ||
-                _statusCode == 204 ||
-                _statusCode == 304) {
-              _noMessageBody = true;
-            }
+          _expect(byte, _CharCode.LF);
+          _messageType == _MessageType.RESPONSE;
+          // Check whether this response will never have a body.
+          if (_statusCode <= 199 || _statusCode == 204 || _statusCode == 304) {
+            _noMessageBody = true;
           }
           _state = _State.HEADER_START;
           break;
 
         case _State.HEADER_START:
-          _headers = HttpHeadersImpl(version);
-          if (byte == CharCode.CR) {
+          _headers = _HttpHeaders(version!);
+          if (byte == _CharCode.CR) {
             _state = _State.HEADER_ENDING;
-          } else if (byte == CharCode.LF) {
+          } else if (byte == _CharCode.LF) {
             _state = _State.HEADER_ENDING;
-            _index--; // Make the new state see the LF again.
+            _index = _index - 1; // Make the new state see the LF again.
           } else {
             // Start of new header field.
-            _headerField.add(_toLowerCaseByte(byte));
+            _addWithValidation(_headerField, _toLowerCaseByte(byte));
             _state = _State.HEADER_FIELD;
           }
           break;
 
         case _State.HEADER_FIELD:
-          if (byte == CharCode.COLON) {
+          if (byte == _CharCode.COLON) {
             _state = _State.HEADER_VALUE_START;
           } else {
-            if (!CharCode.isTokenChar(byte)) {
-              throw HttpException("Invalid header field name");
+            if (!_isTokenChar(byte)) {
+              throw HttpException("Invalid header field name, with $byte");
             }
-            _headerField.add(_toLowerCaseByte(byte));
+            _addWithValidation(_headerField, _toLowerCaseByte(byte));
           }
           break;
 
         case _State.HEADER_VALUE_START:
-          if (byte == CharCode.CR) {
-            _state = _State.HEADER_VALUE_FOLDING_OR_ENDING;
-          } else if (byte == CharCode.LF) {
+          if (byte == _CharCode.CR) {
+            _state = _State.HEADER_VALUE_FOLD_OR_END_CR;
+          } else if (byte == _CharCode.LF) {
             _state = _State.HEADER_VALUE_FOLD_OR_END;
-          } else if (byte != CharCode.SP && byte != CharCode.HT) {
+          } else if (byte != _CharCode.SP && byte != _CharCode.HT) {
             // Start of new header value.
-            _headerValue.add(byte);
+            _addWithValidation(_headerValue, byte);
             _state = _State.HEADER_VALUE;
           }
           break;
 
         case _State.HEADER_VALUE:
-          if (byte == CharCode.CR) {
-            _state = _State.HEADER_VALUE_FOLDING_OR_ENDING;
-          } else if (byte == CharCode.LF) {
+          if (byte == _CharCode.CR) {
+            _state = _State.HEADER_VALUE_FOLD_OR_END_CR;
+          } else if (byte == _CharCode.LF) {
             _state = _State.HEADER_VALUE_FOLD_OR_END;
           } else {
-            _headerValue.add(byte);
+            _addWithValidation(_headerValue, byte);
           }
           break;
 
-        case _State.HEADER_VALUE_FOLDING_OR_ENDING:
-          _expect(byte, CharCode.LF);
+        case _State.HEADER_VALUE_FOLD_OR_END_CR:
+          _expect(byte, _CharCode.LF);
           _state = _State.HEADER_VALUE_FOLD_OR_END;
           break;
 
         case _State.HEADER_VALUE_FOLD_OR_END:
-          if (byte == CharCode.SP || byte == CharCode.HT) {
-            _state = _State.HEADER_VALUE_START;
+          if (byte == _CharCode.SP || byte == _CharCode.HT) {
+            // This is an obs-fold as defined in RFC 7230 and we should
+            // "...replace each received obs-fold with one or more SP octets
+            // prior to interpreting the field value or forwarding the
+            // message downstream."
+            // See https://www.rfc-editor.org/rfc/rfc7230#section-3.2.4
+            _addWithValidation(_headerValue, _CharCode.SP);
+            _state = _State.HEADER_VALUE_START; // Strips leading whitespace.
           } else {
             String headerField = String.fromCharCodes(_headerField);
+            // The field value does not include any leading or trailing whitespace.
+            // See https://www.rfc-editor.org/rfc/rfc7230#section-3.2.4
+            _removeTrailingSpaces(_headerValue);
             String headerValue = String.fromCharCodes(_headerValue);
-            if (headerField == "transfer-encoding" &&
-                _caseInsensitiveCompare("chunked".codeUnits, _headerValue)) {
-              _chunked = true;
+
+            // RFC-7230 3.3.3 says:
+            // If a message is received with both a Transfer-Encoding and a
+            // Content-Length header field, the Transfer-Encoding overrides
+            // the Content-Length...
+            // A sender MUST remove the received Content-Length field prior
+            // to forwarding such a message downstream.
+            if (headerField == HttpHeaders.contentLengthHeader) {
+              // Content Length header should not have more than one occurrence.
+              if (_contentLength) {
+                throw HttpException("The Content-Length header occurred "
+                    "more than once, at most one is allowed.");
+              } else if (!_transferEncoding) {
+                _contentLength = true;
+              }
+            } else if (headerField == HttpHeaders.transferEncodingHeader) {
+              _transferEncoding = true;
+              if (_caseInsensitiveCompare("chunked".codeUnits, _headerValue)) {
+                _chunked = true;
+              }
+              _contentLength = false;
             }
-            if (headerField == "connection") {
+            var headers = _headers!;
+            if (headerField == HttpHeaders.connectionHeader) {
               List<String> tokens = _tokenizeFieldValue(headerValue);
               final bool isResponse = _messageType == _MessageType.RESPONSE;
               final bool isUpgradeCode =
-                  (_statusCode == HttpStatus.UPGRADE_REQUIRED) ||
-                      (_statusCode == HttpStatus.SWITCHING_PROTOCOLS);
+                  (_statusCode == HttpStatus.upgradeRequired) ||
+                      (_statusCode == HttpStatus.switchingProtocols);
               for (int i = 0; i < tokens.length; i++) {
                 final bool isUpgrade = _caseInsensitiveCompare(
                     "upgrade".codeUnits, tokens[i].codeUnits);
@@ -630,65 +730,81 @@ class HttpParser extends Stream<HttpIncoming> {
                     (isUpgrade && isResponse && isUpgradeCode)) {
                   _connectionUpgrade = true;
                 }
-                _headers.add(headerField, tokens[i]);
+                headers._addConnection(headerField, tokens[i]);
               }
-            } else {
-              _headers.add(headerField, headerValue);
+            } else if (headerField != HttpHeaders.contentLengthHeader ||
+                !_transferEncoding) {
+              // Calling `headers._add("transfer-encoding", "chunked")` will
+              // remove the Content-Length header.
+              headers._add(headerField, headerValue);
             }
             _headerField.clear();
             _headerValue.clear();
 
-            if (byte == CharCode.CR) {
+            if (byte == _CharCode.CR) {
               _state = _State.HEADER_ENDING;
-            } else if (byte == CharCode.LF) {
+            } else if (byte == _CharCode.LF) {
               _state = _State.HEADER_ENDING;
-              _index--; // Make the new state see the LF again.
+              _index = _index - 1; // Make the new state see the LF again.
             } else {
               // Start of new header field.
-              _headerField.add(_toLowerCaseByte(byte));
               _state = _State.HEADER_FIELD;
+              _addWithValidation(_headerField, _toLowerCaseByte(byte));
             }
           }
           break;
 
         case _State.HEADER_ENDING:
-          _expect(byte, CharCode.LF);
+          _expect(byte, _CharCode.LF);
           if (_headersEnd()) {
             return;
-          } else {
-            break;
           }
-          return;
-
-        case _State.CHUNK_SIZE_STARTING_CR:
-          _expect(byte, CharCode.CR);
-          _state = _State.CHUNK_SIZE_STARTING_LF;
           break;
 
-        case _State.CHUNK_SIZE_STARTING_LF:
-          _expect(byte, CharCode.LF);
+        case _State.CHUNK_SIZE_STARTING_CR:
+          if (byte == _CharCode.LF) {
+            _state = _State.CHUNK_SIZE_STARTING;
+            _index = _index - 1; // Make the new state see the LF again.
+            break;
+          }
+          _expect(byte, _CharCode.CR);
+          _state = _State.CHUNK_SIZE_STARTING;
+          break;
+
+        case _State.CHUNK_SIZE_STARTING:
+          _expect(byte, _CharCode.LF);
           _state = _State.CHUNK_SIZE;
           break;
 
         case _State.CHUNK_SIZE:
-          if (byte == CharCode.CR) {
+          if (byte == _CharCode.CR) {
             _state = _State.CHUNK_SIZE_ENDING;
-          } else if (byte == CharCode.SEMI_COLON) {
+          } else if (byte == _CharCode.LF) {
+            _state = _State.CHUNK_SIZE_ENDING;
+            _index = _index - 1; // Make the new state see the LF again.
+          } else if (byte == _CharCode.SEMI_COLON) {
             _state = _State.CHUNK_SIZE_EXTENSION;
           } else {
             int value = _expectHexDigit(byte);
+            // Checks whether (_remainingContent * 16 + value) overflows.
+            if (_remainingContent > _chunkSizeLimit >> 4) {
+              throw HttpException('Chunk size overflows the integer');
+            }
             _remainingContent = _remainingContent * 16 + value;
           }
           break;
 
         case _State.CHUNK_SIZE_EXTENSION:
-          if (byte == CharCode.CR) {
+          if (byte == _CharCode.CR) {
             _state = _State.CHUNK_SIZE_ENDING;
+          } else if (byte == _CharCode.LF) {
+            _state = _State.CHUNK_SIZE_ENDING;
+            _index = _index - 1; // Make the new state see the LF again.
           }
           break;
 
         case _State.CHUNK_SIZE_ENDING:
-          _expect(byte, CharCode.LF);
+          _expect(byte, _CharCode.LF);
           if (_remainingContent > 0) {
             _state = _State.BODY;
           } else {
@@ -697,20 +813,25 @@ class HttpParser extends Stream<HttpIncoming> {
           break;
 
         case _State.CHUNKED_BODY_DONE_CR:
-          _expect(byte, CharCode.CR);
-          _state = _State.CHUNKED_BODY_DONE_LF;
+          if (byte == _CharCode.LF) {
+            _state = _State.CHUNKED_BODY_DONE;
+            _index = _index - 1; // Make the new state see the LF again.
+            break;
+          }
+          _expect(byte, _CharCode.CR);
           break;
 
-        case _State.CHUNKED_BODY_DONE_LF:
-          _expect(byte, CharCode.LF);
+        case _State.CHUNKED_BODY_DONE:
+          _expect(byte, _CharCode.LF);
           _reset();
           _closeIncoming();
           break;
 
         case _State.BODY:
           // The body is not handled one byte at a time but in blocks.
-          _index--;
-          int dataAvailable = _buffer.length - _index;
+          _index = _index - 1;
+          var buffer = _buffer!;
+          int dataAvailable = buffer.length - _index;
           if (_remainingContent >= 0 && dataAvailable > _remainingContent) {
             dataAvailable = _remainingContent;
           }
@@ -718,12 +839,12 @@ class HttpParser extends Stream<HttpIncoming> {
           // cases like this, and the user will not experience different data
           // typed (which could lead to polymorphic user code).
           Uint8List data = Uint8List.view(
-              _buffer.buffer, _buffer.offsetInBytes + _index, dataAvailable);
-          _bodyController.add(data);
+              buffer.buffer, buffer.offsetInBytes + _index, dataAvailable);
+          _bodyController!.add(data);
           if (_remainingContent != -1) {
             _remainingContent -= data.length;
           }
-          _index += data.length;
+          _index = _index + data.length;
           if (_remainingContent == 0) {
             if (!_chunked) {
               _reset();
@@ -747,18 +868,19 @@ class HttpParser extends Stream<HttpIncoming> {
     }
 
     _parserCalled = false;
-    if (_buffer != null && _index == _buffer.length) {
+    var buffer = _buffer;
+    if (buffer != null && _index == buffer.length) {
       // If all data is parsed release the buffer and resume receiving
       // data.
       _releaseBuffer();
       if (_state != _State.UPGRADED && _state != _State.FAILURE) {
-        _socketSubscription.resume();
+        _socketSubscription!.resume();
       }
     }
   }
 
   void _onData(Uint8List buffer) {
-    _socketSubscription.pause();
+    _socketSubscription!.pause();
     assert(_buffer == null);
     _buffer = buffer;
     _index = 0;
@@ -774,8 +896,8 @@ class HttpParser extends Stream<HttpIncoming> {
       if (_state != _State.UPGRADED &&
           !(_state == _State.START && !_requestParser) &&
           !(_state == _State.BODY && !_chunked && _transferLength == -1)) {
-        _bodyController
-            .addError(HttpException("Connection closed while receiving data"));
+        _reportBodyError(
+            HttpException("Connection closed while receiving data"));
       }
       _closeIncoming(true);
       _controller.close();
@@ -784,7 +906,7 @@ class HttpParser extends Stream<HttpIncoming> {
     // If the connection is idle the HTTP stream is closed.
     if (_state == _State.START) {
       if (!_requestParser) {
-        _reportError(
+        _reportHttpError(
             HttpException("Connection closed before full header was received"));
       }
       _controller.close();
@@ -800,7 +922,7 @@ class HttpParser extends Stream<HttpIncoming> {
       _state = _State.FAILURE;
       // Report the error through the error callback if any. Otherwise
       // throw the error.
-      _reportError(
+      _reportHttpError(
           HttpException("Connection closed before full header was received"));
       _controller.close();
       return;
@@ -812,13 +934,13 @@ class HttpParser extends Stream<HttpIncoming> {
       _state = _State.FAILURE;
       // Report the error through the error callback if any. Otherwise
       // throw the error.
-      _reportError(
+      _reportHttpError(
           HttpException("Connection closed before full body was received"));
     }
     _controller.close();
   }
 
-  String get version {
+  String? get version {
     switch (_httpVersion) {
       case _HttpVersion.HTTP10:
         return "1.0";
@@ -833,20 +955,22 @@ class HttpParser extends Stream<HttpIncoming> {
   bool get upgrade => _connectionUpgrade && _state == _State.UPGRADED;
   bool get persistentConnection => _persistentConnection;
 
-  set isHead(bool value) {
-    if (value) _noMessageBody = true;
+  void set isHead(bool value) {
+    _noMessageBody = valueOfNonNullableParamWithDefault<bool>(value, false);
   }
 
-  HttpDetachedIncoming detachIncoming() {
+  _HttpDetachedIncoming detachIncoming() {
     // Simulate detached by marking as upgraded.
     _state = _State.UPGRADED;
-    return HttpDetachedIncoming(_socketSubscription, readUnparsedData());
+    return _HttpDetachedIncoming(_socketSubscription, readUnparsedData());
   }
 
-  Uint8List readUnparsedData() {
-    if (_buffer == null) return null;
-    if (_index == _buffer.length) return null;
-    var result = _buffer.sublist(_index);
+  Uint8List? readUnparsedData() {
+    var buffer = _buffer;
+    if (buffer == null) return null;
+    var index = _index;
+    if (index == buffer.length) return null;
+    var result = buffer.sublist(index);
     _releaseBuffer();
     return result;
   }
@@ -857,8 +981,9 @@ class HttpParser extends Stream<HttpIncoming> {
     _messageType = _MessageType.UNDETERMINED;
     _headerField.clear();
     _headerValue.clear();
+    _headersReceivedSize = 0;
     _method.clear();
-    _uri_or_reason_phrase.clear();
+    _uriOrReasonPhrase.clear();
 
     _statusCode = 0;
     _statusCodeLength = 0;
@@ -872,12 +997,34 @@ class HttpParser extends Stream<HttpIncoming> {
     _noMessageBody = false;
     _remainingContent = -1;
 
+    _contentLength = false;
+    _transferEncoding = false;
+
     _headers = null;
   }
 
   void _releaseBuffer() {
     _buffer = null;
-    _index = null;
+    _index = -1;
+  }
+
+  static bool _isTokenChar(int byte) {
+    return byte > 31 && byte < 128 && !_Const.SEPARATOR_MAP[byte];
+  }
+
+  static bool _isValueChar(int byte) {
+    return (byte > 31 && byte < 128) || (byte == _CharCode.HT);
+  }
+
+  static void _removeTrailingSpaces(List<int> value) {
+    var length = value.length;
+    while (length > 0 &&
+        (value[length - 1] == _CharCode.SP ||
+            value[length - 1] == _CharCode.HT)) {
+      --length;
+    }
+
+    value.length = length;
   }
 
   static List<String> _tokenizeFieldValue(String headerValue) {
@@ -907,7 +1054,7 @@ class HttpParser extends Stream<HttpIncoming> {
   }
 
   // expected should already be lowercase.
-  bool _caseInsensitiveCompare(List<int> expected, List<int> value) {
+  static bool _caseInsensitiveCompare(List<int> expected, List<int> value) {
     if (expected.length != value.length) return false;
     for (int i = 0; i < expected.length; i++) {
       if (expected[i] != _toLowerCaseByte(value[i])) return false;
@@ -917,7 +1064,7 @@ class HttpParser extends Stream<HttpIncoming> {
 
   void _expect(int val1, int val2) {
     if (val1 != val2) {
-      throw HttpException("Failed to parse HTTP");
+      throw HttpException("Failed to parse HTTP, $val1 does not match $val2");
     }
   }
 
@@ -929,57 +1076,100 @@ class HttpParser extends Stream<HttpIncoming> {
     } else if (0x61 <= byte && byte <= 0x66) {
       return byte - 0x61 + 10; // a - f
     } else {
-      throw HttpException("Failed to parse HTTP");
+      throw HttpException(
+          "Failed to parse HTTP, $byte is expected to be a Hex digit");
     }
   }
 
-  void _createIncoming(int transferLength) {
+  void _addWithValidation(List<int> list, int byte) {
+    _headersReceivedSize++;
+    if (_headersReceivedSize < _headerTotalSizeLimit) {
+      list.add(byte);
+    } else {
+      _reportSizeLimitError();
+    }
+  }
+
+  void _reportSizeLimitError() {
+    String method = "";
+    switch (_state) {
+      case _State.START:
+      case _State.METHOD_OR_RESPONSE_HTTP_VERSION:
+      case _State.REQUEST_LINE_METHOD:
+        method = "Method";
+        break;
+
+      case _State.REQUEST_LINE_URI:
+        method = "URI";
+        break;
+
+      case _State.RESPONSE_LINE_REASON_PHRASE:
+        method = "Reason phrase";
+        break;
+
+      case _State.HEADER_START:
+      case _State.HEADER_FIELD:
+        method = "Header field";
+        break;
+
+      case _State.HEADER_VALUE_START:
+      case _State.HEADER_VALUE:
+        method = "Header value";
+        break;
+
+      default:
+        throw UnsupportedError("Unexpected state: $_state");
+    }
+    throw HttpException(
+        "$method exceeds the $_headerTotalSizeLimit size limit");
+  }
+
+  _HttpIncoming _createIncoming(int transferLength) {
     assert(_incoming == null);
     assert(_bodyController == null);
     assert(!_bodyPaused);
-    HttpIncoming incoming;
-    _bodyController = StreamController<Uint8List>(
-        sync: true,
-        onListen: () {
-          if (incoming != _incoming) return;
-          assert(_bodyPaused);
-          _bodyPaused = false;
-          _pauseStateChanged();
-        },
-        onPause: () {
-          if (incoming != _incoming) return;
-          assert(!_bodyPaused);
-          _bodyPaused = true;
-          _pauseStateChanged();
-        },
-        onResume: () {
-          if (incoming != _incoming) return;
-          assert(_bodyPaused);
-          _bodyPaused = false;
-          _pauseStateChanged();
-        },
-        onCancel: () {
-          if (incoming != _incoming) return;
-          if (_socketSubscription != null) {
-            _socketSubscription.cancel();
-          }
-          _closeIncoming(true);
-          _controller.close();
-        });
-    incoming = _incoming =
-        HttpIncoming(_headers, transferLength, _bodyController.stream);
+    var controller = _bodyController = StreamController<Uint8List>(sync: true);
+    var incoming =
+        _incoming = _HttpIncoming(_headers!, transferLength, controller.stream);
+    controller
+      ..onListen = () {
+        if (incoming != _incoming) return;
+        assert(_bodyPaused);
+        _bodyPaused = false;
+        _pauseStateChanged();
+      }
+      ..onPause = () {
+        if (incoming != _incoming) return;
+        assert(!_bodyPaused);
+        _bodyPaused = true;
+        _pauseStateChanged();
+      }
+      ..onResume = () {
+        if (incoming != _incoming) return;
+        assert(_bodyPaused);
+        _bodyPaused = false;
+        _pauseStateChanged();
+      }
+      ..onCancel = () {
+        if (incoming != _incoming) return;
+        _socketSubscription?.cancel();
+        _closeIncoming(true);
+        _controller.close();
+      };
     _bodyPaused = true;
     _pauseStateChanged();
+    return incoming;
   }
 
   void _closeIncoming([bool closing = false]) {
     // Ignore multiple close (can happen in re-entrance).
-    if (_incoming == null) return;
     var tmp = _incoming;
+    if (tmp == null) return;
     tmp.close(closing);
     _incoming = null;
-    if (_bodyController != null) {
-      _bodyController.close();
+    var controller = _bodyController;
+    if (controller != null) {
+      controller.close();
       _bodyController = null;
     }
     _bodyPaused = false;
@@ -998,10 +1188,18 @@ class HttpParser extends Stream<HttpIncoming> {
     }
   }
 
-  void _reportError(Object error, [StackTrace stackTrace]) {
-    if (_socketSubscription != null) _socketSubscription.cancel();
+  void _reportHttpError(error, [stackTrace]) {
+    _socketSubscription?.cancel();
     _state = _State.FAILURE;
     _controller.addError(error, stackTrace);
     _controller.close();
+  }
+
+  void _reportBodyError(error, [stackTrace]) {
+    _socketSubscription?.cancel();
+    _state = _State.FAILURE;
+    _bodyController?.addError(error, stackTrace);
+    // In case of drain(), error event will close the stream.
+    _bodyController?.close();
   }
 }
