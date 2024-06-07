@@ -2,7 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-part of '../http.dart';
+part of 'http.dart';
 
 abstract final class HttpProfiler {
   static const _kType = 'HttpProfile';
@@ -2708,7 +2708,6 @@ class _HttpClient implements HttpClient {
   }
 
   bool _isValidToken(String token) {
-    checkNotNullable(token, "token");
     // from https://www.rfc-editor.org/rfc/rfc2616#page-15
     //
     // CTL            = <any US-ASCII control character
@@ -2753,8 +2752,6 @@ class _HttpClient implements HttpClient {
         throw ArgumentError("Unsupported scheme '${uri.scheme}' in URI $uri");
       }
     }
-
-    _httpConnectionHook(uri);
 
     bool isSecure = uri.isScheme("https");
 
@@ -3374,7 +3371,7 @@ class _HttpServer extends Stream<HttpRequest>
   // Indicated if the http server has been closed.
   bool closed = false;
 
-  final ServerSocketBase _serverSocket;
+  final dynamic _serverSocket;
   final bool _closeServer;
 
   // Set of currently connected clients.

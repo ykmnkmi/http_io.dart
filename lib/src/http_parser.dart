@@ -2,7 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-part of '../http.dart';
+part of 'http.dart';
 
 // Global constants.
 class _Const {
@@ -956,7 +956,7 @@ class _HttpParser extends Stream<_HttpIncoming> {
   bool get persistentConnection => _persistentConnection;
 
   void set isHead(bool value) {
-    _noMessageBody = valueOfNonNullableParamWithDefault<bool>(value, false);
+    _noMessageBody = value;
   }
 
   _HttpDetachedIncoming detachIncoming() {

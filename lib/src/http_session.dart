@@ -2,37 +2,28 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-part of '../http.dart';
+part of 'http.dart';
 
-const String _DART_SESSION_ID = 'DARTSESSID';
+const String _DART_SESSION_ID = "DARTSESSID";
 
 // A _HttpSession is a node in a double-linked list, with _next and _prev being
 // the previous and next pointers.
 class _HttpSession implements HttpSession {
   // Destroyed marked. Used by the http connection to see if a session is valid.
   bool _destroyed = false;
-
   bool _isNew = true;
-
   DateTime _lastSeen;
-
   void Function()? _timeoutCallback;
-
   final _HttpSessionManager _sessionManager;
-
   // Pointers in timeout queue.
   _HttpSession? _prev;
-
   _HttpSession? _next;
-
-  @override
   final String id;
 
-  final Map<Object?, Object?> _data = HashMap<Object?, Object?>();
+  final Map _data = HashMap();
 
   _HttpSession(this._sessionManager, this.id) : _lastSeen = DateTime.now();
 
-  @override
   void destroy() {
     assert(!_destroyed);
     _destroyed = true;
@@ -49,117 +40,59 @@ class _HttpSession implements HttpSession {
 
   DateTime get lastSeen => _lastSeen;
 
-  @override
   bool get isNew => _isNew;
 
-  @override
-  set onTimeout(void Function()? callback) {
+  void set onTimeout(void Function()? callback) {
     _timeoutCallback = callback;
   }
 
   // Map implementation:
-  @override
-  bool containsValue(value) {
-    return _data.containsValue(value);
-  }
-
-  @override
-  bool containsKey(key) {
-    return _data.containsKey(key);
-  }
-
-  @override
-  Object? operator [](key) {
-    return _data[key];
-  }
-
-  @override
+  bool containsValue(value) => _data.containsValue(value);
+  bool containsKey(key) => _data.containsKey(key);
+  operator [](key) => _data[key];
   void operator []=(key, value) {
     _data[key] = value;
   }
 
-  @override
-  Object? putIfAbsent(key, ifAbsent) {
-    return _data.putIfAbsent(key, ifAbsent);
-  }
-
-  @override
-  void addAll(Map<Object?, Object?> other) {
-    _data.addAll(other);
-  }
-
-  @override
-  Object? remove(key) {
-    return _data.remove(key);
-  }
-
-  @override
+  putIfAbsent(key, ifAbsent) => _data.putIfAbsent(key, ifAbsent);
+  addAll(Map other) => _data.addAll(other);
+  remove(key) => _data.remove(key);
   void clear() {
     _data.clear();
   }
 
-  @override
-  void forEach(void Function(Object? key, Object? value) forEach) {
-    _data.forEach(forEach);
+  void forEach(void f(key, value)) {
+    _data.forEach(f);
   }
 
-  @override
-  Iterable<MapEntry<Object?, Object?>> get entries => _data.entries;
+  Iterable<MapEntry> get entries => _data.entries;
 
-  @override
-  void addEntries(Iterable<MapEntry<Object?, Object?>> entries) {
+  void addEntries(Iterable<MapEntry> entries) {
     _data.addEntries(entries);
   }
 
-  @override
-  Map<K, V> map<K, V>(
-      MapEntry<K, V> Function(Object? key, Object? value) transform) {
-    return _data.map(transform);
-  }
+  Map<K, V> map<K, V>(MapEntry<K, V> transform(key, value)) =>
+      _data.map(transform);
 
-  @override
-  void removeWhere(bool Function(Object? key, Object? value) test) {
+  void removeWhere(bool test(key, value)) {
     _data.removeWhere(test);
   }
 
-  @override
-  Map<K, V> cast<K, V>() {
-    return _data.cast<K, V>();
-  }
+  Map<K, V> cast<K, V>() => _data.cast<K, V>();
+  update(key, update(value), {Function()? ifAbsent}) =>
+      _data.update(key, update, ifAbsent: ifAbsent);
 
-  @override
-  Object? update(
-    key,
-    Object? Function(Object? value) update, {
-    Object? Function()? ifAbsent,
-  }) {
-    return _data.update(key, update, ifAbsent: ifAbsent);
-  }
-
-  @override
-  void updateAll(Object? Function(Object? key, Object? value) update) {
+  void updateAll(update(key, value)) {
     _data.updateAll(update);
   }
 
-  @override
-  Iterable<Object?> get keys => _data.keys;
-
-  @override
-  Iterable<Object?> get values => _data.values;
-
-  @override
+  Iterable get keys => _data.keys;
+  Iterable get values => _data.values;
   int get length => _data.length;
-
-  @override
   bool get isEmpty => _data.isEmpty;
-
-  @override
   bool get isNotEmpty => _data.isNotEmpty;
 
-  @override
-  String toString() {
-    return 'HttpSession id:$id $_data';
-  }
+  String toString() => 'HttpSession id:$id $_data';
 }
 
 // Private class used to manage all the active sessions. The sessions are stored
@@ -169,43 +102,34 @@ class _HttpSession implements HttpSession {
 //  * In a linked list, used as a timeout queue.
 class _HttpSessionManager {
   final Map<String, _HttpSession> _sessions;
-
   int _sessionTimeout = 20 * 60; // 20 mins.
-
   _HttpSession? _head;
-
   _HttpSession? _tail;
-
   Timer? _timer;
 
   _HttpSessionManager() : _sessions = {};
 
   String createSessionId() {
-    const int keyLength = 16; // 128 bits.
-
-    Uint8List data = _CryptoUtils.getRandomBytes(keyLength);
+    const int _KEY_LENGTH = 16; // 128 bits.
+    var data = _CryptoUtils.getRandomBytes(_KEY_LENGTH);
     return _CryptoUtils.bytesToHex(data);
   }
 
-  _HttpSession? getSession(String id) {
-    return _sessions[id];
-  }
+  _HttpSession? getSession(String id) => _sessions[id];
 
   _HttpSession createSession() {
-    String id = createSessionId();
-
+    var id = createSessionId();
     // TODO(ajohnsen): Consider adding a limit and throwing an exception.
     // Should be very unlikely however.
     while (_sessions.containsKey(id)) {
       id = createSessionId();
     }
-
-    _HttpSession session = _sessions[id] = _HttpSession(this, id);
+    var session = _sessions[id] = _HttpSession(this, id);
     _addToTimeoutQueue(session);
     return session;
   }
 
-  set sessionTimeout(int timeout) {
+  void set sessionTimeout(int timeout) {
     _sessionTimeout = timeout;
     _stopTimer();
     _startTimer();
@@ -227,8 +151,7 @@ class _HttpSessionManager {
       _startTimer();
     } else {
       assert(_timer != null);
-
-      _HttpSession tail = _tail!;
+      var tail = _tail!;
       // Add to end.
       tail._next = session;
       session._prev = tail;
@@ -237,16 +160,14 @@ class _HttpSessionManager {
   }
 
   void _removeFromTimeoutQueue(_HttpSession session) {
-    _HttpSession? next = session._next;
-    _HttpSession? prev = session._prev;
+    var next = session._next;
+    var prev = session._prev;
     session._next = session._prev = null;
     next?._prev = prev;
     prev?._next = next;
-
     if (_tail == session) {
       _tail = prev;
     }
-
     if (_head == session) {
       _head = next;
       // We removed the head element, start new timer.
@@ -257,17 +178,14 @@ class _HttpSessionManager {
 
   void _timerTimeout() {
     _stopTimer(); // Clear timer.
-
-    _HttpSession session = _head!;
+    var session = _head!;
     session.destroy(); // Will remove the session from timeout queue and map.
     session._timeoutCallback?.call();
   }
 
   void _startTimer() {
     assert(_timer == null);
-
-    _HttpSession? head = _head;
-
+    var head = _head;
     if (head != null) {
       int seconds = DateTime.now().difference(head.lastSeen).inSeconds;
       _timer =
@@ -276,8 +194,7 @@ class _HttpSessionManager {
   }
 
   void _stopTimer() {
-    Timer? timer = _timer;
-
+    var timer = _timer;
     if (timer != null) {
       timer.cancel();
       _timer = null;

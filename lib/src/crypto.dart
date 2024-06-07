@@ -2,38 +2,31 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-part of '../http.dart';
+part of 'http.dart';
 
 class _CryptoUtils {
   static Uint8List getRandomBytes(int count) {
-    Uint8List result = Uint8List(count);
-
+    final Uint8List result = Uint8List(count);
     for (int i = 0; i < count; i++) {
       result[i] = Random.secure().nextInt(0xff);
     }
-
     return result;
   }
 
   static String bytesToHex(List<int> bytes) {
-    StringBuffer result = StringBuffer();
-
-    for (int part in bytes) {
+    var result = StringBuffer();
+    for (var part in bytes) {
       result.write('${part < 16 ? '0' : ''}${part.toRadixString(16)}');
     }
-
     return result.toString();
   }
 }
 
 // Constants.
-const int _MASK_8 = 0xff;
-
-const int _MASK_32 = 0xffffffff;
-
-const int _BITS_PER_BYTE = 8;
-
-const int _BYTES_PER_WORD = 4;
+const _MASK_8 = 0xff;
+const _MASK_32 = 0xffffffff;
+const _BITS_PER_BYTE = 8;
+const _BYTES_PER_WORD = 4;
 
 // Base class encapsulating common behavior for cryptographic hash
 // functions.
@@ -80,7 +73,7 @@ abstract class _HashBase {
   }
 
   // One round of the hash computation.
-  void _updateHash(Uint32List m);
+  _updateHash(Uint32List m);
 
   // Helper methods.
   int _add32(int x, int y) => (x + y) & _MASK_32;
@@ -115,7 +108,7 @@ abstract class _HashBase {
       var word = (w3 & 0xff) << 24;
       word |= (w2 & _MASK_8) << 16;
       word |= (w1 & _MASK_8) << 8;
-      word |= w0 & _MASK_8;
+      word |= (w0 & _MASK_8);
       _currentChunk[wordIndex] = word;
     }
   }
@@ -200,7 +193,6 @@ class _MD5 extends _HashBase {
 
   // Compute one iteration of the MD5 algorithm with a chunk of
   // 16 32-bit pieces.
-  @override
   void _updateHash(Uint32List m) {
     assert(m.length == 16);
 
@@ -259,7 +251,6 @@ class _SHA1 extends _HashBase {
 
   // Compute one iteration of the SHA1 algorithm with a chunk of
   // 16 32-bit pieces.
-  @override
   void _updateHash(Uint32List m) {
     assert(m.length == 16);
 
@@ -280,7 +271,7 @@ class _SHA1 extends _HashBase {
       if (i < 20) {
         t = _add32(_add32(t, (b & c) | (~b & d)), 0x5A827999);
       } else if (i < 40) {
-        t = _add32(_add32(t, b ^ c ^ d), 0x6ED9EBA1);
+        t = _add32(_add32(t, (b ^ c ^ d)), 0x6ED9EBA1);
       } else if (i < 60) {
         t = _add32(_add32(t, (b & c) | (b & d) | (c & d)), 0x8F1BBCDC);
       } else {
