@@ -3150,15 +3150,6 @@ final class _HttpConnection extends LinkedListEntry<_HttpConnection>
   String get _serviceTypeName => 'HttpServerConnection';
 }
 
-// Common interface of [ServerSocket] and [SecureServerSocket] used by
-// [_HttpServer].
-abstract interface class ServerSocketBase<T extends Socket>
-    implements Stream<T> {
-  int get port;
-  InternetAddress get address;
-  Future<void> close();
-}
-
 // HTTP server waiting for socket connections.
 class _HttpServer extends Stream<HttpRequest>
     with _ServiceObject

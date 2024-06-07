@@ -254,7 +254,7 @@ abstract class HttpServer implements Stream<HttpRequest> {
   /// Attaches the HTTP server to an existing [ServerSocket]. When the
   /// [HttpServer] is closed, the [HttpServer] will just detach itself,
   /// closing current connections but not closing [serverSocket].
-  factory HttpServer.listenOn(ServerSocketBase serverSocket) =>
+  factory HttpServer.listenOn(ServerSocket serverSocket) =>
       _HttpServer.listenOn(serverSocket);
 
   /// Permanently stops this [HttpServer] from listening for new
