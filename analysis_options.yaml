@@ -7,7 +7,12 @@ analyzer:
     # strict-raw-types: true
   errors:
     annotate_overrides: ignore
+    avoid_function_literals_in_foreach_calls: ignore
+    avoid_init_to_null: ignore
     avoid_return_types_on_setters: ignore
+    avoid_returning_null_for_void: ignore
+    avoid_single_cascade_in_expression_statements: ignore
+    await_only_futures: ignore
     body_might_complete_normally_catch_error: ignore
     camel_case_extensions: ignore
     camel_case_types: ignore
@@ -16,22 +21,41 @@ analyzer:
     deprecated_member_use: ignore
     empty_catches: ignore
     empty_statements: ignore
+    inference_failure_on_collection_literal: ignore
     inference_failure_on_function_invocation: ignore
     inference_failure_on_function_return_type: ignore
+    inference_failure_on_instance_creation: ignore
+    inference_failure_on_uninitialized_variable: ignore
     inference_failure_on_untyped_parameter: ignore
+    invalid_return_type_for_catch_error: ignore
     library_private_types_in_public_api: ignore
     no_leading_underscores_for_local_identifiers: ignore
     non_constant_identifier_names: ignore
+    prefer_adjacent_string_concatenation: ignore
+    prefer_collection_literals: ignore
+    prefer_contains: ignore
+    prefer_final_fields: ignore
+    prefer_generic_function_type_aliases: ignore
     prefer_interpolation_to_compose_strings: ignore
+    prefer_is_empty: ignore
+    prefer_spread_collections: ignore
+    prefer_typing_uninitialized_variables: ignore
     todo: ignore
+    unnecessary_brace_in_string_interps: ignore
+    unnecessary_new: ignore
     unnecessary_null_comparison: ignore
+    unnecessary_string_escapes: ignore
+    unnecessary_string_interpolations: ignore
     unnecessary_this: ignore
+    unnecessary_type_check: ignore
+    unused_catch_clause: ignore
+    unused_catch_stack: ignore
     unused_element: ignore
     unused_field: ignore
+    unused_import: ignore
+    unused_local_variable: ignore
     use_function_type_syntax_for_parameters: ignore
     use_super_parameters: ignore
-  exclude:
-    - test
 
 linter:
   rules:
@@ -41,7 +65,7 @@ linter:
     # - avoid_escaping_inner_quotes
     - avoid_final_parameters
     - avoid_print
-    - avoid_void_async
+    # - avoid_void_async
     - directives_ordering
     # - prefer_single_quotes
     # - unnecessary_final
