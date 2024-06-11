@@ -258,7 +258,10 @@ Future<void> testHttp10KeepAliveServerCloses() async {
 
 void main() {
   test("Http10NoKeepAlive", testHttp10NoKeepAlive);
+
   test("Http10ServerClose", testHttp10ServerClose);
+
   test("Http10KeepAlive", testHttp10KeepAlive);
+
   test("Http10KeepAliveServerCloses", testHttp10KeepAliveServerCloses);
 }
