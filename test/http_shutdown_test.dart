@@ -3,13 +3,13 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import "dart:async";
-import "dart:io" show SocketException;
 
 import "package:http_io/http_io.dart";
 import "package:test/test.dart";
 
-Future<Null> test1(int totalConnections) {
-  final completer = Completer<Null>();
+import "expect.dart";
+
+void test1(int totalConnections) {
   // Server which just closes immediately.
   HttpServer.bind("127.0.0.1", 0).then((server) {
     server.listen((HttpRequest request) {
@@ -17,7 +17,7 @@ Future<Null> test1(int totalConnections) {
     });
 
     int count = 0;
-    HttpClient client = HttpClient();
+    HttpClient client = new HttpClient();
     for (int i = 0; i < totalConnections; i++) {
       client
           .get("127.0.0.1", server.port, "/")
@@ -28,17 +28,14 @@ Future<Null> test1(int totalConnections) {
           if (count == totalConnections) {
             client.close();
             server.close();
-            completer.complete();
           }
         });
       });
     }
   });
-  return completer.future;
 }
 
-Future<Null> test2(int totalConnections, int outputStreamWrites) {
-  final completer = Completer<Null>();
+void test2(int totalConnections, int outputStreamWrites) {
   // Server which responds without waiting for request body.
   HttpServer.bind("127.0.0.1", 0).then((server) {
     server.listen((HttpRequest request) {
@@ -47,7 +44,7 @@ Future<Null> test2(int totalConnections, int outputStreamWrites) {
     });
 
     int count = 0;
-    HttpClient client = HttpClient();
+    HttpClient client = new HttpClient();
     for (int i = 0; i < totalConnections; i++) {
       client
           .get("127.0.0.1", server.port, "/")
@@ -64,7 +61,6 @@ Future<Null> test2(int totalConnections, int outputStreamWrites) {
           if (count == totalConnections) {
             client.close(force: true);
             server.close();
-            completer.complete();
           }
         }, onError: (e) {} /* ignore */);
       }).catchError((error) {
@@ -72,16 +68,13 @@ Future<Null> test2(int totalConnections, int outputStreamWrites) {
         if (count == totalConnections) {
           client.close();
           server.close();
-          completer.complete();
         }
       });
     }
   });
-  return completer.future;
 }
 
-Future<Null> test3(int totalConnections) {
-  final completer = Completer<Null>();
+void test3(int totalConnections) {
   // Server which responds when request body has been received.
   HttpServer.bind("127.0.0.1", 0).then((server) {
     server.listen((HttpRequest request) {
@@ -92,7 +85,7 @@ Future<Null> test3(int totalConnections) {
     });
 
     int count = 0;
-    HttpClient client = HttpClient();
+    HttpClient client = new HttpClient();
     for (int i = 0; i < totalConnections; i++) {
       client
           .get("127.0.0.1", server.port, "/")
@@ -106,32 +99,28 @@ Future<Null> test3(int totalConnections) {
           if (count == totalConnections) {
             client.close();
             server.close();
-            completer.complete();
           }
         });
       });
     }
   });
-  return completer.future;
 }
 
-Future<Null> test4() {
-  final completer = Completer<Null>();
+void test4() {
   HttpServer.bind("127.0.0.1", 0).then((server) {
     server.listen((var request) {
       request.listen((_) {}, onDone: () {
-        Timer.periodic(Duration(milliseconds: 100), (timer) {
+        new Timer.periodic(new Duration(milliseconds: 100), (timer) {
           if (server.connectionsInfo().total == 0) {
             server.close();
             timer.cancel();
-            completer.complete();
           }
         });
         request.response.close();
       });
     });
 
-    var client = HttpClient();
+    var client = new HttpClient();
     client
         .get("127.0.0.1", server.port, "/")
         .then((request) => request.close())
@@ -141,11 +130,9 @@ Future<Null> test4() {
       });
     });
   });
-  return completer.future;
 }
 
-Future<Null> test5(int totalConnections) {
-  final completer = Completer<Null>();
+void test5(int totalConnections) {
   HttpServer.bind("127.0.0.1", 0).then((server) {
     server.listen((request) {
       request.listen((_) {}, onDone: () {
@@ -157,7 +144,7 @@ Future<Null> test5(int totalConnections) {
     // Create a number of client requests and keep then active. Then
     // close the client and wait for the server to lose all active
     // connections.
-    var client = HttpClient();
+    var client = new HttpClient();
     client.maxConnectionsPerHost = totalConnections;
     for (int i = 0; i < totalConnections; i++) {
       client
@@ -167,7 +154,7 @@ Future<Null> test5(int totalConnections) {
             // TODO(sgjesse): Make this test work with
             //request.response instead of request.close() return
             //return request.response;
-            request.done.catchError((e) {});
+            Future<HttpClientResponse?>.value(request.done).catchError((e) {});
             return request.close();
           })
           .then((response) {})
@@ -175,7 +162,7 @@ Future<Null> test5(int totalConnections) {
               test: (e) => e is HttpException || e is SocketException);
     }
     bool clientClosed = false;
-    Timer.periodic(Duration(milliseconds: 100), (timer) {
+    new Timer.periodic(new Duration(milliseconds: 100), (timer) {
       if (!clientClosed) {
         if (server.connectionsInfo().total == totalConnections) {
           clientClosed = true;
@@ -185,23 +172,21 @@ Future<Null> test5(int totalConnections) {
         if (server.connectionsInfo().total == 0) {
           server.close();
           timer.cancel();
-          completer.complete();
         }
       }
     });
   });
-  return completer.future;
 }
 
 void main() {
-  test('test1_1', () => test1(1));
-  test('test1_10', () => test1(10));
-  test('test2_1_10', () => test2(1, 10));
-  test('test2_10_10', () => test2(10, 10));
-  test('test2_10_1000', () => test2(10, 1000));
-  test('test3_1', () => test3(1));
-  test('test3_10', () => test3(10));
-  test('test4', () => test4());
-  test('test5_1', () => test5(1));
-  test('test5_10', () => test5(10));
+  test1(1);
+  test1(10);
+  test2(1, 10);
+  test2(10, 10);
+  test2(10, 1000);
+  test3(1);
+  test3(10);
+  test4();
+  test5(1);
+  test5(10);
 }

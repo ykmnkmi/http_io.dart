@@ -10,20 +10,20 @@ import 'package:test/test.dart';
 const _sessionId = "DARTSESSID";
 
 String _getSessionId(List<Cookie> cookies) {
-  var id = cookies.fold<String>(null, (last, cookie) {
+  var id = cookies.fold<String>('', (last, cookie) {
     if (last != null) return last;
     if (cookie.name.toUpperCase() == _sessionId) {
       expect(cookie.httpOnly, isTrue);
       return cookie.value;
     }
-    return null;
+    return '';
   });
   expect(id, isNotNull);
   return id;
 }
 
 Future<String> _connectGetSession(HttpClient client, int port,
-    [String session]) async {
+    [String? session]) async {
   var request = await client.get("127.0.0.1", port, "/");
 
   if (session != null) {

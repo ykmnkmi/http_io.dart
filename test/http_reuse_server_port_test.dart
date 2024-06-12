@@ -1,18 +1,19 @@
-// Copyright (c) 2018, the Dart project authors.  Please see the AUTHORS file
+// Copyright (c) 2013, the Dart project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
 import 'dart:async';
 
-import 'package:http_io/http_io.dart';
-import 'package:test/test.dart';
+import "package:http_io/http_io.dart";
+
+import "async_helper.dart";
 
 Future<int> runServer(int port, int connections, bool clean) {
-  Completer<int> completer = Completer<int>();
+  var completer = new Completer<int>();
   HttpServer.bind("127.0.0.1", port).then((server) {
     int i = 0;
     server.listen((request) {
-      request.pipe(request.response);
+      request.cast<List<int>>().pipe(request.response);
       i++;
       if (!clean && i == 10) {
         int port = server.port;
@@ -20,8 +21,8 @@ Future<int> runServer(int port, int connections, bool clean) {
       }
     });
 
-    Future.wait(List.generate(connections, (_) {
-      var client = HttpClient();
+    Future.wait(new List.generate(connections, (_) {
+      var client = new HttpClient();
       return client
           .get("127.0.0.1", server.port, "/")
           .then((request) => request.close())
@@ -39,33 +40,31 @@ Future<int> runServer(int port, int connections, bool clean) {
   return completer.future;
 }
 
-Future<Null> testReusePort() {
-  final completer = Completer<Null>();
+void testReusePort() {
+  asyncStart();
   runServer(0, 10, true).then((int port) {
     // Stress test the port reusing it 10 times.
-    Future.forEach(Iterable.generate(10), (_) {
+    Future.forEach(List.filled(10, null), (_) {
       return runServer(port, 10, true);
     }).then((_) {
-      completer.complete();
+      asyncEnd();
     });
   });
-  return completer.future;
 }
 
-Future<Null> testUncleanReusePort() {
-  final completer = Completer<Null>();
+void testUncleanReusePort() {
+  asyncStart();
   runServer(0, 10, false).then((int port) {
     // Stress test the port reusing it 10 times.
-    Future.forEach(Iterable.generate(10), (_) {
+    Future.forEach(List.filled(10, null), (_) {
       return runServer(port, 10, false);
     }).then((_) {
-      completer.complete();
+      asyncEnd();
     });
   });
-  return completer.future;
 }
 
 void main() {
-  test('reusePort', testReusePort);
-  test('uncleanedReusePort', testUncleanReusePort);
+  testReusePort();
+  testUncleanReusePort();
 }

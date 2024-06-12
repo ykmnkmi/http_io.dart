@@ -1,19 +1,23 @@
-// Copyright (c) 2018, the Dart project authors.  Please see the AUTHORS file
+// Copyright (c) 2013, the Dart project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
 import "dart:async";
 
-import 'package:http_io/http_io.dart';
-import 'package:test/test.dart';
+import "package:http_io/http_io.dart";
+import "package:test/test.dart";
 
-Future<void> getData(HttpClient client, int port, bool chunked, int length) {
+import "expect.dart";
+
+Future getData(HttpClient client, int port, bool chunked, int length) {
   return client
       .get("127.0.0.1", port, "/?chunked=$chunked&length=$length")
       .then((request) => request.close())
       .then((response) {
-    return response.fold(0, (bytes, data) => bytes + data.length).then((bytes) {
-      expect(length, equals(bytes));
+    return response
+        .fold<int>(0, (bytes, data) => bytes + data.length)
+        .then((bytes) {
+      Expect.equals(length, bytes);
     });
   });
 }
@@ -22,8 +26,8 @@ Future<HttpServer> startServer() {
   return HttpServer.bind("127.0.0.1", 0).then((server) {
     server.listen((request) {
       bool chunked = request.uri.queryParameters["chunked"] == "true";
-      int length = int.parse(request.uri.queryParameters["length"]);
-      var buffer = List<int>.filled(length, 0);
+      int length = int.parse(request.uri.queryParameters["length"]!);
+      var buffer = new List<int>.filled(length, 0);
       if (!chunked) request.response.contentLength = length;
       request.response.add(buffer);
       request.response.close();
@@ -32,10 +36,9 @@ Future<HttpServer> startServer() {
   });
 }
 
-Future<Null> testKeepAliveNonChunked() {
-  final completer = Completer<Null>();
+testKeepAliveNonChunked() {
   startServer().then((server) {
-    var client = HttpClient();
+    var client = new HttpClient();
 
     getData(client, server.port, false, 100)
         .then((_) => getData(client, server.port, false, 100))
@@ -45,16 +48,13 @@ Future<Null> testKeepAliveNonChunked() {
         .then((_) {
       server.close();
       client.close();
-      completer.complete();
     });
   });
-  return completer.future;
 }
 
-Future<Null> testKeepAliveChunked() {
-  final completer = Completer<Null>();
+testKeepAliveChunked() {
   startServer().then((server) {
-    var client = HttpClient();
+    var client = new HttpClient();
 
     getData(client, server.port, true, 100)
         .then((_) => getData(client, server.port, true, 100))
@@ -64,16 +64,13 @@ Future<Null> testKeepAliveChunked() {
         .then((_) {
       server.close();
       client.close();
-      completer.complete();
     });
   });
-  return completer.future;
 }
 
-Future<Null> testKeepAliveMixed() {
-  final completer = Completer<Null>();
+testKeepAliveMixed() {
   startServer().then((server) {
-    var client = HttpClient();
+    var client = new HttpClient();
 
     getData(client, server.port, true, 100)
         .then((_) => getData(client, server.port, false, 100))
@@ -86,14 +83,12 @@ Future<Null> testKeepAliveMixed() {
         .then((_) {
       server.close();
       client.close();
-      completer.complete();
     });
   });
-  return completer.future;
 }
 
 void main() {
-  test('keepAliveNonChunked', testKeepAliveNonChunked);
-  test('keepAliveChunked', testKeepAliveChunked);
-  test('keepAliveMixed', testKeepAliveMixed);
+  testKeepAliveNonChunked();
+  testKeepAliveChunked();
+  testKeepAliveMixed();
 }

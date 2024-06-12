@@ -2,27 +2,24 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import "dart:async";
-
 import "package:http_io/http_io.dart";
-import "package:test/test.dart";
 
-Future<Null> testNoBody(int totalConnections, bool explicitContentLength) {
-  var completer = Completer<Null>();
+import "expect.dart";
+
+void testNoBody(int totalConnections, bool explicitContentLength) {
   int count = 0;
   HttpServer.bind("127.0.0.1", 0, backlog: totalConnections).then((server) {
     server.listen((HttpRequest request) {
-      expect("0", equals(request.headers.value('content-length')));
-      expect(0, equals(request.contentLength));
+      Expect.equals(null, request.headers.value('content-length'));
+      Expect.equals(-1, request.contentLength);
       var response = request.response;
       response.contentLength = 0;
       response.done.then((_) {
-        fail("Unexpected successful response completion");
+        Expect.fail("Unexpected successful response completion");
       }).catchError((error) {
-        expect(error is HttpException, isTrue);
+        Expect.isTrue(error is HttpException);
         if (++count == totalConnections) {
           server.close();
-          completer.complete(null);
         }
       });
       // write with content length 0 closes the connection and
@@ -34,14 +31,16 @@ Future<Null> testNoBody(int totalConnections, bool explicitContentLength) {
       // After an explicit close, write becomes a state error
       // because we have said we will not add more.
       response.close();
-      response.write("x");
+      Expect.throws(() {
+        response.write("x");
+      }, (e) => e is StateError);
     }, onError: (e, trace) {
       String msg = "Unexpected server error $e";
       if (trace != null) msg += "\nStackTrace: $trace";
-      fail(msg);
+      Expect.fail(msg);
     });
 
-    HttpClient client = HttpClient();
+    HttpClient client = new HttpClient();
     for (int i = 0; i < totalConnections; i++) {
       client.get("127.0.0.1", server.port, "/").then((request) {
         if (explicitContentLength) {
@@ -49,24 +48,22 @@ Future<Null> testNoBody(int totalConnections, bool explicitContentLength) {
         }
         return request.close();
       }).then((response) {
-        expect("0", equals(response.headers.value('content-length')));
-        expect(0, equals(response.contentLength));
+        Expect.equals("0", response.headers.value('content-length'));
+        Expect.equals(0, response.contentLength);
         response.drain();
       }).catchError((e, trace) {
         // It's also okay to fail, as headers may not be written.
       });
     }
   });
-  return completer.future;
 }
 
-Future<Null> testBody(int totalConnections, bool useHeader) {
-  var completer = Completer<Null>();
+void testBody(int totalConnections, bool useHeader) {
   HttpServer.bind("127.0.0.1", 0, backlog: totalConnections).then((server) {
     int serverCount = 0;
     server.listen((HttpRequest request) {
-      expect("2", equals(request.headers.value('content-length')));
-      expect(2, equals(request.contentLength));
+      Expect.equals("2", request.headers.value('content-length'));
+      Expect.equals(2, request.contentLength);
       var response = request.response;
       if (useHeader) {
         response.contentLength = 2;
@@ -75,54 +72,47 @@ Future<Null> testBody(int totalConnections, bool useHeader) {
       }
       request.listen((d) {}, onDone: () {
         response.write("x");
-        try {
-          response.contentLength = 3;
-          fail("Expected HttpException");
-        } catch (e) {
-          expect(e is HttpException, isTrue);
-        }
+        Expect.throws(
+            () => response.contentLength = 3, (e) => e is HttpException);
         response.write("x");
         response.write("x");
         response.done.then((_) {
-          fail("Unexpected successful response completion");
+          Expect.fail("Unexpected successful response completion");
         }).catchError((error) {
-          expect(error is HttpException, isTrue);
+          Expect.isTrue(error is HttpException, "[$error]");
           if (++serverCount == totalConnections) {
             server.close();
-            completer.complete(null);
           }
         });
         response.close();
-        response.write("x");
+        Expect.throws(() {
+          response.write("x");
+        }, (e) => e is StateError);
       });
     }, onError: (e, trace) {
       String msg = "Unexpected error $e";
       if (trace != null) msg += "\nStackTrace: $trace";
-      fail(msg);
+      Expect.fail(msg);
     });
 
     int clientCount = 0;
-    HttpClient client = HttpClient();
+    HttpClient client = new HttpClient();
     for (int i = 0; i < totalConnections; i++) {
       client.get("127.0.0.1", server.port, "/").then((request) {
         if (useHeader) {
           request.contentLength = 2;
         } else {
-          request.headers.add(HttpHeaders.CONTENT_LENGTH, "7");
-          request.headers.add(HttpHeaders.CONTENT_LENGTH, "2");
+          request.headers.add(HttpHeaders.contentLengthHeader, "7");
+          request.headers.add(HttpHeaders.contentLengthHeader, "2");
         }
         request.write("x");
-        try {
-          request.contentLength = 3;
-          fail("Expected HttpException");
-        } catch (e) {
-          expect(e is HttpException, isTrue);
-        }
+        Expect.throws(
+            () => request.contentLength = 3, (e) => e is HttpException);
         request.write("x");
         return request.close();
       }).then((response) {
-        expect("2", equals(response.headers.value('content-length')));
-        expect(2, equals(response.contentLength));
+        Expect.equals("2", response.headers.value('content-length'));
+        Expect.equals(2, response.contentLength);
         response.listen((d) {}, onDone: () {
           if (++clientCount == totalConnections) {
             client.close();
@@ -135,15 +125,13 @@ Future<Null> testBody(int totalConnections, bool useHeader) {
       });
     }
   });
-  return completer.future;
 }
 
-Future<Null> testBodyChunked(int totalConnections, bool useHeader) {
-  var completer = Completer<Null>();
+void testBodyChunked(int totalConnections, bool useHeader) {
   HttpServer.bind("127.0.0.1", 0, backlog: totalConnections).then((server) {
     server.listen((HttpRequest request) {
-      expect(request.headers.value('content-length'), isNull);
-      expect(-1, equals(request.contentLength));
+      Expect.isNull(request.headers.value('content-length'));
+      Expect.equals(-1, request.contentLength);
       var response = request.response;
       if (useHeader) {
         response.contentLength = 2;
@@ -154,79 +142,70 @@ Future<Null> testBodyChunked(int totalConnections, bool useHeader) {
       }
       request.listen((d) {}, onDone: () {
         response.write("x");
-        try {
-          response.headers.chunkedTransferEncoding = false;
-          fail("Expected HttpException");
-        } catch (e) {
-          expect(e is HttpException, isTrue);
-        }
+        Expect.throws(() => response.headers.chunkedTransferEncoding = false,
+            (e) => e is HttpException);
         response.write("x");
         response.write("x");
         response.close();
-        response.write("x");
+        Expect.throws(() {
+          response.write("x");
+        }, (e) => e is StateError);
       });
     }, onError: (e, trace) {
       String msg = "Unexpected error $e";
       if (trace != null) msg += "\nStackTrace: $trace";
-      fail(msg);
+      Expect.fail(msg);
     });
 
     int count = 0;
-    HttpClient client = HttpClient();
+    HttpClient client = new HttpClient();
     for (int i = 0; i < totalConnections; i++) {
       client.get("127.0.0.1", server.port, "/").then((request) {
         if (useHeader) {
           request.contentLength = 2;
           request.headers.chunkedTransferEncoding = true;
         } else {
-          request.headers.add(HttpHeaders.CONTENT_LENGTH, "2");
-          request.headers.set(HttpHeaders.TRANSFER_ENCODING, "chunked");
+          request.headers.add(HttpHeaders.contentLengthHeader, "2");
+          request.headers.set(HttpHeaders.transferEncodingHeader, "chunked");
         }
         request.write("x");
-        try {
-          request.headers.chunkedTransferEncoding = false;
-          fail("Expected HttpException");
-        } catch (e) {
-          expect(e is HttpException, isTrue);
-        }
+        Expect.throws(() => request.headers.chunkedTransferEncoding = false,
+            (e) => e is HttpException);
         request.write("x");
         request.write("x");
         return request.close();
       }).then((response) {
-        expect(response.headers.value('content-length'), isNull);
-        expect(-1, equals(response.contentLength));
+        Expect.isNull(response.headers.value('content-length'));
+        Expect.equals(-1, response.contentLength);
         response.listen((d) {}, onDone: () {
           if (++count == totalConnections) {
             client.close();
             server.close();
-            completer.complete(null);
           }
         });
       }).catchError((e, trace) {
         String msg = "Unexpected error $e";
         if (trace != null) msg += "\nStackTrace: $trace";
-        fail(msg);
+        Expect.fail(msg);
       });
     }
   });
-  return completer.future;
 }
 
-Future<Null> testSetContentLength() {
-  var completer = Completer<Null>();
+void testSetContentLength() {
   HttpServer.bind("127.0.0.1", 0).then((server) {
     server.listen((HttpRequest request) {
       var response = request.response;
-      expect(response.headers.value('content-length'), isNull);
-      expect(-1, equals(response.contentLength));
+      Expect.isNull(response.headers.value('content-length'));
+      Expect.equals(-1, response.contentLength);
       response.headers.set("content-length", 3);
-      expect("3", equals(response.headers.value('content-length')));
-      expect(3, equals(response.contentLength));
+      Expect.equals("3", response.headers.value('content-length'));
+      Expect.equals(3, response.contentLength);
       response.write("xxx");
       response.close();
     });
 
-    var client = HttpClient();
+    var client = new HttpClient();
     client
         .get("127.0.0.1", server.port, "/")
         .then((request) => request.close())
@@ -234,20 +213,19 @@ Future<Null> testSetContentLength() {
       response.listen((_) {}, onDone: () {
         client.close();
         server.close();
-        completer.complete(null);
       });
     });
   });
-  return completer.future;
 }
 
 void main() {
-  test('NoBody5', () => testNoBody(5, false));
-  test('NoBody25', () => testNoBody(25, false));
-  test('NoBody5Explicit', () => testNoBody(5, true));
-  test('NoBody25Explicit', () => testNoBody(25, true));
-  test('Body5', () => testBody(5, false));
-  test('BodyChunked5', () => testBodyChunked(5, false));
-  test('BodyChunked5UseHeader', () => testBodyChunked(5, true));
-  test('SetContentLength', () => testSetContentLength());
+  testNoBody(5, false);
+  testNoBody(25, false);
+  testNoBody(5, true);
+  testNoBody(25, true);
+  testBody(5, false);
+  testBody(5, true);
+  testBodyChunked(5, false);
+  testBodyChunked(5, true);
+  testSetContentLength();
 }

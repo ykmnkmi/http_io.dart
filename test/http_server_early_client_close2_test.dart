@@ -1,23 +1,21 @@
-// Copyright (c) 2018, the Dart project authors.  Please see the AUTHORS file
+// Copyright (c) 2013, the Dart project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
 import "dart:async";
-import "dart:io" show Directory, File, Platform, Socket;
+import "dart:io" show File, Platform;
+import "dart:isolate";
 
-import 'package:http_io/http_io.dart';
-import 'package:test/test.dart';
+import "package:http_io/http_io.dart";
+import "package:test/test.dart";
 
-Future<Null> httpServerEarlyClientClose2() {
-  final completer = Completer<Null>();
+import "expect.dart";
+
+main() {
   HttpServer.bind("127.0.0.1", 0).then((server) {
     server.listen((request) {
-      String name =
-          '${Directory.current.path}/test/http_server_early_client_close2_test.dart';
-      if (!File(name).existsSync()) {
-        name = Platform.script.toFilePath();
-      }
-      File(name)
+      String name = Platform.script.toFilePath();
+      new File(name)
           .openRead()
           .cast<List<int>>()
           .pipe(request.response)
@@ -36,7 +34,6 @@ Future<Null> httpServerEarlyClientClose2() {
             makeRequest();
           } else {
             server.close();
-            completer.complete();
           }
         });
       });
@@ -44,9 +41,4 @@ Future<Null> httpServerEarlyClientClose2() {
 
     makeRequest();
   });
-  return completer.future;
-}
-
-main() {
-  test('httpServerEarlyClientClose2', httpServerEarlyClientClose2);
 }

@@ -1,11 +1,15 @@
-// Copyright (c) 2018, the Dart project authors.  Please see the AUTHORS file
+// Copyright (c) 2013, the Dart project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import 'dart:io' show Socket, exit;
+import 'dart:async';
+import 'dart:io' show exit;
+
+import 'package:http_io/http_io.dart';
 
 void main(List<String> arguments) {
   int port = int.parse(arguments.first);
+  var client = new HttpClient();
   const MAX = 64;
   int count = 0;
   void run() {
@@ -20,7 +24,5 @@ void main(List<String> arguments) {
     });
   }
 
-  for (int i = 0; i < 4; i++) {
-    run();
-  }
+  for (int i = 0; i < 4; i++) run();
 }

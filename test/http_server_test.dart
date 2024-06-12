@@ -1,41 +1,40 @@
-// Copyright (c) 2017, the Dart project authors.  Please see the AUTHORS file
+// Copyright (c) 2013, the Dart project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
 import "dart:async";
-import "dart:io" hide HttpServer, HttpClient, HttpHeaders, HttpRequest;
 import "dart:typed_data";
 
 import "package:http_io/http_io.dart";
-import "package:test/test.dart";
 
-Future<Null> testDefaultResponseHeaders() {
+import "async_helper.dart";
+import "expect.dart";
+
+void testDefaultResponseHeaders() {
   checkDefaultHeaders(headers) {
-    expect(headers[HttpHeaders.CONTENT_TYPE],
-        equals(['text/plain; charset=utf-8']));
-    expect(headers['X-Frame-Options'], equals(['SAMEORIGIN']));
-    expect(headers['X-Content-Type-Options'], equals(['nosniff']));
-    expect(headers['X-XSS-Protection'], equals(['1; mode=block']));
+    Expect.listEquals(
+        headers[HttpHeaders.contentTypeHeader], ['text/plain; charset=utf-8']);
+    Expect.listEquals(headers['X-Frame-Options'], ['SAMEORIGIN']);
+    Expect.listEquals(headers['X-Content-Type-Options'], ['nosniff']);
+    Expect.listEquals(headers['X-XSS-Protection'], ['1; mode=block']);
   }
 
   checkDefaultHeadersClear(headers) {
-    expect(headers[HttpHeaders.CONTENT_TYPE], isNull);
-    expect(headers['X-Frame-Options'], isNull);
-    expect(headers['X-Content-Type-Options'], isNull);
-    expect(headers['X-XSS-Protection'], isNull);
+    Expect.isNull(headers[HttpHeaders.contentTypeHeader]);
+    Expect.isNull(headers['X-Frame-Options']);
+    Expect.isNull(headers['X-Content-Type-Options']);
+    Expect.isNull(headers['X-XSS-Protection']);
   }
 
   checkDefaultHeadersClearAB(headers) {
-    expect(headers[HttpHeaders.CONTENT_TYPE], isNull);
-    expect(headers['X-Frame-Options'], isNull);
-    expect(headers['X-Content-Type-Options'], isNull);
-    expect(headers['X-XSS-Protection'], isNull);
-    expect(headers['a'], equals(['b']));
+    Expect.isNull(headers[HttpHeaders.contentTypeHeader]);
+    Expect.isNull(headers['X-Frame-Options']);
+    Expect.isNull(headers['X-Content-Type-Options']);
+    Expect.isNull(headers['X-XSS-Protection']);
+    Expect.listEquals(headers['a'], ['b']);
   }
 
-  doTest(bool clearHeaders, Map<String, dynamic> defaultHeaders,
-      Function checker) {
-    Completer<Null> completer = Completer();
+  test(bool clearHeaders, Map? defaultHeaders, Function checker) {
     HttpServer.bind("127.0.0.1", 0).then((server) {
       if (clearHeaders) server.defaultResponseHeaders.clear();
       if (defaultHeaders != null) {
@@ -47,7 +46,7 @@ Future<Null> testDefaultResponseHeaders() {
         request.response.close();
       });
 
-      HttpClient client = HttpClient();
+      HttpClient client = new HttpClient();
       client
           .get("127.0.0.1", server.port, "/")
           .then((request) => request.close())
@@ -55,20 +54,17 @@ Future<Null> testDefaultResponseHeaders() {
         checker(response.headers);
         server.close();
         client.close();
-        completer.complete(null);
       });
     });
-    return completer.future;
   }
 
-  return doTest(false, null, checkDefaultHeaders)
-      .then((_) => doTest(true, null, checkDefaultHeadersClear))
-      .then((_) => doTest(true, {'a': 'b'}, checkDefaultHeadersClearAB));
+  test(false, null, checkDefaultHeaders);
+  test(true, null, checkDefaultHeadersClear);
+  test(true, {'a': 'b'}, checkDefaultHeadersClearAB);
 }
 
-Future<Null> testDefaultResponseHeadersContentType() {
-  doTest(bool clearHeaders, String requestBody, List<int> responseBody) {
-    Completer<Null> completer = Completer();
+void testDefaultResponseHeadersContentType() {
+  test(bool clearHeaders, String requestBody, List<int> responseBody) {
     HttpServer.bind("127.0.0.1", 0).then((server) {
       if (clearHeaders) server.defaultResponseHeaders.clear();
       server.listen((request) {
@@ -76,36 +72,33 @@ Future<Null> testDefaultResponseHeadersContentType() {
         request.response.close();
       });
 
-      HttpClient client = HttpClient();
+      HttpClient client = new HttpClient();
       client
           .get("127.0.0.1", server.port, "/")
           .then((request) => request.close())
           .then((response) {
-        response.fold([], (a, b) => a..addAll(b)).then((body) {
-          expect(body, equals(responseBody));
+        response.fold<List<int>>([], (a, b) => a..addAll(b)).then((body) {
+          Expect.listEquals(body, responseBody);
         }).whenComplete(() {
           server.close();
           client.close();
-          completer.complete(null);
         });
       });
     });
-    return completer.future;
   }
 
-  return doTest(false, 'æøå', [195, 166, 195, 184, 195, 165])
-      .then((_) => doTest(true, 'æøå', [230, 248, 229]));
+  test(false, 'æøå', [195, 166, 195, 184, 195, 165]);
+  test(true, 'æøå', [230, 248, 229]);
 }
 
-Future<Null> testListenOn() {
-  Completer<Null> completer = Completer();
-  ServerSocket socket;
-  HttpServer server;
+void testListenOn() {
+  late ServerSocket socket;
+  late HttpServer server;
 
-  void doTest(void onDone()) {
-    expect(socket.port, equals(server.port));
+  void test(void onDone()) {
+    Expect.equals(socket.port, server.port);
 
-    HttpClient client = HttpClient();
+    HttpClient client = new HttpClient();
     client.get("127.0.0.1", socket.port, "/").then((request) {
       return request.close();
     }).then((response) {
@@ -116,66 +109,65 @@ Future<Null> testListenOn() {
     }).catchError((e, trace) {
       String msg = "Unexpected error in Http Client: $e";
       if (trace != null) msg += "\nStackTrace: $trace";
-      fail(msg);
+      Expect.fail(msg);
     });
   }
 
   // Test two connection after each other.
+  asyncStart();
   ServerSocket.bind("127.0.0.1", 0).then((s) {
     socket = s;
-    server = HttpServer.listenOn(socket);
-    expect(server.address.address, equals('127.0.0.1'));
-    expect(server.address.host, equals('127.0.0.1'));
+    server = new HttpServer.listenOn(socket);
+    Expect.equals(server.address.address, '127.0.0.1');
+    Expect.equals(server.address.host, '127.0.0.1');
     server.listen((HttpRequest request) {
       request.listen((_) {}, onDone: () => request.response.close());
     });
 
-    doTest(() {
-      doTest(() {
+    test(() {
+      test(() {
         server.close();
-        expect(() => server.port, throwsException);
-        expect(() => server.address, throwsException);
+        Expect.throws(() => server.port);
+        Expect.throws(() => server.address);
         socket.close();
-        completer.complete(null);
+        asyncEnd();
       });
     });
   });
-  return completer.future;
 }
 
-Future<Null> testHttpServerZone() {
-  Completer<Null> completer = Completer();
-  Zone parent = Zone.current;
+void testHttpServerZone() {
+  asyncStart();
+  Expect.equals(Zone.root, Zone.current);
   runZoned(() {
-    expect(parent, isNot(equals(Zone.current)));
+    Expect.notEquals(Zone.root, Zone.current);
     HttpServer.bind("127.0.0.1", 0).then((server) {
-      expect(parent, isNot(equals(Zone.current)));
+      Expect.notEquals(Zone.root, Zone.current);
       server.listen((request) {
-        expect(parent, isNot(equals(Zone.current)));
+        Expect.notEquals(Zone.root, Zone.current);
         request.response.close();
         server.close();
       });
-      HttpClient()
+      new HttpClient()
           .get("127.0.0.1", server.port, '/')
           .then((request) => request.close())
           .then((response) => response.drain())
-          .then((_) => completer.complete(null));
+          .then((_) => asyncEnd());
     });
   });
-  return completer.future;
 }
 
-Future<Null> testHttpServerZoneError() {
-  Completer<Null> completer = Completer();
-  Zone parent = Zone.current;
+void testHttpServerZoneError() {
+  asyncStart();
+  Expect.equals(Zone.root, Zone.current);
   runZonedGuarded(() {
-    expect(parent, isNot(equals(Zone.current)));
+    Expect.notEquals(Zone.root, Zone.current);
     HttpServer.bind("127.0.0.1", 0).then((server) {
-      expect(parent, isNot(equals(Zone.current)));
+      Expect.notEquals(Zone.root, Zone.current);
       server.listen((request) {
-        expect(parent, isNot(equals(Zone.current)));
+        Expect.notEquals(Zone.root, Zone.current);
         request.listen((_) {}, onError: (error) {
-          expect(parent, isNot(equals(Zone.current)));
+          Expect.notEquals(Zone.root, Zone.current);
           server.close();
           throw error;
         });
@@ -188,29 +180,26 @@ Future<Null> testHttpServerZoneError() {
       });
     });
   }, (e, s) {
-    completer.complete(null);
+    asyncEnd();
   });
-  return completer.future;
 }
 
-Future<Null> testHttpServerClientClose() {
-  Completer<Null> completer = Completer();
+void testHttpServerClientClose() {
   HttpServer.bind("127.0.0.1", 0).then((server) {
     runZonedGuarded(() {
       server.listen((request) {
         request.response.bufferOutput = false;
-        request.response.add(Uint8List(64 * 1024));
-        Timer(const Duration(milliseconds: 100), () {
+        request.response.add(new Uint8List(64 * 1024));
+        new Timer(const Duration(milliseconds: 100), () {
           request.response.close().then((_) {
             server.close();
-            completer.complete(null);
           });
         });
       });
     }, (e, s) {
-      fail("Unexpected error: $e(${e.hashCode})\n$s");
+      Expect.fail("Unexpected error: $e(${e.hashCode})\n$s");
     });
-    var client = HttpClient();
+    var client = new HttpClient();
     client
         .get("127.0.0.1", server.port, "/")
         .then((request) => request.close())
@@ -218,26 +207,13 @@ Future<Null> testHttpServerClientClose() {
       response.listen((_) {}).cancel();
     });
   });
-  return completer.future;
 }
 
 void main() {
-  test("DefaultResponseHeaders", () async {
-    await testDefaultResponseHeaders();
-  });
-  test("DefaultResponseHeadersContentType", () async {
-    await testDefaultResponseHeadersContentType();
-  });
-  test("ListenOn", () async {
-    await testListenOn();
-  });
-  test("HttpServerZone", () async {
-    await testHttpServerZone();
-  });
-  test("HttpServerZoneError", () async {
-    await testHttpServerZoneError();
-  });
-  test("HttpServerClientClose", () async {
-    await testHttpServerClientClose();
-  });
+  testDefaultResponseHeaders();
+  testDefaultResponseHeadersContentType();
+  testListenOn();
+  testHttpServerZone();
+  testHttpServerZoneError();
+  testHttpServerClientClose();
 }

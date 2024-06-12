@@ -7,10 +7,10 @@ import "dart:math";
 import "dart:typed_data";
 
 import "package:http_io/http_io.dart";
-import "package:test/test.dart";
 
-Future<Null> testClientAndServerCloseNoListen(int connections) {
-  Completer<Null> completer = Completer();
+import "expect.dart";
+
+testClientAndServerCloseNoListen(int connections) {
   HttpServer.bind("127.0.0.1", 0).then((server) {
     int closed = 0;
     server.listen((request) {
@@ -18,11 +18,10 @@ Future<Null> testClientAndServerCloseNoListen(int connections) {
       request.response.done.then((_) {
         closed++;
         if (closed == connections) {
-          expect(0, equals(server.connectionsInfo().active));
-          expect(server.connectionsInfo().total,
-              equals(server.connectionsInfo().idle));
+          Expect.equals(0, server.connectionsInfo().active);
+          Expect.equals(
+              server.connectionsInfo().total, server.connectionsInfo().idle);
           server.close();
-          completer.complete(null);
         }
       });
     });
@@ -34,21 +33,18 @@ Future<Null> testClientAndServerCloseNoListen(int connections) {
           .then((response) {});
     }
   });
-  return completer.future;
 }
 
-Future<Null> testClientCloseServerListen(int connections) {
-  Completer<Null> completer = Completer();
+testClientCloseServerListen(int connections) {
   HttpServer.bind("127.0.0.1", 0).then((server) {
     int closed = 0;
-    void check() {
+    check() {
       closed++;
       if (closed == connections * 2) {
-        expect(0, equals(server.connectionsInfo().active));
-        expect(server.connectionsInfo().total,
-            equals(server.connectionsInfo().idle));
+        Expect.equals(0, server.connectionsInfo().active);
+        Expect.equals(
+            server.connectionsInfo().total, server.connectionsInfo().idle);
         server.close();
-        completer.complete(null);
       }
     }
 
@@ -66,11 +62,9 @@ Future<Null> testClientCloseServerListen(int connections) {
           .then((response) => check());
     }
   });
-  return completer.future;
 }
 
-Future<Null> testClientCloseSendingResponse(int connections) {
-  Completer<Null> completer = Completer();
+testClientCloseSendingResponse(int connections) {
   var buffer = Uint8List(64 * 1024);
   var rand = Random();
   for (int i = 0; i < buffer.length; i++) {
@@ -78,15 +72,14 @@ Future<Null> testClientCloseSendingResponse(int connections) {
   }
   HttpServer.bind("127.0.0.1", 0).then((server) {
     int closed = 0;
-    void check() {
+    check() {
       closed++;
       // Wait for both server and client to see the connections as closed.
       if (closed == connections * 2) {
-        expect(0, equals(server.connectionsInfo().active));
-        expect(server.connectionsInfo().total,
-            equals(server.connectionsInfo().idle));
+        Expect.equals(0, server.connectionsInfo().active);
+        Expect.equals(
+            server.connectionsInfo().total, server.connectionsInfo().idle);
         server.close();
-        completer.complete(null);
       }
     }
 
@@ -115,45 +108,42 @@ Future<Null> testClientCloseSendingResponse(int connections) {
       });
     }
   });
-  return completer.future;
 }
 
-Future<Null> testClientCloseWhileSendingRequest(int connections) {
-  Completer<Null> completer = Completer();
-  HttpServer.bind("127.0.0.1", 0).then((server) async {
+// Closing the request early, before sending the full request payload should
+// result in an error on both server and client.
+testClientCloseWhileSendingRequest(int connections) {
+  HttpServer.bind("127.0.0.1", 0).then((server) {
+    int serverErrors = 0;
+    int clientErrors = 0;
     server.listen((request) {
-      request.listen((_) {}, onError: (e) {
-        // A race may cause the connection to be closed while the server is
-        // receiving the insufficient number of bytes.
-        expect(e is HttpException, isTrue);
+      request.listen((_) {}, onError: (_) {
+        serverErrors++;
+        if (serverErrors == connections) {
+          server.close();
+        }
       });
+    }, onDone: () {
+      Expect.equals(connections, clientErrors);
+      Expect.equals(connections, serverErrors);
     });
     var client = HttpClient();
-    int closed = 0;
     for (int i = 0; i < connections; i++) {
-      await client.post("127.0.0.1", server.port, "/").then((request) {
+      Future<HttpClientResponse?>.value(
+          client.post("127.0.0.1", server.port, "/").then((request) {
         request.contentLength = 110;
         request.write("0123456789");
-        // This triggers an error because fewer bytes were written than
-        // specified in contentLength.
         return request.close();
-      }).catchError((e) {
-        closed++;
-        if (closed == connections) {
-          server.close();
-          completer.complete(null);
-        }
+      })).catchError((_) {
+        clientErrors++;
       });
     }
   });
-  return completer.future;
 }
 
-void main() {
-  test('ClientAndServerCloseNoListen',
-      () => testClientAndServerCloseNoListen(10));
-  test('ClientCloseServerListen', () => testClientCloseServerListen(10));
-  test('ClientCloseSendingResponse', () => testClientCloseSendingResponse(10));
-  test('ClientCloseWhileSendingRequest',
-      () => testClientCloseWhileSendingRequest(10));
+main() {
+  testClientAndServerCloseNoListen(10);
+  testClientCloseServerListen(10);
+  testClientCloseSendingResponse(10);
+  testClientCloseWhileSendingRequest(10);
 }

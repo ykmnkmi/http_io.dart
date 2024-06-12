@@ -1,4 +1,4 @@
-// Copyright (c) 2018, the Dart project authors. Please see the AUTHORS file
+// Copyright (c) 2013, the Dart project authors. Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
@@ -6,8 +6,11 @@
 // a certificate that can't be authenticated.  This checks that all the
 // futures returned from these connection attempts complete (with errors).
 
+// ignore_for_file: avoid_print
+
 import "dart:async";
-import "dart:io";
+
+import "package:http_io/http_io.dart";
 
 class ExpectException implements Exception {
   ExpectException(this.message);
@@ -17,16 +20,18 @@ class ExpectException implements Exception {
 
 void expect(condition, message) {
   if (!condition) {
-    throw ExpectException(message);
+    throw new ExpectException(message);
   }
 }
 
 const HOST_NAME = "localhost";
 
-Future<Null> runClients(int port) async {
-  HttpClient client = HttpClient();
+Future runClients(int port) {
+  HttpClient client = new HttpClient();
+
+  var testFutures = <Future>[];
   for (int i = 0; i < 20; ++i) {
-    await client.getUrl(Uri.parse('https://$HOST_NAME:$port/')).then(
+    testFutures.add(client.getUrl(Uri.parse('https://$HOST_NAME:$port/')).then(
         (HttpClientRequest request) {
       expect(false, "Request succeeded");
     }, onError: (e) {
@@ -34,10 +39,11 @@ Future<Null> runClients(int port) async {
       expect(
           e is HandshakeException || e is SocketException || e is ArgumentError,
           "Error is wrong type: $e");
-    });
+    }));
   }
+  return Future.wait(testFutures);
 }
 
-Future<Null> main(List<String> args) async {
-  await runClients(int.parse(args[0])).then((_) => print('SUCCESS'));
+void main(List<String> args) {
+  runClients(int.parse(args[0])).then((_) => print('SUCCESS'));
 }

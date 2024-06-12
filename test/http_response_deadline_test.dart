@@ -1,15 +1,15 @@
-// Copyright (c) 2018, the Dart project authors.  Please see the AUTHORS file
+// Copyright (c) 2013, the Dart project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
 import "dart:async";
-import "dart:io" show BytesBuilder;
+import "dart:typed_data";
 
-import 'package:http_io/http_io.dart';
-import 'package:test/test.dart';
+import "package:http_io/http_io.dart";
 
-Future<Null> testSimpleDeadline(int connections) {
-  final completer = Completer<Null>();
+import "expect.dart";
+
+void testSimpleDeadline(int connections) {
   HttpServer.bind('localhost', 0).then((server) {
     server.listen((request) {
       request.response.deadline = const Duration(seconds: 1000);
@@ -18,23 +18,18 @@ Future<Null> testSimpleDeadline(int connections) {
     });
 
     var futures = <Future>[];
-    var client = HttpClient();
+    var client = new HttpClient();
     for (int i = 0; i < connections; i++) {
       futures.add(client
           .get('localhost', server.port, '/')
           .then((request) => request.close())
           .then((response) => response.drain()));
     }
-    Future.wait(futures).then((_) {
-      server.close();
-      completer.complete();
-    });
+    Future.wait(futures).then((_) => server.close());
   });
-  return completer.future;
 }
 
-Future<Null> testExceedDeadline(int connections) {
-  final completer = Completer<Null>();
+void testExceedDeadline(int connections) {
   HttpServer.bind('localhost', 0).then((server) {
     server.listen((request) {
       request.response.deadline = const Duration(milliseconds: 100);
@@ -43,35 +38,30 @@ Future<Null> testExceedDeadline(int connections) {
     });
 
     var futures = <Future>[];
-    var client = HttpClient();
+    var client = new HttpClient();
     for (int i = 0; i < connections; i++) {
       futures.add(client
           .get('localhost', server.port, '/')
           .then((request) => request.close())
           .then((response) => response.drain())
           .then((_) {
-        fail("Expected error");
+        Expect.fail("Expected error");
       }, onError: (e) {
-        // expect error.
+        // Expect error.
       }));
     }
-    Future.wait(futures).then((_) {
-      server.close();
-      completer.complete();
-    });
+    Future.wait(futures).then((_) => server.close());
   });
-  return completer.future;
 }
 
-Future<Null> testDeadlineAndDetach(int connections) {
-  final completer = Completer<Null>();
+void testDeadlineAndDetach(int connections) {
   HttpServer.bind('localhost', 0).then((server) {
     server.listen((request) {
       request.response.deadline = const Duration(milliseconds: 0);
       request.response.contentLength = 5;
       request.response.persistentConnection = false;
       request.response.detachSocket().then((socket) {
-        Timer(const Duration(milliseconds: 100), () {
+        new Timer(const Duration(milliseconds: 100), () {
           socket.write('stuff');
           socket.close();
           socket.listen(null);
@@ -80,29 +70,25 @@ Future<Null> testDeadlineAndDetach(int connections) {
     });
 
     var futures = <Future>[];
-    var client = HttpClient();
+    var client = new HttpClient();
     for (int i = 0; i < connections; i++) {
       futures.add(client
           .get('localhost', server.port, '/')
           .then((request) => request.close())
           .then((response) {
         return response
-            .fold(BytesBuilder(), (b, d) => b..add(d))
+            .fold<BytesBuilder>(new BytesBuilder(), (b, d) => b..add(d))
             .then((builder) {
-          expect('stuff', equals(String.fromCharCodes(builder.takeBytes())));
+          Expect.equals('stuff', new String.fromCharCodes(builder.takeBytes()));
         });
       }));
     }
-    Future.wait(futures).then((_) {
-      server.close();
-      completer.complete();
-    });
+    Future.wait(futures).then((_) => server.close());
   });
-  return completer.future;
 }
 
 void main() {
-  test('simpleDeadline', () => testSimpleDeadline(10));
-  test('exceedDeadline', () => testExceedDeadline(10));
-  test('deadlineAndDetach', () => testDeadlineAndDetach(10));
+  testSimpleDeadline(10);
+  testExceedDeadline(10);
+  testDeadlineAndDetach(10);
 }

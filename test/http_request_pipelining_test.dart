@@ -1,15 +1,13 @@
-// Copyright (c) 2018, the Dart project authors.  Please see the AUTHORS file
+// Copyright (c) 2013, the Dart project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import 'dart:async';
-import 'dart:io' show Socket;
+import "package:http_io/http_io.dart";
+import "package:test/test.dart";
 
-import 'package:http_io/http_io.dart';
-import 'package:test/test.dart';
+import "expect.dart";
 
-Future<Null> requestPipeling() {
-  final completer = Completer<Null>();
+void main() {
   final int REQUEST_COUNT = 100;
   int count = 0;
   HttpServer.bind("127.0.0.1", 0).then((server) {
@@ -19,9 +17,8 @@ Future<Null> requestPipeling() {
       request.response.close();
       if (request.uri.path == "/done") {
         request.response.done.then((_) {
-          expect(REQUEST_COUNT + 1, equals(count));
+          Expect.equals(REQUEST_COUNT + 1, count);
           server.close();
-          completer.complete();
         });
       }
     });
@@ -34,9 +31,4 @@ Future<Null> requestPipeling() {
       s.close();
     });
   });
-  return completer.future;
-}
-
-void main() {
-  test('httpRequestPipeling', requestPipeling);
 }

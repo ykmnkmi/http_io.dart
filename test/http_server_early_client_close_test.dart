@@ -1,18 +1,20 @@
-// Copyright (c) 2018, the Dart project authors.  Please see the AUTHORS file
+// Copyright (c) 2013, the Dart project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
 import "dart:async";
-import "dart:io" show Directory, File, Platform, Socket;
+import "dart:io" show File, Platform;
 import "dart:isolate";
 
-import 'package:http_io/http_io.dart';
-import 'package:test/test.dart';
+import "package:http_io/http_io.dart";
+import "package:test/test.dart";
+
+import "expect.dart";
 
 Future sendData(List<int> data, int port) {
   return Socket.connect("127.0.0.1", port).then((socket) {
     socket.listen((data) {
-      fail("No data response was expected");
+      Expect.fail("No data response was expected");
     });
     socket.add(data);
     return socket.close().then((_) {
@@ -26,36 +28,38 @@ class EarlyCloseTest {
 
   Future execute() {
     return HttpServer.bind("127.0.0.1", 0).then((server) {
-      Completer c = Completer();
+      Completer c = new Completer();
 
       bool calledOnRequest = false;
       bool calledOnError = false;
-      ReceivePort port = ReceivePort();
-      var requestCompleter = Completer();
+      bool calledOnDone = false;
+      ReceivePort port = new ReceivePort();
+      var requestCompleter = new Completer();
       server.listen((request) {
-        expect(expectRequest, isTrue);
-        expect(calledOnError, isFalse);
-        expect(calledOnRequest, isFalse);
+        Expect.isTrue(expectRequest);
+        Expect.isFalse(calledOnError);
+        Expect.isFalse(calledOnRequest, "onRequest called multiple times");
         calledOnRequest = true;
         request.listen((_) {}, onDone: () {
           requestCompleter.complete();
         }, onError: (error) {
-          expect(calledOnError, isFalse);
-          expect(exception, equals(error.message));
+          Expect.isFalse(calledOnError);
+          Expect.equals(exception, error.message);
           calledOnError = true;
           if (exception != null) port.close();
         });
       }, onDone: () {
-        expect(expectRequest, equals(calledOnRequest));
+        Expect.equals(expectRequest, calledOnRequest);
+        calledOnDone = true;
         if (exception == null) port.close();
         c.complete(null);
       });
 
-      List<int> d;
+      List<int>? d;
       if (data is List<int>) d = data;
       if (data is String) d = data.codeUnits;
-      if (d == null) fail("Invalid data");
-      sendData(d, server.port).then((_) {
+      if (d == null) Expect.fail("Invalid data");
+      sendData(d!, server.port).then((_) {
         if (!expectRequest) requestCompleter.complete();
         requestCompleter.future.then((_) => server.close());
       });
@@ -64,15 +68,15 @@ class EarlyCloseTest {
     });
   }
 
-  final dynamic data;
-  final String exception;
+  final data;
+  final String? exception;
   final bool expectRequest;
 }
 
-Future<Null> testEarlyClose1() async {
+void testEarlyClose1() {
   List<EarlyCloseTest> tests = <EarlyCloseTest>[];
-  void add(Object data, [String exception, bool expectRequest = false]) {
-    tests.add(EarlyCloseTest(data, exception, expectRequest));
+  void add(Object data, [String? exception, bool expectRequest = false]) {
+    tests.add(new EarlyCloseTest(data, exception, expectRequest));
   }
   // The empty packet is valid.
 
@@ -88,21 +92,22 @@ Future<Null> testEarlyClose1() async {
   add("GET / HTTP/1.1\r\nContent-Length: 100\r\n\r\n1",
       "Connection closed while receiving data", true);
 
-  for (final t in tests) {
-    await t.execute();
+  void runTest(Iterator it) {
+    if (it.moveNext()) {
+      it.current.execute().then((_) {
+        runTest(it);
+      });
+    }
   }
+
+  runTest(tests.iterator);
 }
 
-Future<Null> testEarlyClose2() {
-  final completer = Completer<Null>();
+testEarlyClose2() {
   HttpServer.bind("127.0.0.1", 0).then((server) {
     server.listen((request) {
-      String name =
-          "${Directory.current.path}/test/http_server_early_client_close_test.dart";
-      if (!File(name).existsSync()) {
-        name = Platform.script.toFilePath();
-      }
-      File(name)
+      String name = Platform.script.toFilePath();
+      new File(name)
           .openRead()
           .cast<List<int>>()
           .pipe(request.response)
@@ -120,10 +125,7 @@ Future<Null> testEarlyClose2() {
           if (++count < 10) {
             makeRequest();
           } else {
-            scheduleMicrotask(() {
-              server.close();
-              completer.complete();
-            });
+            scheduleMicrotask(server.close);
           }
         });
       });
@@ -131,19 +133,16 @@ Future<Null> testEarlyClose2() {
 
     makeRequest();
   });
-  return completer.future;
 }
 
-Future<Null> testEarlyClose3() {
-  final completer = Completer<Null>();
+void testEarlyClose3() {
   HttpServer.bind("127.0.0.1", 0).then((server) {
     server.listen((request) {
-      StreamSubscription subscription;
+      var subscription;
       subscription = request.listen((_) {}, onError: (error) {
         // subscription.cancel should not trigger an error.
         subscription.cancel();
         server.close();
-        completer.complete();
       });
     });
     Socket.connect("127.0.0.1", server.port).then((socket) {
@@ -156,11 +155,10 @@ Future<Null> testEarlyClose3() {
       socket.done.catchError((_) {});
     });
   });
-  return completer.future;
 }
 
 void main() {
-  test('testEarlyClose1', testEarlyClose1);
-  test('testEarlyClose2', testEarlyClose2);
-  test('testEarlyClose3', testEarlyClose3);
+  testEarlyClose1();
+  testEarlyClose2();
+  testEarlyClose3();
 }

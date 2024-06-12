@@ -2,34 +2,40 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+// ignore_for_file: avoid_print
+
 import 'dart:async';
-import 'dart:io' hide HttpClient, HttpServer;
+import 'dart:convert';
 
-import "package:http_io/http_io.dart";
-import "package:test/test.dart";
+import 'package:http_io/http_io.dart';
 
-Future<Null> testBindShared(String host, bool v6Only) async {
+import 'async_helper.dart';
+import 'expect.dart';
+
+testBindShared(String host, bool v6Only) async {
+  asyncStart();
+
   // Sent a single request using a new HttpClient to ensure a new TCP
   // connection is used.
   Future singleRequest(host, port, statusCode) async {
-    var client = HttpClient();
+    var client = new HttpClient();
     var request = await client.open('GET', host, port, '/');
     var response = await request.close();
     await response.drain();
-    expect(statusCode, equals(response.statusCode));
+    Expect.equals(statusCode, response.statusCode);
     client.close(force: true);
   }
 
-  Completer server1Request = Completer();
-  Completer server2Request = Completer();
+  Completer server1Request = new Completer();
+  Completer server2Request = new Completer();
 
   var server1 = await HttpServer.bind(host, 0, v6Only: v6Only, shared: true);
   var port = server1.port;
-  expect(port > 0, isTrue);
+  Expect.isTrue(port > 0);
 
   var server2 = await HttpServer.bind(host, port, v6Only: v6Only, shared: true);
-  expect(server1.address.address, equals(server2.address.address));
-  expect(port, equals(server2.port));
+  Expect.equals(server1.address.address, server2.address.address);
+  Expect.equals(port, server2.port);
 
   server1.listen((request) {
     server1Request.complete();
@@ -51,31 +57,24 @@ Future<Null> testBindShared(String host, bool v6Only) async {
 
   await server1Request.future;
   await server2Request.future;
+
+  asyncEnd();
 }
 
 void main() {
-  test("BindShared ipv4 not v6only", () async {
-    const String host = '127.0.0.1';
-    await testBindShared(host, false);
-  });
-
-  test("BindShared ipv4 v6only", () async {
-    const String host = '127.0.0.1';
-    await testBindShared(host, true);
-  });
-
-  test("BindShared ipv6 not v6only", () async {
-    bool useIPv6 = await supportsIPV6();
-    if (!useIPv6) return;
-    const String host = '::1';
-    await testBindShared(host, false);
-  });
-
-  test("BindShared ipv6 v6only", () async {
-    bool useIPv6 = await supportsIPV6();
-    if (!useIPv6) return;
-    const String host = '::1';
-    await testBindShared(host, true);
+  // Please don't change this to use await/async.
+  asyncStart();
+  supportsIPV6().then((ok) {
+    var addresses = ['127.0.0.1'];
+    if (ok) {
+      addresses.add('::1');
+    }
+    var futures = <Future>[];
+    for (var host in addresses) {
+      futures.add(testBindShared(host, false));
+      futures.add(testBindShared(host, true));
+    }
+    Future.wait(futures).then((_) => asyncEnd());
   });
 }
 
@@ -85,6 +84,7 @@ Future<bool> supportsIPV6() async {
     await socket.close();
     return true;
   } catch (e) {
+    print(e);
     return false;
   }
 }

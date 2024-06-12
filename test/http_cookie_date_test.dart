@@ -1,20 +1,21 @@
-// Copyright (c) 2018, the Dart project authors. Please see the AUTHORS file
+// Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-library dart.http;
+import "package:http_io/http_io.dart";
+import "package:test/test.dart";
+import "expect.dart";
 
-import 'package:http_io/http_io.dart';
-import 'package:http_io/src/http_headers_impl.dart';
-import 'package:test/test.dart';
+var _parseCookieDate = Testing$HttpDate.test$_parseCookieDate;
 
 void testParseHttpCookieDate() {
-  expect(() => parseCookieDate(""), throwsA(TypeMatcher<HttpException>()));
+  Expect.throws(() => _parseCookieDate(""));
 
   test(int year, int month, int day, int hours, int minutes, int seconds,
       String formatted) {
-    DateTime date = DateTime.utc(year, month, day, hours, minutes, seconds, 0);
-    expect(date, parseCookieDate(formatted));
+    DateTime date =
+        new DateTime.utc(year, month, day, hours, minutes, seconds, 0);
+    Expect.equals(date, _parseCookieDate(formatted));
   }
 
   test(2012, DateTime.june, 19, 14, 15, 01, "tue, 19-jun-12 14:15:01 gmt");
@@ -25,5 +26,5 @@ void testParseHttpCookieDate() {
 }
 
 void main() {
-  test('parseHttpCookieDate', testParseHttpCookieDate);
+  testParseHttpCookieDate();
 }
