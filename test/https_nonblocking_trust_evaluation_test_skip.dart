@@ -2,6 +2,8 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+// VMOptions=--long-ssl-cert-evaluation
+
 // ignore_for_file: avoid_print
 
 import 'dart:async';

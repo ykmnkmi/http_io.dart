@@ -2,11 +2,16 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+// VMOptions=
+// VMOptions=--short_socket_read
+// VMOptions=--short_socket_write
+// VMOptions=--short_socket_read --short_socket_write
+
 // ignore_for_file: avoid_print
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io' show File, Platform, Process, exit;
+import 'dart:io' show Platform, Process, exit;
 
 import 'package:http_io/http_io.dart';
 
@@ -17,17 +22,14 @@ String getFilename(String path) => Platform.script.resolve(path).toFilePath();
 
 final SecurityContext serverSecurityContext = () {
   final context = SecurityContext();
-  context
-      .usePrivateKeyBytes(File(getFilename('localhost.key')).readAsBytesSync());
-  context.useCertificateChainBytes(
-      File(getFilename('localhost.crt')).readAsBytesSync());
+  context.usePrivateKey(getFilename('localhost.key'));
+  context.useCertificateChain(getFilename('localhost.crt'));
   return context;
 }();
 
 final SecurityContext clientSecurityContext = () {
   final context = SecurityContext(withTrustedRoots: true);
-  context.setTrustedCertificatesBytes(
-      File(getFilename('localhost.crt')).readAsBytesSync());
+  context.setTrustedCertificates(getFilename('localhost.crt'));
   return context;
 }();
 
@@ -75,7 +77,7 @@ void main(List<String> args) async {
     var socket = await SecureSocket.connect('localhost', port,
         context: clientSecurityContext);
     socket.write(<int>[1, 2, 3]);
-  }, onError: (e) async {
+  }, onError: (e) {
     // Even if server disconnects during later parts of handshake, since
     // TLS v1.3 client might not notice it until attempt to communicate with
     // the server.
