@@ -163,7 +163,6 @@ void testSessionsDestroy() {
         var session2 = request.session;
         Expect.notEquals(session.id, session2.id);
       }
-      ;
       request.response.close();
     });
 

@@ -10,9 +10,6 @@
 import "dart:async";
 
 import "package:http_io/http_io.dart";
-import "package:test/test.dart";
-
-import "expect.dart";
 
 void test1(int totalConnections) {
   // Server which just closes immediately.
@@ -58,7 +55,7 @@ void test2(int totalConnections, int outputStreamWrites) {
         for (int i = 0; i < outputStreamWrites; i++) {
           request.write("Hello, world!");
         }
-        request.done.catchError((_) {});
+        request.done.catchError((_) => null);
         return request.close();
       }).then((HttpClientResponse response) {
         response.listen((_) {}, onDone: () {
@@ -159,7 +156,8 @@ void test5(int totalConnections) {
             // TODO(sgjesse): Make this test work with
             //request.response instead of request.close() return
             //return request.response;
-            Future<HttpClientResponse?>.value(request.done).catchError((e) {});
+            Future<HttpClientResponse?>.value(request.done)
+                .catchError((e) => null);
             return request.close();
           })
           .then((response) {})

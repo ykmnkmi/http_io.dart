@@ -6,7 +6,6 @@ import "dart:async";
 import "dart:io" show Platform;
 
 import "package:http_io/http_io.dart";
-import "package:test/test.dart";
 
 import "expect.dart";
 

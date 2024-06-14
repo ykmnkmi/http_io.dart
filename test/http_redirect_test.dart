@@ -539,6 +539,7 @@ void testAutoRedirectLimit() {
       Expect.equals(5, error.redirects.length);
       server.close();
       client.close();
+      return null;
     }, test: (e) => e is RedirectException);
   });
 }
@@ -555,6 +556,7 @@ void testRedirectLoop() {
       Expect.equals(2, error.redirects.length);
       server.close();
       client.close();
+      return null;
     }, test: (e) => e is RedirectException);
   });
 }

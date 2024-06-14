@@ -9,7 +9,6 @@ import "dart:io" show Platform;
 import "package:convert/convert.dart";
 import "package:crypto/crypto.dart";
 import "package:http_io/http_io.dart";
-import "package:test/test.dart";
 
 import "expect.dart";
 

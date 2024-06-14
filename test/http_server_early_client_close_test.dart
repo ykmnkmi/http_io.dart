@@ -12,7 +12,6 @@ import "dart:io" show File, Platform;
 import "dart:isolate";
 
 import "package:http_io/http_io.dart";
-import "package:test/test.dart";
 
 import "expect.dart";
 

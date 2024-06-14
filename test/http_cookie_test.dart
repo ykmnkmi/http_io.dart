@@ -3,7 +3,7 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import "package:http_io/http_io.dart";
-import "package:test/test.dart";
+
 import "expect.dart";
 
 void testCookies() {

@@ -141,6 +141,7 @@ testClientCloseWhileSendingRequest(int connections) {
         return request.close();
       })).catchError((_) {
         clientErrors++;
+        return null;
       });
     }
   });

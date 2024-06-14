@@ -7,14 +7,9 @@
 // VMOptions=--short_socket_write
 // VMOptions=--short_socket_read --short_socket_write
 
-import "dart:async";
 import "dart:io" show File, Platform;
-import "dart:isolate";
 
 import "package:http_io/http_io.dart";
-import "package:test/test.dart";
-
-import "expect.dart";
 
 main() {
   HttpServer.bind("127.0.0.1", 0).then((server) {

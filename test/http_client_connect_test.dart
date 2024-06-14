@@ -61,6 +61,7 @@ void testGetInvalidHost() {
       .catchError((error) {
     client.close();
     asyncEnd();
+    return null;
   });
 }
 

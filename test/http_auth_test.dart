@@ -26,7 +26,6 @@ class Server {
           response.close();
           return;
         }
-        ;
 
         String username;
         String password;

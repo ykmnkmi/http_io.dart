@@ -6,14 +6,11 @@ analyzer:
     strict-inference: true
     # strict-raw-types: true
   errors:
-    body_might_complete_normally_catch_error: ignore
     camel_case_extensions: ignore
     camel_case_types: ignore
     constant_identifier_names: ignore
     curly_braces_in_flow_control_structures: ignore
     deprecated_member_use: ignore
-    empty_catches: ignore
-    empty_statements: ignore
     inference_failure_on_collection_literal: ignore
     inference_failure_on_function_invocation: ignore
     inference_failure_on_function_return_type: ignore
@@ -45,10 +42,8 @@ analyzer:
     unused_catch_stack: ignore
     unused_element: ignore
     unused_field: ignore
-    unused_import: ignore
     unused_local_variable: ignore
     use_function_type_syntax_for_parameters: ignore
-    use_super_parameters: ignore
 
 linter:
   rules:

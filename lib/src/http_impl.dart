@@ -1071,9 +1071,7 @@ class _IOSinkImpl extends _StreamSinkImpl<List<int>> implements IOSink {
   bool _encodingMutable = true;
 
   final _HttpProfileData? _profileData;
-  _IOSinkImpl(
-      StreamConsumer<List<int>> target, this._encoding, this._profileData)
-      : super(target);
+  _IOSinkImpl(super.target, this._encoding, this._profileData);
 
   @override
   Encoding get encoding => _encoding;
@@ -2326,6 +2324,7 @@ class _HttpClientConnection {
     });
     Future<Socket?>.value(_streamFuture).catchError((e) {
       destroy();
+      return null;
     });
     return request;
   }
@@ -3590,7 +3589,9 @@ class _HttpConnectionInfo implements HttpConnectionInfo {
     try {
       return _HttpConnectionInfo(
           socket.remoteAddress, socket.remotePort, socket.port);
-    } catch (e) {}
+    } catch (e) {
+      // do nothing
+    }
     return null;
   }
 }
