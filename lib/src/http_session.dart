@@ -74,7 +74,7 @@ class _HttpSession implements HttpSession {
   }
 
   @override
-  void forEach(void f(key, value)) {
+  void forEach(void Function(dynamic key, dynamic value) f) {
     _data.forEach(f);
   }
 
@@ -87,22 +87,23 @@ class _HttpSession implements HttpSession {
   }
 
   @override
-  Map<K, V> map<K, V>(MapEntry<K, V> transform(key, value)) =>
+  Map<K, V> map<K, V>(
+          MapEntry<K, V> Function(dynamic key, dynamic value) transform) =>
       _data.map(transform);
 
   @override
-  void removeWhere(bool test(key, value)) {
+  void removeWhere(bool Function(dynamic key, dynamic value) test) {
     _data.removeWhere(test);
   }
 
   @override
   Map<K, V> cast<K, V>() => _data.cast<K, V>();
   @override
-  update(key, update(value), {Function()? ifAbsent}) =>
+  update(key, Function(dynamic value) update, {Function()? ifAbsent}) =>
       _data.update(key, update, ifAbsent: ifAbsent);
 
   @override
-  void updateAll(update(key, value)) {
+  void updateAll(dynamic Function(dynamic key, dynamic value) update) {
     _data.updateAll(update);
   }
 

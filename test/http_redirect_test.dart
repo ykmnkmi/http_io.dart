@@ -15,8 +15,8 @@ Future<HttpServer> setupServer({Uri? targetServer}) {
   final completer = Completer<HttpServer>();
   HttpServer.bind("127.0.0.1", 0).then((server) {
     var handlers = Map<String, Function>();
-    addRequestHandler(
-        String path, void handler(HttpRequest request, HttpResponse response)) {
+    addRequestHandler(String path,
+        void Function(HttpRequest request, HttpResponse response) handler) {
       handlers[path] = handler;
     }
 
@@ -210,8 +210,8 @@ Future<HttpServer> setupTargetServer() {
   final completer = Completer<HttpServer>();
   HttpServer.bind("127.0.0.1", 0).then((server) {
     var handlers = Map<String, Function>();
-    addRequestHandler(
-        String path, void handler(HttpRequest request, HttpResponse response)) {
+    addRequestHandler(String path,
+        void Function(HttpRequest request, HttpResponse response) handler) {
       handlers[path] = handler;
     }
 

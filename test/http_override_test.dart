@@ -59,7 +59,8 @@ class MyHttpClient1 implements HttpClient {
   @override
   Future<HttpClientRequest> headUrl(Uri url) => throw "";
   @override
-  set authenticate(Future<bool> f(Uri url, String scheme, String realm)?) {}
+  set authenticate(
+      Future<bool> Function(Uri url, String scheme, String realm)? f) {}
   @override
   void addCredentials(
       Uri url, String realm, HttpClientCredentials credentials) {}
@@ -69,16 +70,17 @@ class MyHttpClient1 implements HttpClient {
               Uri url, String? proxyHost, int? proxyPort)?
           f) {}
   @override
-  set findProxy(String f(Uri url)?) {}
+  set findProxy(String Function(Uri url)? f) {}
   @override
   set authenticateProxy(
-      Future<bool> f(String host, int port, String scheme, String realm)?) {}
+      Future<bool> Function(String host, int port, String scheme, String realm)?
+          f) {}
   @override
   void addProxyCredentials(
       String host, int port, String realm, HttpClientCredentials credentials) {}
   @override
   set badCertificateCallback(
-      bool callback(X509Certificate cert, String host, int port)?) {}
+      bool Function(X509Certificate cert, String host, int port)? callback) {}
   @override
   set keyLog(Function(String line)? callback) {}
   @override
@@ -136,7 +138,8 @@ class MyHttpClient2 implements HttpClient {
   @override
   Future<HttpClientRequest> headUrl(Uri url) => throw "";
   @override
-  set authenticate(Future<bool> f(Uri url, String scheme, String realm)?) {}
+  set authenticate(
+      Future<bool> Function(Uri url, String scheme, String realm)? f) {}
   @override
   void addCredentials(
       Uri url, String realm, HttpClientCredentials credentials) {}
@@ -146,16 +149,17 @@ class MyHttpClient2 implements HttpClient {
               Uri url, String? proxyHost, int? proxyPort)?
           f) {}
   @override
-  set findProxy(String f(Uri url)?) {}
+  set findProxy(String Function(Uri url)? f) {}
   @override
   set authenticateProxy(
-      Future<bool> f(String host, int port, String scheme, String realm)?) {}
+      Future<bool> Function(String host, int port, String scheme, String realm)?
+          f) {}
   @override
   void addProxyCredentials(
       String host, int port, String realm, HttpClientCredentials credentials) {}
   @override
   set badCertificateCallback(
-      bool callback(X509Certificate cert, String host, int port)?) {}
+      bool Function(X509Certificate cert, String host, int port)? callback) {}
   @override
   set keyLog(Function(String line)? callback) {}
   @override

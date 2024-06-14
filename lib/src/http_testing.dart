@@ -48,13 +48,13 @@ extension Testing$HttpDate on HttpDate {
 }
 
 extension Testing$_HttpHeaders on _HttpHeaders {
-  void test$_build(BytesBuilder builder) => this._build(builder);
-  List<Cookie> test$_parseCookies() => this._parseCookies();
+  void test$_build(BytesBuilder builder) => _build(builder);
+  List<Cookie> test$_parseCookies() => _parseCookies();
 }
 
 extension Testing$_WebSocketProtocolTransformer
     on _WebSocketProtocolTransformer {
-  int get test$_state => this._state;
+  int get test$_state => _state;
 }
 
 extension Testing$_WebSocketImpl on _WebSocketImpl {
@@ -65,5 +65,5 @@ extension Testing$_WebSocketImpl on _WebSocketImpl {
           HttpClient? customClient}) =>
       _WebSocketImpl.connect(url, protocols, headers,
           compression: compression, customClient: customClient);
-  Timer? get test$_pingTimer => this._pingTimer;
+  Timer? get test$_pingTimer => _pingTimer;
 }

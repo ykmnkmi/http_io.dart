@@ -192,7 +192,7 @@ class _HttpDetachedIncoming extends Stream<Uint8List> {
   @override
   StreamSubscription<Uint8List> listen(void Function(Uint8List event)? onData,
       {Function? onError, void Function()? onDone, bool? cancelOnError}) {
-    var subscription = this._subscription;
+    var subscription = _subscription;
     if (subscription != null) {
       subscription
         ..onData(onData)

@@ -20,8 +20,10 @@ import "expect.dart";
 File scriptSource = File(
     Platform.script.resolve("http_server_response_test.dart").toFilePath());
 
-void testServerRequest(void handler(server, request),
-    {int? bytes, bool closeClient = false}) {
+void testServerRequest(
+    void Function(HttpServer server, HttpRequest request) handler,
+    {int? bytes,
+    bool closeClient = false}) {
   HttpServer.bind("127.0.0.1", 0).then((server) {
     server.defaultResponseHeaders.clear();
     server.listen((request) {

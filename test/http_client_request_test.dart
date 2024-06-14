@@ -10,7 +10,7 @@ import "package:http_io/http_io.dart";
 import "async_helper.dart";
 import "expect.dart";
 
-void testClientRequest(Future handler(request)) {
+void testClientRequest(Future Function(HttpClientRequest request) handler) {
   HttpServer.bind("127.0.0.1", 0).then((server) {
     server.listen((request) {
       request.drain().then((_) => request.response.close()).catchError((_) {});

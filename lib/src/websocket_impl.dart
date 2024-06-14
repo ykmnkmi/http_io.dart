@@ -1197,7 +1197,7 @@ class _WebSocketImpl extends Stream with _ServiceObject implements WebSocket {
   }
 
   @override
-  StreamSubscription listen(void onData(message)?,
+  StreamSubscription listen(void Function(dynamic message)? onData,
       {Function? onError, void Function()? onDone, bool? cancelOnError}) {
     return _controller.stream.listen(onData,
         onError: onError, onDone: onDone, cancelOnError: cancelOnError);

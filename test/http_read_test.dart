@@ -16,7 +16,7 @@ import "expect.dart";
 class IsolatedHttpServer {
   IsolatedHttpServer();
 
-  void setServerStartedHandler(void startedCallback(int port)) {
+  void setServerStartedHandler(void Function(int port) startedCallback) {
     _startedCallback = startedCallback;
   }
 

@@ -13,7 +13,7 @@ import "expect.dart";
 
 int lastRetryId = 0;
 
-Future retry(Future fun(), {int maxCount = 10}) async {
+Future retry(Future Function() fun, {int maxCount = 10}) async {
   final int id = lastRetryId++;
   for (int i = 0; i < maxCount; i++) {
     try {
@@ -30,7 +30,7 @@ Future retry(Future fun(), {int maxCount = 10}) async {
   return await fun();
 }
 
-Future throws(Function f, bool check(Object exception)) async {
+Future throws(Function f, bool Function(Object exception) check) async {
   try {
     await f();
   } catch (e) {
@@ -43,7 +43,8 @@ Future throws(Function f, bool check(Object exception)) async {
 }
 
 // Create a temporary directory and delete it when the test function exits.
-Future withTempDir(String prefix, Future<void> test(Directory dir)) async {
+Future withTempDir(
+    String prefix, Future<void> Function(Directory dir) test) async {
   final tempDir = Directory.systemTemp.createTempSync(prefix);
   try {
     await runZonedGuarded(() => test(tempDir), (e, st) {

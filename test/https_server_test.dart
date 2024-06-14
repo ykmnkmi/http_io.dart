@@ -22,7 +22,7 @@ SecurityContext clientContext = SecurityContext()
   ..setTrustedCertificates(localFile('certificates/trusted_certs.pem'));
 
 void testListenOn() {
-  void test(void onDone()) {
+  void test(void Function() onDone) {
     HttpServer.bindSecure(HOST, 0, serverContext, backlog: 5).then((server) {
       ReceivePort serverPort = ReceivePort();
       server.listen((HttpRequest request) {

@@ -39,7 +39,6 @@ analyzer:
     unused_element: ignore
     unused_field: ignore
     unused_local_variable: ignore
-    use_function_type_syntax_for_parameters: ignore
 
 linter:
   rules:

@@ -95,7 +95,7 @@ void testListenOn() {
   late ServerSocket socket;
   late HttpServer server;
 
-  void test(void onDone()) {
+  void test(void Function() onDone) {
     Expect.equals(socket.port, server.port);
 
     HttpClient client = HttpClient();
