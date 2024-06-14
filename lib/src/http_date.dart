@@ -283,11 +283,17 @@ class HttpDate {
 
     var tokens = <String>[];
     while (!isEnd()) {
-      while (!isEnd() && isDelimiter(date[position])) position++;
+      while (!isEnd() && isDelimiter(date[position])) {
+        position++;
+      }
       int start = position;
-      while (!isEnd() && isNonDelimiter(date[position])) position++;
+      while (!isEnd() && isNonDelimiter(date[position])) {
+        position++;
+      }
       tokens.add(date.substring(start, position).toLowerCase());
-      while (!isEnd() && isDelimiter(date[position])) position++;
+      while (!isEnd() && isDelimiter(date[position])) {
+        position++;
+      }
     }
 
     String? timeStr;
@@ -322,9 +328,11 @@ class HttpDate {
     }
 
     int year = toInt(yearStr);
-    if (year >= 70 && year <= 99)
+    if (year >= 70 && year <= 99) {
       year += 1900;
-    else if (year >= 0 && year <= 69) year += 2000;
+    } else if (year >= 0 && year <= 69) {
+      year += 2000;
+    }
     if (year < 1601) error();
 
     int dayOfMonth = toInt(dayOfMonthStr);

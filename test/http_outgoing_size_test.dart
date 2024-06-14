@@ -12,7 +12,9 @@ void testChunkedBufferSizeMsg() {
   // Buffer of same size as our internal buffer, minus 4. Makes us hit the
   // boundary.
   var sendData = Uint8List(8 * 1024 - 4);
-  for (int i = 0; i < sendData.length; i++) sendData[i] = i % 256;
+  for (int i = 0; i < sendData.length; i++) {
+    sendData[i] = i % 256;
+  }
 
   HttpServer.bind('127.0.0.1', 0).then((server) {
     server.listen((request) {
