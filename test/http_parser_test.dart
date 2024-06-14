@@ -37,7 +37,7 @@ class HttpParserTest {
       String request, String expectedMethod, String expectedUri,
       {int expectedTransferLength = 0,
       int expectedBytesReceived = 0,
-      Map<String, String?>? expectedHeaders = null,
+      Map<String, String?>? expectedHeaders,
       bool chunked = false,
       bool upgrade = false,
       int unparsedLength = 0,
@@ -50,9 +50,9 @@ class HttpParserTest {
       var port1 = new ReceivePort();
       var port2 = new ReceivePort();
 
-      String? method = null;
-      Uri? uri = null;
-      _HttpHeaders? headers = null;
+      String? method;
+      Uri? uri;
+      _HttpHeaders? headers;
       int bytesReceived = 0;
       int unparsedBytesReceived = 0;
       bool upgraded = false;
@@ -129,7 +129,7 @@ class HttpParserTest {
       String request, String expectedMethod, String expectedUri,
       {int expectedTransferLength = 0,
       int expectedBytesReceived = 0,
-      Map<String, String>? expectedHeaders = null,
+      Map<String, String>? expectedHeaders,
       bool chunked = false,
       bool upgrade = false,
       int unparsedLength = 0,
@@ -204,10 +204,10 @@ class HttpParserTest {
       String response, int expectedStatusCode, String expectedReasonPhrase,
       {int expectedTransferLength = 0,
       int expectedBytesReceived = 0,
-      Map<String, String>? expectedHeaders = null,
+      Map<String, String>? expectedHeaders,
       bool chunked = false,
       bool close = false,
-      String? responseToMethod = null,
+      String? responseToMethod,
       bool connectionClose = false,
       bool upgrade = false,
       int unparsedLength = 0,
@@ -219,10 +219,10 @@ class HttpParserTest {
       _HttpParser httpParser;
       bool headersCompleteCalled = false;
       bool dataEndCalled = false;
-      bool? dataEndClose = null;
+      bool? dataEndClose;
       int statusCode = -1;
-      String? reasonPhrase = null;
-      _HttpHeaders? headers = null;
+      String? reasonPhrase;
+      _HttpHeaders? headers;
       int bytesReceived = 0;
 
       httpParser = new _HttpParser.responseParser();
