@@ -25,7 +25,11 @@ Future<void> main() async {
 
     if (vmOptions.isEmpty) {
       stdout.writeln('dart ${entity.path}');
-      await Isolate.spawnUri(Directory.current.uri.resolveUri(entity.uri), [], null);
+      await Isolate.spawnUri(
+        Directory.current.uri.resolveUri(entity.uri),
+        [],
+        null,
+      );
     } else {
       for (List<String> options in vmOptions) {
         options = <String>[...options, entity.path];

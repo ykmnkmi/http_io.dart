@@ -2232,7 +2232,7 @@ class _HttpClientConnection {
         proxyCreds.authorize(request);
       }
     }
-    if (uri.userInfo != null && uri.userInfo.isNotEmpty) {
+    if (uri.userInfo.isNotEmpty) {
       // If the URL contains user information use that for basic
       // authorization.
       String auth = base64Encode(utf8.encode(uri.userInfo));
@@ -3499,9 +3499,6 @@ class _ProxyConfiguration {
   static const String DIRECT_PREFIX = "DIRECT";
 
   _ProxyConfiguration(String configuration) : proxies = <_Proxy>[] {
-    if (configuration == null) {
-      throw HttpException("Invalid proxy configuration $configuration");
-    }
     List<String> list = configuration.split(";");
     for (var proxy in list) {
       proxy = proxy.trim();
@@ -3585,7 +3582,6 @@ class _HttpConnectionInfo implements HttpConnectionInfo {
   _HttpConnectionInfo(this.remoteAddress, this.remotePort, this.localPort);
 
   static _HttpConnectionInfo? create(Socket socket) {
-    if (socket == null) return null;
     try {
       return _HttpConnectionInfo(
           socket.remoteAddress, socket.remotePort, socket.port);

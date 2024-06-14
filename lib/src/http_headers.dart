@@ -716,9 +716,8 @@ class _HeaderValue implements HeaderValue {
 
   _HeaderValue([this._value = "", Map<String, String?> parameters = const {}]) {
     // TODO(40614): Remove once non-nullability is sound.
-    Map<String, String?>? nullableParameters = parameters;
-    if (nullableParameters != null && nullableParameters.isNotEmpty) {
-      _parameters = HashMap<String, String?>.from(nullableParameters);
+    if (parameters.isNotEmpty) {
+      _parameters = HashMap<String, String?>.from(parameters);
     }
   }
 
@@ -930,17 +929,14 @@ class _ContentType extends _HeaderValue implements ContentType {
     _subType = emptyIfNull(_subType);
     _value = "$_primaryType/$_subType";
     // TODO(40614): Remove once non-nullability is sound.
-    Map<String, String?>? nullableParameters = parameters;
-    if (nullableParameters != null) {
-      var parameterMap = _ensureParameters();
-      nullableParameters.forEach((String key, String? value) {
-        String lowerCaseKey = key.toLowerCase();
-        if (lowerCaseKey == "charset") {
-          value = value?.toLowerCase();
-        }
-        parameterMap[lowerCaseKey] = value;
-      });
-    }
+    var parameterMap = _ensureParameters();
+    parameters.forEach((String key, String? value) {
+      String lowerCaseKey = key.toLowerCase();
+      if (lowerCaseKey == "charset") {
+        value = value?.toLowerCase();
+      }
+      parameterMap[lowerCaseKey] = value;
+    });
     if (charset != null) {
       _ensureParameters()["charset"] = charset.toLowerCase();
     }
@@ -1171,7 +1167,6 @@ class _Cookie implements Cookie {
       "{",
       "}"
     ];
-    if (newName == null) throw ArgumentError.notNull("name");
     for (int i = 0; i < newName.length; i++) {
       int codeUnit = newName.codeUnitAt(i);
       if (codeUnit <= 32 ||
@@ -1187,9 +1182,6 @@ class _Cookie implements Cookie {
   }
 
   static String _validateValue(String newValue) {
-    if (newValue == null) throw ArgumentError.notNull("value");
-    // Per RFC 6265, consider surrounding "" as part of the value, but otherwise
-    // double quotes are not allowed.
     int start = 0;
     int end = newValue.length;
     if (2 <= newValue.length &&

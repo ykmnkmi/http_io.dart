@@ -1032,7 +1032,7 @@ class _WebSocketImpl extends Stream with _ServiceObject implements WebSocket {
         query: uri.query,
         fragment: uri.fragment);
     return (customClient ?? _httpClient).openUrl("GET", uri).then((request) {
-      if (uri.userInfo != null && uri.userInfo.isNotEmpty) {
+      if (uri.userInfo.isNotEmpty) {
         // If the URL contains user information use that for basic
         // authorization.
         String auth = base64Encode(utf8.encode(uri.userInfo));

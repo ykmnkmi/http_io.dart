@@ -139,10 +139,8 @@ class ProxyServer {
       authHeader.write(', realm="$realm"');
       authHeader.write(', nonce="$nonce"');
       if (stale) authHeader.write(', stale="true"');
-      if (serverAlgorithm != null) {
-        authHeader.write(', algorithm=$serverAlgorithm');
-      }
-      if (serverQop != null) authHeader.write(', qop="$serverQop"');
+      authHeader.write(', algorithm=$serverAlgorithm');
+      authHeader.write(', qop="$serverQop"');
       response.headers.set(HttpHeaders.proxyAuthenticateHeader, authHeader);
       response.close();
     });

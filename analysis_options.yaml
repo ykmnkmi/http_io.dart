@@ -32,7 +32,6 @@ analyzer:
     prefer_typing_uninitialized_variables: ignore
     todo: ignore
     unnecessary_brace_in_string_interps: ignore
-    unnecessary_null_comparison: ignore
     unnecessary_type_check: ignore
     unused_catch_clause: ignore
     unused_catch_stack: ignore
