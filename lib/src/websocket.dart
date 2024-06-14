@@ -379,15 +379,18 @@ abstract class WebSocket
   /// arguments to send close information to the remote peer. If they are
   /// omitted, the peer will see [WebSocketStatus.noStatusReceived] code
   /// with no reason.
+  @override
   Future close([int? code, String? reason]);
 
   /// Sends data on the WebSocket connection. The data in [data] must
   /// be either a `String`, or a `List<int>` holding bytes.
+  @override
   void add(/*String|List<int>*/ data);
 
   /// Sends data from a stream on WebSocket connection. Each data event from
   /// [stream] will be send as a single WebSocket frame. The data from [stream]
   /// must be either `String`s, or `List<int>`s holding bytes.
+  @override
   Future addStream(Stream stream);
 
   /// Sends a text message with the text represented by [bytes].
@@ -410,5 +413,6 @@ class WebSocketException implements IOException {
 
   const WebSocketException([this.message = ""]);
 
+  @override
   String toString() => "WebSocketException: $message";
 }

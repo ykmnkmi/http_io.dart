@@ -18,12 +18,14 @@ class _HttpSession implements HttpSession {
   // Pointers in timeout queue.
   _HttpSession? _prev;
   _HttpSession? _next;
+  @override
   final String id;
 
   final Map _data = HashMap();
 
   _HttpSession(this._sessionManager, this.id) : _lastSeen = DateTime.now();
 
+  @override
   void destroy() {
     assert(!_destroyed);
     _destroyed = true;
@@ -40,58 +42,82 @@ class _HttpSession implements HttpSession {
 
   DateTime get lastSeen => _lastSeen;
 
+  @override
   bool get isNew => _isNew;
 
+  @override
   void set onTimeout(void Function()? callback) {
     _timeoutCallback = callback;
   }
 
   // Map implementation:
+  @override
   bool containsValue(value) => _data.containsValue(value);
+  @override
   bool containsKey(key) => _data.containsKey(key);
+  @override
   operator [](key) => _data[key];
+  @override
   void operator []=(key, value) {
     _data[key] = value;
   }
 
+  @override
   putIfAbsent(key, ifAbsent) => _data.putIfAbsent(key, ifAbsent);
+  @override
   addAll(Map other) => _data.addAll(other);
+  @override
   remove(key) => _data.remove(key);
+  @override
   void clear() {
     _data.clear();
   }
 
+  @override
   void forEach(void f(key, value)) {
     _data.forEach(f);
   }
 
+  @override
   Iterable<MapEntry> get entries => _data.entries;
 
+  @override
   void addEntries(Iterable<MapEntry> entries) {
     _data.addEntries(entries);
   }
 
+  @override
   Map<K, V> map<K, V>(MapEntry<K, V> transform(key, value)) =>
       _data.map(transform);
 
+  @override
   void removeWhere(bool test(key, value)) {
     _data.removeWhere(test);
   }
 
+  @override
   Map<K, V> cast<K, V>() => _data.cast<K, V>();
+  @override
   update(key, update(value), {Function()? ifAbsent}) =>
       _data.update(key, update, ifAbsent: ifAbsent);
 
+  @override
   void updateAll(update(key, value)) {
     _data.updateAll(update);
   }
 
+  @override
   Iterable get keys => _data.keys;
+  @override
   Iterable get values => _data.values;
+  @override
   int get length => _data.length;
+  @override
   bool get isEmpty => _data.isEmpty;
+  @override
   bool get isNotEmpty => _data.isNotEmpty;
 
+  @override
   String toString() => 'HttpSession id:$id $_data';
 }
 

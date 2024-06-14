@@ -48,6 +48,7 @@ class _CompressionMaxWindowBits {
   String headerValue;
   int maxWindowBits;
   _CompressionMaxWindowBits(this.headerValue, this.maxWindowBits);
+  @override
   String toString() => headerValue;
 }
 
@@ -97,6 +98,7 @@ class _WebSocketProtocolTransformer extends StreamTransformerBase<List<int>,
   final _WebSocketPerMessageDeflate? _deflate;
   _WebSocketProtocolTransformer([this._serverSide = false, this._deflate]);
 
+  @override
   Stream<dynamic /*List<int>|_WebSocketPing|_WebSocketPong*/ > bind(
       Stream<List<int>> stream) {
     return Stream.eventTransformed(stream, (EventSink eventSink) {
@@ -108,17 +110,20 @@ class _WebSocketProtocolTransformer extends StreamTransformerBase<List<int>,
     });
   }
 
+  @override
   void addError(Object error, [StackTrace? stackTrace]) {
     // TODO(40614): Remove once non-nullability is sound.
     ArgumentError.checkNotNull(error, "error");
     _eventSink!.addError(error, stackTrace);
   }
 
+  @override
   void close() {
     _eventSink!.close();
   }
 
   /// Process data received from the underlying communication channel.
+  @override
   void add(List<int> bytes) {
     var buffer = bytes is Uint8List ? bytes : Uint8List.fromList(bytes);
     int index = 0;
@@ -413,6 +418,7 @@ class _WebSocketTransformerImpl
 
   _WebSocketTransformerImpl(this._protocolSelector, this._compression);
 
+  @override
   Stream<WebSocket> bind(Stream<HttpRequest> stream) {
     stream.listen((request) {
       _upgrade(request, _protocolSelector, _compression)
@@ -670,6 +676,7 @@ class _WebSocketOutgoingTransformer
   _WebSocketOutgoingTransformer(this.webSocket)
       : _deflateHelper = webSocket._deflate;
 
+  @override
   Stream<List<int>> bind(Stream stream) {
     return Stream<List<int>>.eventTransformed(stream,
         (EventSink<List<int>> eventSink) {
@@ -681,6 +688,7 @@ class _WebSocketOutgoingTransformer
     });
   }
 
+  @override
   void add(message) {
     if (message is _WebSocketPong) {
       addFrame(_WebSocketOpcode.PONG, message.payload);
@@ -717,12 +725,14 @@ class _WebSocketOutgoingTransformer
     addFrame(opcode, data);
   }
 
+  @override
   void addError(Object error, [StackTrace? stackTrace]) {
     // TODO(40614): Remove once non-nullability is sound.
     ArgumentError.checkNotNull(error, "error");
     _eventSink!.addError(error, stackTrace);
   }
 
+  @override
   void close() {
     int? code = webSocket._outCloseCode;
     String? reason = webSocket._outCloseReason;
@@ -922,6 +932,7 @@ class _WebSocketConsumer implements StreamConsumer {
     return true;
   }
 
+  @override
   Future addStream(Stream stream) {
     if (_closed) {
       stream.listen(null).cancel();
@@ -939,6 +950,7 @@ class _WebSocketConsumer implements StreamConsumer {
     return completer.future;
   }
 
+  @override
   Future close() {
     _ensureController().close();
 
@@ -968,6 +980,7 @@ class _WebSocketImpl extends Stream with _ServiceObject implements WebSocket {
   static const int DEFAULT_WINDOW_BITS = 15;
   static const String PER_MESSAGE_DEFLATE = "permessage-deflate";
 
+  @override
   final String? protocol;
 
   final StreamController _controller;
@@ -1183,14 +1196,17 @@ class _WebSocketImpl extends Stream with _ServiceObject implements WebSocket {
     _webSockets[_serviceId] = this;
   }
 
+  @override
   StreamSubscription listen(void onData(message)?,
       {Function? onError, void Function()? onDone, bool? cancelOnError}) {
     return _controller.stream.listen(onData,
         onError: onError, onDone: onDone, cancelOnError: cancelOnError);
   }
 
+  @override
   Duration? get pingInterval => _pingInterval;
 
+  @override
   void set pingInterval(Duration? interval) {
     if (_writeClosed) return;
     _pingTimer?.cancel();
@@ -1212,29 +1228,39 @@ class _WebSocketImpl extends Stream with _ServiceObject implements WebSocket {
     });
   }
 
+  @override
   int get readyState => _readyState;
 
+  @override
   String get extensions => "";
+  @override
   int? get closeCode => _closeCode;
+  @override
   String? get closeReason => _closeReason;
 
+  @override
   void add(data) {
     _sink.add(data);
   }
 
+  @override
   void addUtf8Text(List<int> bytes) {
     // TODO(40614): Remove once non-nullability is sound.
     ArgumentError.checkNotNull(bytes, "bytes");
     _sink.add(_EncodedString(bytes));
   }
 
+  @override
   void addError(Object error, [StackTrace? stackTrace]) {
     _sink.addError(error, stackTrace);
   }
 
+  @override
   Future addStream(Stream stream) => _sink.addStream(stream);
+  @override
   Future get done => _sink.done;
 
+  @override
   Future close([int? code, String? reason]) {
     if (_isReservedStatusCode(code)) {
       throw WebSocketException("Reserved status code $code");
@@ -1282,7 +1308,9 @@ class _WebSocketImpl extends Stream with _ServiceObject implements WebSocket {
     _webSockets.remove(_serviceId);
   }
 
+  @override
   String get _serviceTypePath => 'io/websockets';
+  @override
   String get _serviceTypeName => 'WebSocket';
 
   static bool _isReservedStatusCode(int? code) {

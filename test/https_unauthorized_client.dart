@@ -14,6 +14,7 @@ import "package:http_io/http_io.dart";
 
 class ExpectException implements Exception {
   ExpectException(this.message);
+  @override
   String toString() => "ExpectException: $message";
   String message;
 }

@@ -193,6 +193,7 @@ class _MD5 extends _HashBase {
 
   // Compute one iteration of the MD5 algorithm with a chunk of
   // 16 32-bit pieces.
+  @override
   void _updateHash(Uint32List m) {
     assert(m.length == 16);
 
@@ -251,6 +252,7 @@ class _SHA1 extends _HashBase {
 
   // Compute one iteration of the SHA1 algorithm with a chunk of
   // 16 32-bit pieces.
+  @override
   void _updateHash(Uint32List m) {
     assert(m.length == 16);
 

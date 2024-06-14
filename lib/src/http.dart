@@ -640,6 +640,7 @@ abstract interface class HeaderValue {
   /// ```plaintext
   /// value; parameter1=value1; parameter2=value2
   /// ```
+  @override
   String toString();
 }
 
@@ -868,6 +869,7 @@ abstract interface class Cookie {
   /// Returns the formatted string representation of the cookie. The
   /// string representation can be used for setting the Cookie or
   /// 'set-cookie' headers
+  @override
   String toString();
 }
 
@@ -1814,9 +1816,11 @@ abstract interface class HttpClientRequest implements IOSink {
   ///
   /// If an error occurs before the response is available, this future will
   /// complete with an error.
+  @override
   Future<HttpClientResponse> get done;
 
   /// Close the request for input. Returns the value of [done].
+  @override
   Future<HttpClientResponse> close();
 
   /// Gets information about the client connection.
@@ -2048,6 +2052,7 @@ class HttpException implements IOException {
 
   const HttpException(this.message, {this.uri});
 
+  @override
   String toString() {
     var b = StringBuffer()
       ..write('HttpException: ')
@@ -2061,12 +2066,15 @@ class HttpException implements IOException {
 }
 
 class RedirectException implements HttpException {
+  @override
   final String message;
   final List<RedirectInfo> redirects;
 
   const RedirectException(this.message, this.redirects);
 
+  @override
   String toString() => "RedirectException: $message";
 
+  @override
   Uri? get uri => redirects.isEmpty ? null : redirects.last.location;
 }

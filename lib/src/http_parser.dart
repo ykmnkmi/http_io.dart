@@ -114,30 +114,37 @@ class _HttpDetachedStreamSubscription implements StreamSubscription<Uint8List> {
   _HttpDetachedStreamSubscription(
       this._subscription, this._injectData, this._userOnData);
 
+  @override
   bool get isPaused => _subscription.isPaused;
 
+  @override
   Future<T> asFuture<T>([T? futureValue]) =>
       _subscription.asFuture<T>(futureValue as T);
 
+  @override
   Future cancel() {
     _isCanceled = true;
     _injectData = null;
     return _subscription.cancel();
   }
 
+  @override
   void onData(void Function(Uint8List data)? handleData) {
     _userOnData = handleData;
     _subscription.onData(handleData);
   }
 
+  @override
   void onDone(void Function()? handleDone) {
     _subscription.onDone(handleDone);
   }
 
+  @override
   void onError(Function? handleError) {
     _subscription.onError(handleError);
   }
 
+  @override
   void pause([Future? resumeSignal]) {
     if (_injectData == null) {
       _subscription.pause(resumeSignal);
@@ -149,6 +156,7 @@ class _HttpDetachedStreamSubscription implements StreamSubscription<Uint8List> {
     }
   }
 
+  @override
   void resume() {
     if (_injectData == null) {
       _subscription.resume();
@@ -181,6 +189,7 @@ class _HttpDetachedIncoming extends Stream<Uint8List> {
 
   _HttpDetachedIncoming(this._subscription, this._bufferedData);
 
+  @override
   StreamSubscription<Uint8List> listen(void Function(Uint8List event)? onData,
       {Function? onError, void Function()? onDone, bool? cancelOnError}) {
     var subscription = this._subscription;
@@ -296,6 +305,7 @@ class _HttpParser extends Stream<_HttpIncoming> {
     _reset();
   }
 
+  @override
   StreamSubscription<_HttpIncoming> listen(
       void Function(_HttpIncoming event)? onData,
       {Function? onError,

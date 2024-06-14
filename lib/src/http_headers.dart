@@ -42,8 +42,10 @@ class _HttpHeaders implements HttpHeaders {
     }
   }
 
+  @override
   List<String>? operator [](String name) => _headers[_validateField(name)];
 
+  @override
   String? value(String name) {
     name = _validateField(name);
     List<String>? values = _headers[name];
@@ -55,6 +57,7 @@ class _HttpHeaders implements HttpHeaders {
     return values[0];
   }
 
+  @override
   void add(String name, value, {bool preserveHeaderCase = false}) {
     _checkMutable();
     String lowercaseName = _validateField(name);
@@ -77,6 +80,7 @@ class _HttpHeaders implements HttpHeaders {
     }
   }
 
+  @override
   void set(String name, Object value, {bool preserveHeaderCase = false}) {
     _checkMutable();
     String lowercaseName = _validateField(name);
@@ -94,6 +98,7 @@ class _HttpHeaders implements HttpHeaders {
     _addAll(lowercaseName, value);
   }
 
+  @override
   void remove(String name, Object value) {
     _checkMutable();
     name = _validateField(name);
@@ -111,6 +116,7 @@ class _HttpHeaders implements HttpHeaders {
     }
   }
 
+  @override
   void removeAll(String name) {
     _checkMutable();
     name = _validateField(name);
@@ -118,6 +124,7 @@ class _HttpHeaders implements HttpHeaders {
     _originalHeaderNames?.remove(name);
   }
 
+  @override
   void forEach(void Function(String name, List<String> values) action) {
     _headers.forEach((String name, List<String> values) {
       String originalName = _originalHeaderName(name);
@@ -125,13 +132,16 @@ class _HttpHeaders implements HttpHeaders {
     });
   }
 
+  @override
   void noFolding(String name) {
     name = _validateField(name);
     (_noFoldingHeaders ??= <String>[]).add(name);
   }
 
+  @override
   bool get persistentConnection => _persistentConnection;
 
+  @override
   void set persistentConnection(bool persistentConnection) {
     _checkMutable();
     if (persistentConnection == _persistentConnection) return;
@@ -157,8 +167,10 @@ class _HttpHeaders implements HttpHeaders {
     _persistentConnection = persistentConnection;
   }
 
+  @override
   int get contentLength => _contentLength;
 
+  @override
   void set contentLength(int contentLength) {
     _checkMutable();
     if (protocolVersion == "1.0" &&
@@ -181,8 +193,10 @@ class _HttpHeaders implements HttpHeaders {
     }
   }
 
+  @override
   bool get chunkedTransferEncoding => _chunkedTransferEncoding;
 
+  @override
   void set chunkedTransferEncoding(bool chunkedTransferEncoding) {
     _checkMutable();
     if (chunkedTransferEncoding && protocolVersion == "1.0") {
@@ -204,22 +218,27 @@ class _HttpHeaders implements HttpHeaders {
     _chunkedTransferEncoding = chunkedTransferEncoding;
   }
 
+  @override
   String? get host => _host;
 
+  @override
   void set host(String? host) {
     _checkMutable();
     _host = host;
     _updateHostHeader();
   }
 
+  @override
   int? get port => _port;
 
+  @override
   void set port(int? port) {
     _checkMutable();
     _port = port;
     _updateHostHeader();
   }
 
+  @override
   DateTime? get ifModifiedSince {
     List<String>? values = _headers[HttpHeaders.ifModifiedSinceHeader];
     if (values != null) {
@@ -233,6 +252,7 @@ class _HttpHeaders implements HttpHeaders {
     return null;
   }
 
+  @override
   void set ifModifiedSince(DateTime? ifModifiedSince) {
     _checkMutable();
     if (ifModifiedSince == null) {
@@ -244,6 +264,7 @@ class _HttpHeaders implements HttpHeaders {
     }
   }
 
+  @override
   DateTime? get date {
     List<String>? values = _headers[HttpHeaders.dateHeader];
     if (values != null) {
@@ -257,6 +278,7 @@ class _HttpHeaders implements HttpHeaders {
     return null;
   }
 
+  @override
   void set date(DateTime? date) {
     _checkMutable();
     if (date == null) {
@@ -268,6 +290,7 @@ class _HttpHeaders implements HttpHeaders {
     }
   }
 
+  @override
   DateTime? get expires {
     List<String>? values = _headers[HttpHeaders.expiresHeader];
     if (values != null) {
@@ -281,6 +304,7 @@ class _HttpHeaders implements HttpHeaders {
     return null;
   }
 
+  @override
   void set expires(DateTime? expires) {
     _checkMutable();
     if (expires == null) {
@@ -292,6 +316,7 @@ class _HttpHeaders implements HttpHeaders {
     }
   }
 
+  @override
   ContentType? get contentType {
     var values = _headers[HttpHeaders.contentTypeHeader];
     if (values != null) {
@@ -301,6 +326,7 @@ class _HttpHeaders implements HttpHeaders {
     }
   }
 
+  @override
   void set contentType(ContentType? contentType) {
     _checkMutable();
     if (contentType == null) {
@@ -310,6 +336,7 @@ class _HttpHeaders implements HttpHeaders {
     }
   }
 
+  @override
   void clear() {
     _checkMutable();
     _headers.clear();
@@ -555,6 +582,7 @@ class _HttpHeaders implements HttpHeaders {
     });
   }
 
+  @override
   String toString() {
     StringBuffer sb = StringBuffer();
     _headers.forEach((String name, List<String> values) {
@@ -704,11 +732,13 @@ class _HeaderValue implements HeaderValue {
     return result;
   }
 
+  @override
   String get value => _value;
 
   Map<String, String?> _ensureParameters() =>
       _parameters ??= <String, String?>{};
 
+  @override
   Map<String, String?> get parameters =>
       _unmodifiableParameters ??= UnmodifiableMapView(_ensureParameters());
 
@@ -726,6 +756,7 @@ class _HeaderValue implements HeaderValue {
     return true;
   }
 
+  @override
   String toString() {
     StringBuffer sb = StringBuffer();
     sb.write(_value);
@@ -931,24 +962,34 @@ class _ContentType extends _HeaderValue implements ContentType {
     return result;
   }
 
+  @override
   String get mimeType => '$primaryType/$subType';
 
+  @override
   String get primaryType => _primaryType;
 
+  @override
   String get subType => _subType;
 
+  @override
   String? get charset => parameters["charset"];
 }
 
 class _Cookie implements Cookie {
   String _name;
   String _value;
+  @override
   DateTime? expires;
+  @override
   int? maxAge;
+  @override
   String? domain;
   String? _path;
+  @override
   bool httpOnly = false;
+  @override
   bool secure = false;
+  @override
   SameSite? sameSite;
 
   _Cookie(String name, String value)
@@ -956,21 +997,27 @@ class _Cookie implements Cookie {
         _value = _validateValue(value),
         httpOnly = true;
 
+  @override
   String get name => _name;
+  @override
   String get value => _value;
 
+  @override
   String? get path => _path;
 
+  @override
   set path(String? newPath) {
     _validatePath(newPath);
     _path = newPath;
   }
 
+  @override
   set name(String newName) {
     _validateName(newName);
     _name = newName;
   }
 
+  @override
   set value(String newValue) {
     _validateValue(newValue);
     _value = newValue;
@@ -1069,6 +1116,7 @@ class _Cookie implements Cookie {
     parseAttributes();
   }
 
+  @override
   String toString() {
     StringBuffer sb = StringBuffer();
     sb

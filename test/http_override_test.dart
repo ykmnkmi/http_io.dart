@@ -9,100 +9,156 @@ import "package:test/test.dart";
 import "expect.dart";
 
 class MyHttpClient1 implements HttpClient {
+  @override
   String? userAgent = "MyHttpClient1";
 
   MyHttpClient1(SecurityContext? context);
 
+  @override
   Duration idleTimeout = Duration.zero;
+  @override
   Duration? connectionTimeout;
+  @override
   int? maxConnectionsPerHost;
+  @override
   bool autoUncompress = true;
   bool enableTimelineLogging = false;
 
+  @override
   Future<HttpClientRequest> open(
           String method, String host, int port, String path) =>
       throw "";
+  @override
   Future<HttpClientRequest> openUrl(String method, Uri url) => throw "";
+  @override
   Future<HttpClientRequest> get(String host, int port, String path) => throw "";
+  @override
   Future<HttpClientRequest> getUrl(Uri url) => throw "";
+  @override
   Future<HttpClientRequest> post(String host, int port, String path) =>
       throw "";
+  @override
   Future<HttpClientRequest> postUrl(Uri url) => throw "";
+  @override
   Future<HttpClientRequest> put(String host, int port, String path) => throw "";
+  @override
   Future<HttpClientRequest> putUrl(Uri url) => throw "";
+  @override
   Future<HttpClientRequest> delete(String host, int port, String path) =>
       throw "";
+  @override
   Future<HttpClientRequest> deleteUrl(Uri url) => throw "";
+  @override
   Future<HttpClientRequest> patch(String host, int port, String path) =>
       throw "";
+  @override
   Future<HttpClientRequest> patchUrl(Uri url) => throw "";
+  @override
   Future<HttpClientRequest> head(String host, int port, String path) =>
       throw "";
+  @override
   Future<HttpClientRequest> headUrl(Uri url) => throw "";
+  @override
   set authenticate(Future<bool> f(Uri url, String scheme, String realm)?) {}
+  @override
   void addCredentials(
       Uri url, String realm, HttpClientCredentials credentials) {}
+  @override
   set connectionFactory(
       Future<ConnectionTask<Socket>> Function(
               Uri url, String? proxyHost, int? proxyPort)?
           f) {}
+  @override
   set findProxy(String f(Uri url)?) {}
+  @override
   set authenticateProxy(
       Future<bool> f(String host, int port, String scheme, String realm)?) {}
+  @override
   void addProxyCredentials(
       String host, int port, String realm, HttpClientCredentials credentials) {}
+  @override
   set badCertificateCallback(
       bool callback(X509Certificate cert, String host, int port)?) {}
+  @override
   void set keyLog(Function(String line)? callback) {}
+  @override
   void close({bool force = false}) {}
 }
 
 class MyHttpClient2 implements HttpClient {
+  @override
   String? userAgent = "MyHttpClient2";
 
   MyHttpClient2(SecurityContext? context);
 
+  @override
   Duration idleTimeout = Duration.zero;
+  @override
   Duration? connectionTimeout;
+  @override
   int? maxConnectionsPerHost;
+  @override
   bool autoUncompress = true;
   bool enableTimelineLogging = false;
 
+  @override
   Future<HttpClientRequest> open(
           String method, String host, int port, String path) =>
       throw "";
+  @override
   Future<HttpClientRequest> openUrl(String method, Uri url) => throw "";
+  @override
   Future<HttpClientRequest> get(String host, int port, String path) => throw "";
+  @override
   Future<HttpClientRequest> getUrl(Uri url) => throw "";
+  @override
   Future<HttpClientRequest> post(String host, int port, String path) =>
       throw "";
+  @override
   Future<HttpClientRequest> postUrl(Uri url) => throw "";
+  @override
   Future<HttpClientRequest> put(String host, int port, String path) => throw "";
+  @override
   Future<HttpClientRequest> putUrl(Uri url) => throw "";
+  @override
   Future<HttpClientRequest> delete(String host, int port, String path) =>
       throw "";
+  @override
   Future<HttpClientRequest> deleteUrl(Uri url) => throw "";
+  @override
   Future<HttpClientRequest> patch(String host, int port, String path) =>
       throw "";
+  @override
   Future<HttpClientRequest> patchUrl(Uri url) => throw "";
+  @override
   Future<HttpClientRequest> head(String host, int port, String path) =>
       throw "";
+  @override
   Future<HttpClientRequest> headUrl(Uri url) => throw "";
+  @override
   set authenticate(Future<bool> f(Uri url, String scheme, String realm)?) {}
+  @override
   void addCredentials(
       Uri url, String realm, HttpClientCredentials credentials) {}
+  @override
   set connectionFactory(
       Future<ConnectionTask<Socket>> Function(
               Uri url, String? proxyHost, int? proxyPort)?
           f) {}
+  @override
   set findProxy(String f(Uri url)?) {}
+  @override
   set authenticateProxy(
       Future<bool> f(String host, int port, String scheme, String realm)?) {}
+  @override
   void addProxyCredentials(
       String host, int port, String realm, HttpClientCredentials credentials) {}
+  @override
   set badCertificateCallback(
       bool callback(X509Certificate cert, String host, int port)?) {}
+  @override
   void set keyLog(Function(String line)? callback) {}
+  @override
   void close({bool force = false}) {}
 }
 
