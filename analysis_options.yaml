@@ -6,9 +6,6 @@ analyzer:
     strict-inference: true
     # strict-raw-types: true
   errors:
-    camel_case_extensions: ignore
-    camel_case_types: ignore
-    constant_identifier_names: ignore
     curly_braces_in_flow_control_structures: ignore
     deprecated_member_use: ignore
     inference_failure_on_collection_literal: ignore

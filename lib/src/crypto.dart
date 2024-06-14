@@ -23,10 +23,10 @@ class _CryptoUtils {
 }
 
 // Constants.
-const _MASK_8 = 0xff;
-const _MASK_32 = 0xffffffff;
-const _BITS_PER_BYTE = 8;
-const _BYTES_PER_WORD = 4;
+const _mask8 = 0xff;
+const _mask32 = 0xffffffff;
+const _bitsPerByte = 8;
+const _bytesPerWord = 4;
 
 // Base class encapsulating common behavior for cryptographic hash
 // functions.
@@ -69,21 +69,21 @@ abstract class _HashBase {
 
   // Returns the block size of the hash in bytes.
   int get blockSize {
-    return _chunkSizeInWords * _BYTES_PER_WORD;
+    return _chunkSizeInWords * _bytesPerWord;
   }
 
   // One round of the hash computation.
   _updateHash(Uint32List m);
 
   // Helper methods.
-  int _add32(int x, int y) => (x + y) & _MASK_32;
+  int _add32(int x, int y) => (x + y) & _mask32;
   int _roundUp(int val, int n) => (val + n - 1) & -n;
 
   // Rotate left limiting to unsigned 32-bit values.
   int _rotl32(int val, int shift) {
     var mod_shift = shift & 31;
-    return ((val << mod_shift) & _MASK_32) |
-        ((val & _MASK_32) >> (32 - mod_shift));
+    return ((val << mod_shift) & _mask32) |
+        ((val & _mask32) >> (32 - mod_shift));
   }
 
   // Compute the final result as a list of bytes from the hash words.
@@ -97,7 +97,7 @@ abstract class _HashBase {
 
   // Converts a list of bytes to a chunk of 32-bit words.
   void _bytesToChunk(List<int> data, int dataIndex) {
-    assert((data.length - dataIndex) >= (_chunkSizeInWords * _BYTES_PER_WORD));
+    assert((data.length - dataIndex) >= (_chunkSizeInWords * _bytesPerWord));
 
     for (var wordIndex = 0; wordIndex < _chunkSizeInWords; wordIndex++) {
       var w3 = _bigEndianWords ? data[dataIndex] : data[dataIndex + 3];
@@ -106,20 +106,20 @@ abstract class _HashBase {
       var w0 = _bigEndianWords ? data[dataIndex + 3] : data[dataIndex];
       dataIndex += 4;
       var word = (w3 & 0xff) << 24;
-      word |= (w2 & _MASK_8) << 16;
-      word |= (w1 & _MASK_8) << 8;
-      word |= (w0 & _MASK_8);
+      word |= (w2 & _mask8) << 16;
+      word |= (w1 & _mask8) << 8;
+      word |= (w0 & _mask8);
       _currentChunk[wordIndex] = word;
     }
   }
 
   // Convert a 32-bit word to four bytes.
   List<int> _wordToBytes(int word) {
-    List<int> bytes = List.filled(_BYTES_PER_WORD, 0);
-    bytes[0] = (word >> (_bigEndianWords ? 24 : 0)) & _MASK_8;
-    bytes[1] = (word >> (_bigEndianWords ? 16 : 8)) & _MASK_8;
-    bytes[2] = (word >> (_bigEndianWords ? 8 : 16)) & _MASK_8;
-    bytes[3] = (word >> (_bigEndianWords ? 0 : 24)) & _MASK_8;
+    List<int> bytes = List.filled(_bytesPerWord, 0);
+    bytes[0] = (word >> (_bigEndianWords ? 24 : 0)) & _mask8;
+    bytes[1] = (word >> (_bigEndianWords ? 16 : 8)) & _mask8;
+    bytes[2] = (word >> (_bigEndianWords ? 8 : 16)) & _mask8;
+    bytes[3] = (word >> (_bigEndianWords ? 0 : 24)) & _mask8;
     return bytes;
   }
 
@@ -127,7 +127,7 @@ abstract class _HashBase {
   // chunk.
   void _iterate() {
     var len = _pendingData.length;
-    var chunkSizeInBytes = _chunkSizeInWords * _BYTES_PER_WORD;
+    var chunkSizeInBytes = _chunkSizeInWords * _bytesPerWord;
     if (len >= chunkSizeInBytes) {
       var index = 0;
       for (; (len - index) >= chunkSizeInBytes; index += chunkSizeInBytes) {
@@ -143,19 +143,19 @@ abstract class _HashBase {
   void _finalizeData() {
     _pendingData.add(0x80);
     var contentsLength = _lengthInBytes + 9;
-    var chunkSizeInBytes = _chunkSizeInWords * _BYTES_PER_WORD;
+    var chunkSizeInBytes = _chunkSizeInWords * _bytesPerWord;
     var finalizedLength = _roundUp(contentsLength, chunkSizeInBytes);
     var zeroPadding = finalizedLength - contentsLength;
     for (var i = 0; i < zeroPadding; i++) {
       _pendingData.add(0);
     }
-    var lengthInBits = _lengthInBytes * _BITS_PER_BYTE;
+    var lengthInBits = _lengthInBytes * _bitsPerByte;
     assert(lengthInBits < pow(2, 32));
     if (_bigEndianWords) {
       _pendingData.addAll(_wordToBytes(0));
-      _pendingData.addAll(_wordToBytes(lengthInBits & _MASK_32));
+      _pendingData.addAll(_wordToBytes(lengthInBits & _mask32));
     } else {
-      _pendingData.addAll(_wordToBytes(lengthInBits & _MASK_32));
+      _pendingData.addAll(_wordToBytes(lengthInBits & _mask32));
       _pendingData.addAll(_wordToBytes(0));
     }
   }
@@ -207,16 +207,16 @@ class _MD5 extends _HashBase {
 
     for (var i = 0; i < 64; i++) {
       if (i < 16) {
-        t0 = (b & c) | ((~b & _MASK_32) & d);
+        t0 = (b & c) | ((~b & _mask32) & d);
         t1 = i;
       } else if (i < 32) {
-        t0 = (d & b) | ((~d & _MASK_32) & c);
+        t0 = (d & b) | ((~d & _mask32) & c);
         t1 = ((5 * i) + 1) % 16;
       } else if (i < 48) {
         t0 = b ^ c ^ d;
         t1 = ((3 * i) + 5) % 16;
       } else {
-        t0 = c ^ (b | (~d & _MASK_32));
+        t0 = c ^ (b | (~d & _mask32));
         t1 = (7 * i) % 16;
       }
 
@@ -284,7 +284,7 @@ class _SHA1 extends _HashBase {
       d = c;
       c = _rotl32(b, 30);
       b = a;
-      a = t & _MASK_32;
+      a = t & _mask32;
     }
 
     _h[0] = _add32(a, _h[0]);

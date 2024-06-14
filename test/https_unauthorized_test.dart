@@ -11,8 +11,8 @@ import "package:http_io/http_io.dart";
 
 import "expect.dart";
 
-const HOST_NAME = "localhost";
-const CERTIFICATE = "localhost_cert";
+const hostName = "localhost";
+const certificate = "localhost_cert";
 
 String localFile(path) => Platform.script.resolve(path).toFilePath();
 
@@ -25,7 +25,7 @@ SecurityContext clientContext = SecurityContext()
   ..setTrustedCertificates(localFile('certificates/trusted_certs.pem'));
 
 Future<HttpServer> runServer() {
-  return HttpServer.bindSecure(HOST_NAME, 0, untrustedServerContext, backlog: 5)
+  return HttpServer.bindSecure(hostName, 0, untrustedServerContext, backlog: 5)
       .then((server) {
     server.listen((HttpRequest request) {
       request.listen((_) {}, onDone: () {

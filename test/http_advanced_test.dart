@@ -53,33 +53,33 @@ class IsolatedHttpServer {
 }
 
 class IsolatedHttpServerCommand {
-  static const START = 0;
-  static const STOP = 1;
-  static const CHUNKED_ENCODING = 2;
+  static const _start = 0;
+  static const _stop = 1;
+  static const _chunkedEncoding = 2;
 
-  IsolatedHttpServerCommand.start() : _command = START;
-  IsolatedHttpServerCommand.stop() : _command = STOP;
-  IsolatedHttpServerCommand.chunkedEncoding() : _command = CHUNKED_ENCODING;
+  IsolatedHttpServerCommand.start() : _command = _start;
+  IsolatedHttpServerCommand.stop() : _command = _stop;
+  IsolatedHttpServerCommand.chunkedEncoding() : _command = _chunkedEncoding;
 
-  bool get isStart => _command == START;
-  bool get isStop => _command == STOP;
-  bool get isChunkedEncoding => _command == CHUNKED_ENCODING;
+  bool get isStart => _command == _start;
+  bool get isStop => _command == _stop;
+  bool get isChunkedEncoding => _command == _chunkedEncoding;
 
   int _command;
 }
 
 class IsolatedHttpServerStatus {
-  static const STARTED = 0;
-  static const STOPPED = 1;
-  static const ERROR = 2;
+  static const _started = 0;
+  static const _stopped = 1;
+  static const _error = 2;
 
-  IsolatedHttpServerStatus.started(this._port) : _state = STARTED;
-  IsolatedHttpServerStatus.stopped() : _state = STOPPED;
-  IsolatedHttpServerStatus.error() : _state = ERROR;
+  IsolatedHttpServerStatus.started(this._port) : _state = _started;
+  IsolatedHttpServerStatus.stopped() : _state = _stopped;
+  IsolatedHttpServerStatus.error() : _state = _error;
 
-  bool get isStarted => _state == STARTED;
-  bool get isStopped => _state == STOPPED;
-  bool get isError => _state == ERROR;
+  bool get isStarted => _state == _started;
+  bool get isStopped => _state == _stopped;
+  bool get isError => _state == _error;
 
   int get port => _port;
 

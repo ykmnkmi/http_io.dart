@@ -34,30 +34,30 @@ part of 'http.dart';
 ///    `instance._privateName`
 /// ```
 
-typedef TestingClass$_Cookie = _Cookie;
-typedef TestingClass$_HttpHeaders = _HttpHeaders;
-typedef TestingClass$_HttpParser = _HttpParser;
-typedef TestingClass$_SHA1 = _SHA1;
-typedef TestingClass$_WebSocketProtocolTransformer
+typedef TestingClass$Cookie = _Cookie;
+typedef TestingClass$HttpHeaders = _HttpHeaders;
+typedef TestingClass$HttpParser = _HttpParser;
+typedef TestingClass$SHA1 = _SHA1;
+typedef TestingClass$WebSocketProtocolTransformer
     = _WebSocketProtocolTransformer;
-typedef TestingClass$_WebSocketImpl = _WebSocketImpl;
+typedef TestingClass$WebSocketImpl = _WebSocketImpl;
 
 extension Testing$HttpDate on HttpDate {
   static DateTime test$_parseCookieDate(String date) =>
       HttpDate._parseCookieDate(date);
 }
 
-extension Testing$_HttpHeaders on _HttpHeaders {
+extension Testing$HttpHeaders on _HttpHeaders {
   void test$_build(BytesBuilder builder) => _build(builder);
   List<Cookie> test$_parseCookies() => _parseCookies();
 }
 
-extension Testing$_WebSocketProtocolTransformer
+extension Testing$WebSocketProtocolTransformer
     on _WebSocketProtocolTransformer {
   int get test$_state => _state;
 }
 
-extension Testing$_WebSocketImpl on _WebSocketImpl {
+extension Testing$WebSocketImpl on _WebSocketImpl {
   static Future<WebSocket> connect(String url, Iterable<String>? protocols,
           Map<String, dynamic>? headers,
           {CompressionOptions compression =

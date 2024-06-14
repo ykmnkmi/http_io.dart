@@ -11,11 +11,11 @@ import "package:http_io/http_io.dart";
 
 import "expect.dart";
 
-const int NUM_SERVERS = 10;
+const int numServers = 10;
 
 void main(List<String> args) {
   if (args.isEmpty) {
-    for (int i = 0; i < NUM_SERVERS; ++i) {
+    for (int i = 0; i < numServers; ++i) {
       makeServer().then((server) {
         runClientProcess(server.port).then((_) => server.close());
       });

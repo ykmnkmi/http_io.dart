@@ -52,33 +52,33 @@ class TestServerMain {
 }
 
 class TestServerCommand {
-  static const START = 0;
-  static const STOP = 1;
-  static const CHUNKED_ENCODING = 2;
+  static const _start = 0;
+  static const _stop = 1;
+  static const _chunkedEncoding = 2;
 
-  TestServerCommand.start() : _command = START;
-  TestServerCommand.stop() : _command = STOP;
-  TestServerCommand.chunkedEncoding() : _command = CHUNKED_ENCODING;
+  TestServerCommand.start() : _command = _start;
+  TestServerCommand.stop() : _command = _stop;
+  TestServerCommand.chunkedEncoding() : _command = _chunkedEncoding;
 
-  bool get isStart => _command == START;
-  bool get isStop => _command == STOP;
-  bool get isChunkedEncoding => _command == CHUNKED_ENCODING;
+  bool get isStart => _command == _start;
+  bool get isStop => _command == _stop;
+  bool get isChunkedEncoding => _command == _chunkedEncoding;
 
   int _command;
 }
 
 class TestServerStatus {
-  static const STARTED = 0;
-  static const STOPPED = 1;
-  static const ERROR = 2;
+  static const _started = 0;
+  static const _stopped = 1;
+  static const _error = 2;
 
-  TestServerStatus.started(this._port) : _state = STARTED;
-  TestServerStatus.stopped() : _state = STOPPED;
-  TestServerStatus.error() : _state = ERROR;
+  TestServerStatus.started(this._port) : _state = _started;
+  TestServerStatus.stopped() : _state = _stopped;
+  TestServerStatus.error() : _state = _error;
 
-  bool get isStarted => _state == STARTED;
-  bool get isStopped => _state == STOPPED;
-  bool get isError => _state == ERROR;
+  bool get isStarted => _state == _started;
+  bool get isStopped => _state == _stopped;
+  bool get isError => _state == _error;
 
   int get port => _port;
 

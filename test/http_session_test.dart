@@ -8,12 +8,12 @@ import "package:http_io/http_io.dart";
 
 import "expect.dart";
 
-const SESSION_ID = "DARTSESSID";
+const sessionId = "DARTSESSID";
 
 String getSessionId(List<Cookie> cookies) {
   var id = cookies.fold<String?>(null, (last, cookie) {
     if (last != null) return last;
-    if (cookie.name.toUpperCase() == SESSION_ID) {
+    if (cookie.name.toUpperCase() == sessionId) {
       Expect.isTrue(cookie.httpOnly);
       return cookie.value;
     }
@@ -27,7 +27,7 @@ Future<String> connectGetSession(HttpClient client, int port,
     [String? session]) {
   return client.get("127.0.0.1", port, "/").then((request) {
     if (session != null) {
-      request.cookies.add(Cookie(SESSION_ID, session));
+      request.cookies.add(Cookie(sessionId, session));
     }
     return request.close();
   }).then((response) {
@@ -133,7 +133,7 @@ void testSessionsData() {
         var id = getSessionId(response.cookies);
         Expect.isNotNull(id);
         client.get("127.0.0.1", server.port, "/").then((request) {
-          request.cookies.add(Cookie(SESSION_ID, id));
+          request.cookies.add(Cookie(sessionId, id));
           return request.close();
         }).then((response) {
           response.listen((_) {}, onDone: () {
@@ -175,7 +175,7 @@ void testSessionsDestroy() {
         var id = getSessionId(response.cookies);
         Expect.isNotNull(id);
         client.get("127.0.0.1", server.port, "/").then((request) {
-          request.cookies.add(Cookie(SESSION_ID, id));
+          request.cookies.add(Cookie(sessionId, id));
           return request.close();
         }).then((response) {
           response.listen((_) {}, onDone: () {

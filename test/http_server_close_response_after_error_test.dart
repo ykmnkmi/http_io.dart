@@ -6,7 +6,7 @@ import 'dart:io' show Platform, Process;
 
 import 'package:http_io/http_io.dart';
 
-const CLIENT_SCRIPT = "http_server_close_response_after_error_client.dart";
+const clientScript = "http_server_close_response_after_error_client.dart";
 
 void main() {
   HttpServer.bind("127.0.0.1", 0).then((server) {
@@ -20,7 +20,7 @@ void main() {
             []
               ..addAll(Platform.executableArguments)
               ..addAll([
-                Platform.script.resolve(CLIENT_SCRIPT).toString(),
+                Platform.script.resolve(clientScript).toString(),
                 server.port.toString()
               ]))
         .then((result) {

@@ -9,7 +9,7 @@ import "package:http_io/http_io.dart";
 import "async_helper.dart";
 import "expect.dart";
 
-const HOST_NAME = "localhost";
+const hostName = "localhost";
 String localFile(path) => Platform.script.resolve(path).toFilePath();
 
 SecurityContext serverContext = SecurityContext()
@@ -31,7 +31,7 @@ SecurityContext clientContext = SecurityContext()
 
 void main() {
   asyncStart();
-  HttpServer.bindSecure(HOST_NAME, 0, serverContext,
+  HttpServer.bindSecure(hostName, 0, serverContext,
           backlog: 5, requestClientCertificate: true)
       .then((server) {
     server.listen((HttpRequest request) {
@@ -43,7 +43,7 @@ void main() {
 
     HttpClient client = HttpClient(context: clientContext);
     client
-        .getUrl(Uri.parse("https://$HOST_NAME:${server.port}/"))
+        .getUrl(Uri.parse("https://$hostName:${server.port}/"))
         .then((request) => request.close())
         .then((response) {
       Expect.equals('/CN=localhost', response.certificate!.subject);

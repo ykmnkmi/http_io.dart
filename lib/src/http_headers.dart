@@ -560,25 +560,25 @@ class _HttpHeaders implements HttpHeaders {
       bool fold = _foldHeader(name);
       var nameData = originalName.codeUnits;
       builder.add(nameData);
-      builder.addByte(_CharCode.COLON);
-      builder.addByte(_CharCode.SP);
+      builder.addByte(_CharCode.colon);
+      builder.addByte(_CharCode.sp);
       for (int i = 0; i < values.length; i++) {
         if (i > 0) {
           if (fold) {
-            builder.addByte(_CharCode.COMMA);
-            builder.addByte(_CharCode.SP);
+            builder.addByte(_CharCode.comma);
+            builder.addByte(_CharCode.sp);
           } else {
-            builder.addByte(_CharCode.CR);
-            builder.addByte(_CharCode.LF);
+            builder.addByte(_CharCode.cr);
+            builder.addByte(_CharCode.lf);
             builder.add(nameData);
-            builder.addByte(_CharCode.COLON);
-            builder.addByte(_CharCode.SP);
+            builder.addByte(_CharCode.colon);
+            builder.addByte(_CharCode.sp);
           }
         }
         builder.add(values[i].codeUnits);
       }
-      builder.addByte(_CharCode.CR);
-      builder.addByte(_CharCode.LF);
+      builder.addByte(_CharCode.cr);
+      builder.addByte(_CharCode.lf);
     });
   }
 

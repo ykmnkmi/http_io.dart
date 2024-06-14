@@ -308,7 +308,7 @@ mixin _ServiceObject {
 
 class _CopyingBytesBuilder implements BytesBuilder {
   // Start with 1024 bytes.
-  static const int _INIT_SIZE = 1024;
+  static const int _initSize = 1024;
 
   static final _emptyList = Uint8List(0);
 
@@ -355,8 +355,8 @@ class _CopyingBytesBuilder implements BytesBuilder {
     // We will create a list in the range of 2-4 times larger than
     // required.
     int newSize = required * 2;
-    if (newSize < _INIT_SIZE) {
-      newSize = _INIT_SIZE;
+    if (newSize < _initSize) {
+      newSize = _initSize;
     } else {
       newSize = _pow2roundup(newSize);
     }
@@ -407,7 +407,7 @@ class _CopyingBytesBuilder implements BytesBuilder {
   }
 }
 
-const int _OUTGOING_BUFFER_SIZE = 8 * 1024;
+const int _outgoingBufferSize = 8 * 1024;
 
 typedef _BytesConsumer = void Function(List<int> bytes);
 
@@ -512,7 +512,7 @@ class _HttpRequest extends _HttpInboundMessage implements HttpRequest {
     if (_httpServer._sessionManagerInstance != null) {
       // Map to session if exists.
       var sessionIds = cookies
-          .where((cookie) => cookie.name.toUpperCase() == _DART_SESSION_ID)
+          .where((cookie) => cookie.name.toUpperCase() == _dartSessionId)
           .map<String>((cookie) => cookie.value);
       for (var sessionId in sessionIds) {
         var session = _httpServer._sessionManager.getSession(sessionId);
@@ -846,13 +846,13 @@ class _HttpClientResponse extends _HttpInboundMessageListInt
       // For basic authentication don't retry already used credentials
       // as they must have already been added to the request causing
       // this authenticate response.
-      if (cr.scheme == _AuthenticationScheme.BASIC && !cr.used) {
+      if (cr.scheme == _AuthenticationScheme.basic && !cr.used) {
         // Credentials were found, prepare for retrying the request.
         return retry();
       }
 
       // Digest authentication only supports the MD5 algorithm.
-      if (cr.scheme == _AuthenticationScheme.DIGEST) {
+      if (cr.scheme == _AuthenticationScheme.digest) {
         var algorithm = header.parameters["algorithm"];
         if (algorithm == null || algorithm.toLowerCase() == "md5") {
           var nonce = cr.nonce;
@@ -1304,20 +1304,20 @@ class _HttpResponse extends _HttpOutboundMessage<HttpResponse>
 
   @override
   void _writeHeader() {
-    BytesBuilder buffer = _CopyingBytesBuilder(_OUTGOING_BUFFER_SIZE);
+    BytesBuilder buffer = _CopyingBytesBuilder(_outgoingBufferSize);
 
     // Write status line.
     if (headers.protocolVersion == "1.1") {
-      buffer.add(_Const.HTTP11);
+      buffer.add(_Const.http11);
     } else {
-      buffer.add(_Const.HTTP10);
+      buffer.add(_Const.http10);
     }
-    buffer.addByte(_CharCode.SP);
+    buffer.addByte(_CharCode.sp);
     buffer.add(statusCode.toString().codeUnits);
-    buffer.addByte(_CharCode.SP);
+    buffer.addByte(_CharCode.sp);
     buffer.add(reasonPhrase.codeUnits);
-    buffer.addByte(_CharCode.CR);
-    buffer.addByte(_CharCode.LF);
+    buffer.addByte(_CharCode.cr);
+    buffer.addByte(_CharCode.lf);
 
     var session = _httpRequest!._session;
     if (session != null && !session._destroyed) {
@@ -1326,7 +1326,7 @@ class _HttpResponse extends _HttpOutboundMessage<HttpResponse>
       // Make sure we only send the current session id.
       bool found = false;
       for (int i = 0; i < cookies.length; i++) {
-        if (cookies[i].name.toUpperCase() == _DART_SESSION_ID) {
+        if (cookies[i].name.toUpperCase() == _dartSessionId) {
           cookies[i]
             ..value = session.id
             ..httpOnly = true
@@ -1335,7 +1335,7 @@ class _HttpResponse extends _HttpOutboundMessage<HttpResponse>
         }
       }
       if (!found) {
-        var cookie = Cookie(_DART_SESSION_ID, session.id);
+        var cookie = Cookie(_dartSessionId, session.id);
         cookies.add(cookie
           ..httpOnly = true
           ..path = "/");
@@ -1350,8 +1350,8 @@ class _HttpResponse extends _HttpOutboundMessage<HttpResponse>
 
     // Write headers.
     headers._build(buffer);
-    buffer.addByte(_CharCode.CR);
-    buffer.addByte(_CharCode.LF);
+    buffer.addByte(_CharCode.cr);
+    buffer.addByte(_CharCode.lf);
     Uint8List headerBytes = buffer.takeBytes();
     _outgoing.setHeader(headerBytes, headerBytes.length);
   }
@@ -1631,18 +1631,18 @@ class _HttpClientRequest extends _HttpOutboundMessage<HttpClientResponse>
       _outgoing.setHeader(Uint8List(0), 0);
       return;
     }
-    BytesBuilder buffer = _CopyingBytesBuilder(_OUTGOING_BUFFER_SIZE);
+    BytesBuilder buffer = _CopyingBytesBuilder(_outgoingBufferSize);
 
     // Write the request method.
     buffer.add(method.codeUnits);
-    buffer.addByte(_CharCode.SP);
+    buffer.addByte(_CharCode.sp);
     // Write the request URI.
     buffer.add(_requestUri().codeUnits);
-    buffer.addByte(_CharCode.SP);
+    buffer.addByte(_CharCode.sp);
     // Write HTTP/1.1.
-    buffer.add(_Const.HTTP11);
-    buffer.addByte(_CharCode.CR);
-    buffer.addByte(_CharCode.LF);
+    buffer.add(_Const.http11);
+    buffer.addByte(_CharCode.cr);
+    buffer.addByte(_CharCode.lf);
 
     // Add the cookies to the headers.
     if (cookies.isNotEmpty) {
@@ -1665,8 +1665,8 @@ class _HttpClientRequest extends _HttpOutboundMessage<HttpClientResponse>
             method == "DELETE" ||
             method == "GET" ||
             method == "HEAD");
-    buffer.addByte(_CharCode.CR);
-    buffer.addByte(_CharCode.LF);
+    buffer.addByte(_CharCode.cr);
+    buffer.addByte(_CharCode.lf);
     Uint8List headerBytes = buffer.takeBytes();
     _outgoing.setHeader(headerBytes, headerBytes.length);
   }
@@ -1717,21 +1717,21 @@ class _HttpGZipSink extends ByteConversionSink {
 // one before gzip (_gzipBuffer) and one after (_buffer).
 class _HttpOutgoing implements StreamConsumer<List<int>> {
   static const List<int> _footerAndChunk0Length = [
-    _CharCode.CR,
-    _CharCode.LF,
+    _CharCode.cr,
+    _CharCode.lf,
     0x30,
-    _CharCode.CR,
-    _CharCode.LF,
-    _CharCode.CR,
-    _CharCode.LF
+    _CharCode.cr,
+    _CharCode.lf,
+    _CharCode.cr,
+    _CharCode.lf
   ];
 
   static const List<int> _chunk0Length = [
     0x30,
-    _CharCode.CR,
-    _CharCode.LF,
-    _CharCode.CR,
-    _CharCode.LF
+    _CharCode.cr,
+    _CharCode.lf,
+    _CharCode.cr,
+    _CharCode.lf
   ];
 
   final Completer<Socket> _doneCompleter = Completer<Socket>();
@@ -1992,7 +1992,7 @@ class _HttpOutgoing implements StreamConsumer<List<int>> {
   set gzip(bool value) {
     _gzip = value;
     if (value) {
-      _gzipBuffer = Uint8List(_OUTGOING_BUFFER_SIZE);
+      _gzipBuffer = Uint8List(_outgoingBufferSize);
       assert(_gzipSink == null);
       _gzipSink =
           ZLibEncoder(gzip: true).startChunkedConversion(_HttpGZipSink((data) {
@@ -2019,10 +2019,10 @@ class _HttpOutgoing implements StreamConsumer<List<int>> {
     if (chunk.length > gzipBuffer.length - _gzipBufferLength) {
       add(Uint8List.view(
           gzipBuffer.buffer, gzipBuffer.offsetInBytes, _gzipBufferLength));
-      _gzipBuffer = Uint8List(_OUTGOING_BUFFER_SIZE);
+      _gzipBuffer = Uint8List(_outgoingBufferSize);
       _gzipBufferLength = 0;
     }
-    if (chunk.length > _OUTGOING_BUFFER_SIZE) {
+    if (chunk.length > _outgoingBufferSize) {
       add(chunk);
     } else {
       var currentLength = _gzipBufferLength;
@@ -2047,10 +2047,10 @@ class _HttpOutgoing implements StreamConsumer<List<int>> {
     }
     if (chunk.length > _buffer!.length - _length) {
       add(Uint8List.view(_buffer!.buffer, _buffer!.offsetInBytes, _length));
-      _buffer = Uint8List(_OUTGOING_BUFFER_SIZE);
+      _buffer = Uint8List(_outgoingBufferSize);
       _length = 0;
     }
-    if (chunk.length > _OUTGOING_BUFFER_SIZE) {
+    if (chunk.length > _outgoingBufferSize) {
       add(chunk);
     } else {
       _buffer!.setRange(_length, _length + chunk.length, chunk);
@@ -2090,16 +2090,16 @@ class _HttpOutgoing implements StreamConsumer<List<int>> {
     }
     var footerAndHeader = Uint8List(size + 2);
     if (_pendingChunkedFooter == 2) {
-      footerAndHeader[0] = _CharCode.CR;
-      footerAndHeader[1] = _CharCode.LF;
+      footerAndHeader[0] = _CharCode.cr;
+      footerAndHeader[1] = _CharCode.lf;
     }
     int index = size;
     while (index > _pendingChunkedFooter) {
       footerAndHeader[--index] = hexDigits[length & 15];
       length = length >> 4;
     }
-    footerAndHeader[size + 0] = _CharCode.CR;
-    footerAndHeader[size + 1] = _CharCode.LF;
+    footerAndHeader[size + 0] = _CharCode.cr;
+    footerAndHeader[size + 1] = _CharCode.lf;
     return footerAndHeader;
   }
 }
@@ -2285,7 +2285,7 @@ class _HttpClientConnection {
         // requests the client to start using a new nonce for proxy
         // authentication.
         if (proxyCreds != null &&
-            proxyCreds.scheme == _AuthenticationScheme.DIGEST) {
+            proxyCreds.scheme == _AuthenticationScheme.digest) {
           var authInfo = incoming.headers["proxy-authentication-info"];
           if (authInfo != null && authInfo.length == 1) {
             var header =
@@ -2296,7 +2296,7 @@ class _HttpClientConnection {
         }
         // For digest authentication check if the server requests the
         // client to start using a new nonce.
-        if (creds != null && creds.scheme == _AuthenticationScheme.DIGEST) {
+        if (creds != null && creds.scheme == _AuthenticationScheme.digest) {
           var authInfo = incoming.headers["authentication-info"];
           if (authInfo != null && authInfo.length == 1) {
             var header =
@@ -3142,10 +3142,10 @@ class _HttpClient implements HttpClient {
 
 final class _HttpConnection extends LinkedListEntry<_HttpConnection>
     with _ServiceObject {
-  static const _ACTIVE = 0;
-  static const _IDLE = 1;
-  static const _CLOSING = 2;
-  static const _DETACHED = 3;
+  static const _active = 0;
+  static const _idle = 1;
+  static const _closing = 2;
+  static const _detached = 3;
 
   // Use HashMap, as we don't need to keep order.
   static final Map<int, _HttpConnection> _connections =
@@ -3154,7 +3154,7 @@ final class _HttpConnection extends LinkedListEntry<_HttpConnection>
   final Socket _socket;
   final _HttpServer _httpServer;
   final _HttpParser _httpParser;
-  int _state = _IDLE;
+  int _state = _idle;
   StreamSubscription? _subscription;
   bool _idleMark = false;
   Future? _streamFuture;
@@ -3172,7 +3172,7 @@ final class _HttpConnection extends LinkedListEntry<_HttpConnection>
       // Only handle one incoming request at the time. Keep the
       // stream paused until the request has been send.
       _subscription!.pause();
-      _state = _ACTIVE;
+      _state = _active;
       var outgoing = _HttpOutgoing(_socket);
       var response = _HttpResponse(
           incoming.uri!,
@@ -3187,13 +3187,13 @@ final class _HttpConnection extends LinkedListEntry<_HttpConnection>
       var request = _HttpRequest(response, incoming, _httpServer, this);
       _streamFuture = outgoing.done.then((_) {
         response.deadline = null;
-        if (_state == _DETACHED) return;
+        if (_state == _detached) return;
         if (response.persistentConnection &&
             request.persistentConnection &&
             incoming.fullBodyRead &&
             !_httpParser.upgrade &&
             !_httpServer.closed) {
-          _state = _IDLE;
+          _state = _idle;
           _idleMark = false;
           _httpServer._markIdle(this);
           // Resume the subscription for incoming requests as the
@@ -3225,15 +3225,15 @@ final class _HttpConnection extends LinkedListEntry<_HttpConnection>
   bool get isMarkedIdle => _idleMark;
 
   void destroy() {
-    if (_state == _CLOSING || _state == _DETACHED) return;
-    _state = _CLOSING;
+    if (_state == _closing || _state == _detached) return;
+    _state = _closing;
     _socket.destroy();
     _httpServer._connectionClosed(this);
     _connections.remove(_serviceId);
   }
 
   Future<Socket> detachSocket() {
-    _state = _DETACHED;
+    _state = _detached;
     // Remove connection from server.
     _httpServer._connectionClosed(this);
 
@@ -3247,10 +3247,10 @@ final class _HttpConnection extends LinkedListEntry<_HttpConnection>
 
   HttpConnectionInfo? get connectionInfo => _HttpConnectionInfo.create(_socket);
 
-  bool get _isActive => _state == _ACTIVE;
-  bool get _isIdle => _state == _IDLE;
-  bool get _isClosing => _state == _CLOSING;
-  bool get _isDetached => _state == _DETACHED;
+  bool get _isActive => _state == _active;
+  bool get _isIdle => _state == _idle;
+  bool get _isClosing => _state == _closing;
+  bool get _isDetached => _state == _detached;
 
   @override
   String get _serviceTypePath => 'io/http/serverconnections';
@@ -3495,19 +3495,19 @@ class _HttpServer extends Stream<HttpRequest>
 }
 
 class _ProxyConfiguration {
-  static const String PROXY_PREFIX = "PROXY ";
-  static const String DIRECT_PREFIX = "DIRECT";
+  static const String proxyPerfix = "PROXY ";
+  static const String directPrefix = "DIRECT";
 
   _ProxyConfiguration(String configuration) : proxies = <_Proxy>[] {
     List<String> list = configuration.split(";");
     for (var proxy in list) {
       proxy = proxy.trim();
       if (proxy.isNotEmpty) {
-        if (proxy.startsWith(PROXY_PREFIX)) {
+        if (proxy.startsWith(proxyPerfix)) {
           String? username;
           String? password;
           // Skip the "PROXY " prefix.
-          proxy = proxy.substring(PROXY_PREFIX.length).trim();
+          proxy = proxy.substring(proxyPerfix.length).trim();
           // Look for proxy authentication.
           int at = proxy.lastIndexOf("@");
           if (at != -1) {
@@ -3538,7 +3538,7 @@ class _ProxyConfiguration {
                 "invalid port '$portString'");
           }
           proxies.add(_Proxy(host, port, username, password));
-        } else if (proxy.trim() == DIRECT_PREFIX) {
+        } else if (proxy.trim() == directPrefix) {
           proxies.add(_Proxy.direct());
         } else {
           throw HttpException("Invalid proxy configuration $configuration");
@@ -3692,22 +3692,22 @@ class _DetachedSocket extends Stream<Uint8List> implements Socket {
 class _AuthenticationScheme {
   final int _scheme;
 
-  static const UNKNOWN = _AuthenticationScheme(-1);
-  static const BASIC = _AuthenticationScheme(0);
-  static const DIGEST = _AuthenticationScheme(1);
+  static const unknown = _AuthenticationScheme(-1);
+  static const basic = _AuthenticationScheme(0);
+  static const digest = _AuthenticationScheme(1);
 
   const _AuthenticationScheme(this._scheme);
 
   factory _AuthenticationScheme.fromString(String scheme) {
-    if (scheme.toLowerCase() == "basic") return BASIC;
-    if (scheme.toLowerCase() == "digest") return DIGEST;
-    return UNKNOWN;
+    if (scheme.toLowerCase() == "basic") return basic;
+    if (scheme.toLowerCase() == "digest") return digest;
+    return unknown;
   }
 
   @override
   String toString() {
-    if (this == BASIC) return "Basic";
-    if (this == DIGEST) return "Digest";
+    if (this == basic) return "Basic";
+    if (this == digest) return "Digest";
     return "Unknown";
   }
 }
@@ -3725,7 +3725,7 @@ abstract class _Credentials {
   int? nonceCount;
 
   _Credentials(this.credentials, this.realm) {
-    if (credentials.scheme == _AuthenticationScheme.DIGEST) {
+    if (credentials.scheme == _AuthenticationScheme.digest) {
       // Calculate the H(A1) value once. There is no mentioning of
       // username/password encoding in RFC 2617. However there is an
       // open draft for adding an additional accept-charset parameter to
@@ -3735,9 +3735,9 @@ abstract class _Credentials {
       var creds = credentials as _HttpClientDigestCredentials;
       var hasher = _MD5()
         ..add(utf8.encode(creds.username))
-        ..add([_CharCode.COLON])
+        ..add([_CharCode.colon])
         ..add(realm.codeUnits)
-        ..add([_CharCode.COLON])
+        ..add([_CharCode.colon])
         ..add(utf8.encode(creds.password));
       ha1 = _CryptoUtils.bytesToHex(hasher.close());
     }
@@ -3768,7 +3768,7 @@ class _SiteCredentials extends _Credentials {
   void authorize(HttpClientRequest request) {
     // Digest credentials cannot be used without a nonce from the
     // server.
-    if (credentials.scheme == _AuthenticationScheme.DIGEST && nonce == null) {
+    if (credentials.scheme == _AuthenticationScheme.digest && nonce == null) {
       return;
     }
     credentials.authorize(this, request as _HttpClientRequest);
@@ -3792,7 +3792,7 @@ class _ProxyCredentials extends _Credentials {
   void authorize(HttpClientRequest request) {
     // Digest credentials cannot be used without a nonce from the
     // server.
-    if (credentials.scheme == _AuthenticationScheme.DIGEST && nonce == null) {
+    if (credentials.scheme == _AuthenticationScheme.digest && nonce == null) {
       return;
     }
     credentials.authorizeProxy(this, request as _HttpClientRequest);
@@ -3813,7 +3813,7 @@ final class _HttpClientBasicCredentials extends _HttpClientCredentials
   _HttpClientBasicCredentials(this.username, this.password);
 
   @override
-  _AuthenticationScheme get scheme => _AuthenticationScheme.BASIC;
+  _AuthenticationScheme get scheme => _AuthenticationScheme.basic;
 
   String authorization() {
     // There is no mentioning of username/password encoding in RFC
@@ -3845,13 +3845,13 @@ final class _HttpClientDigestCredentials extends _HttpClientCredentials
   _HttpClientDigestCredentials(this.username, this.password);
 
   @override
-  _AuthenticationScheme get scheme => _AuthenticationScheme.DIGEST;
+  _AuthenticationScheme get scheme => _AuthenticationScheme.digest;
 
   String authorization(_Credentials credentials, _HttpClientRequest request) {
     String requestUri = request._requestUri();
     _MD5 hasher = _MD5()
       ..add(request.method.codeUnits)
-      ..add([_CharCode.COLON])
+      ..add([_CharCode.colon])
       ..add(requestUri.codeUnits);
     var ha2 = _CryptoUtils.bytesToHex(hasher.close());
 
@@ -3860,7 +3860,7 @@ final class _HttpClientDigestCredentials extends _HttpClientCredentials
     String nc = "";
     hasher = _MD5()
       ..add(credentials.ha1!.codeUnits)
-      ..add([_CharCode.COLON]);
+      ..add([_CharCode.colon]);
     if (credentials.qop == "auth") {
       isAuth = true;
       cnonce = _CryptoUtils.bytesToHex(_CryptoUtils.getRandomBytes(4));
@@ -3869,18 +3869,18 @@ final class _HttpClientDigestCredentials extends _HttpClientCredentials
       nc = nonceCount.toRadixString(16).padLeft(9, "0");
       hasher
         ..add(credentials.nonce!.codeUnits)
-        ..add([_CharCode.COLON])
+        ..add([_CharCode.colon])
         ..add(nc.codeUnits)
-        ..add([_CharCode.COLON])
+        ..add([_CharCode.colon])
         ..add(cnonce.codeUnits)
-        ..add([_CharCode.COLON])
+        ..add([_CharCode.colon])
         ..add("auth".codeUnits)
-        ..add([_CharCode.COLON])
+        ..add([_CharCode.colon])
         ..add(ha2.codeUnits);
     } else {
       hasher
         ..add(credentials.nonce!.codeUnits)
-        ..add([_CharCode.COLON])
+        ..add([_CharCode.colon])
         ..add(ha2.codeUnits);
     }
     var response = _CryptoUtils.bytesToHex(hasher.close());

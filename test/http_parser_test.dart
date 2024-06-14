@@ -11,8 +11,8 @@ import "package:http_io/http_io.dart";
 
 import "expect.dart";
 
-typedef _HttpHeaders = TestingClass$_HttpHeaders;
-typedef _HttpParser = TestingClass$_HttpParser;
+typedef _HttpHeaders = TestingClass$HttpHeaders;
+typedef _HttpParser = TestingClass$HttpParser;
 
 class HttpParserTest {
   final String Function(String) transform;

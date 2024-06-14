@@ -4,7 +4,7 @@
 
 part of 'http.dart';
 
-const String _DART_SESSION_ID = "DARTSESSID";
+const String _dartSessionId = "DARTSESSID";
 
 // A _HttpSession is a node in a double-linked list, with _next and _prev being
 // the previous and next pointers.
@@ -137,8 +137,8 @@ class _HttpSessionManager {
   _HttpSessionManager() : _sessions = {};
 
   String createSessionId() {
-    const int _KEY_LENGTH = 16; // 128 bits.
-    var data = _CryptoUtils.getRandomBytes(_KEY_LENGTH);
+    const int _keyLength = 16; // 128 bits.
+    var data = _CryptoUtils.getRandomBytes(_keyLength);
     return _CryptoUtils.bytesToHex(data);
   }
 

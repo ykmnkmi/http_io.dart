@@ -9,8 +9,8 @@ import "package:http_io/http_io.dart";
 
 import "expect.dart";
 
-typedef _HttpHeaders = TestingClass$_HttpHeaders;
-typedef _Cookie = TestingClass$_Cookie;
+typedef _HttpHeaders = TestingClass$HttpHeaders;
+typedef _Cookie = TestingClass$Cookie;
 
 void testMultiValue() {
   _HttpHeaders headers = _HttpHeaders("1.1");

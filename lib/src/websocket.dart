@@ -107,13 +107,13 @@ class CompressionOptions {
       } else {
         int mwb = serverMaxWindowBits ??
             int.tryParse(part) ??
-            _WebSocketImpl.DEFAULT_WINDOW_BITS;
+            _WebSocketImpl.defaultWindowBits;
         info.headerValue = "; server_max_window_bits=$mwb";
         info.maxWindowBits = mwb;
       }
     } else {
       info.headerValue = "";
-      info.maxWindowBits = _WebSocketImpl.DEFAULT_WINDOW_BITS;
+      info.maxWindowBits = _WebSocketImpl.defaultWindowBits;
     }
     return info;
   }
@@ -156,7 +156,7 @@ class CompressionOptions {
       return info;
     }
 
-    info.headerValue = _WebSocketImpl.PER_MESSAGE_DEFLATE;
+    info.headerValue = _WebSocketImpl.perMessageDeflate;
 
     if (clientNoContextTakeover &&
         (requested == null ||

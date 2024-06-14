@@ -25,14 +25,14 @@ void expect(condition, message) {
   }
 }
 
-const HOST_NAME = "localhost";
+const hostName = "localhost";
 
 Future runClients(int port) {
   HttpClient client = HttpClient();
 
   var testFutures = <Future>[];
   for (int i = 0; i < 20; ++i) {
-    testFutures.add(client.getUrl(Uri.parse('https://$HOST_NAME:$port/')).then(
+    testFutures.add(client.getUrl(Uri.parse('https://$hostName:$port/')).then(
         (HttpClientRequest request) {
       expect(false, "Request succeeded");
     }, onError: (e) {
