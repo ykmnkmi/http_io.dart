@@ -965,7 +965,7 @@ class _HttpParser extends Stream<_HttpIncoming> {
   bool get upgrade => _connectionUpgrade && _state == _State.UPGRADED;
   bool get persistentConnection => _persistentConnection;
 
-  void set isHead(bool value) {
+  set isHead(bool value) {
     _noMessageBody = value;
   }
 

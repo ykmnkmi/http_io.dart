@@ -46,7 +46,7 @@ class _HttpSession implements HttpSession {
   bool get isNew => _isNew;
 
   @override
-  void set onTimeout(void Function()? callback) {
+  set onTimeout(void Function()? callback) {
     _timeoutCallback = callback;
   }
 
@@ -155,7 +155,7 @@ class _HttpSessionManager {
     return session;
   }
 
-  void set sessionTimeout(int timeout) {
+  set sessionTimeout(int timeout) {
     _sessionTimeout = timeout;
     _stopTimer();
     _startTimer();

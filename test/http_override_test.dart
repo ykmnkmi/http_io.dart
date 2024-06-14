@@ -80,7 +80,7 @@ class MyHttpClient1 implements HttpClient {
   set badCertificateCallback(
       bool callback(X509Certificate cert, String host, int port)?) {}
   @override
-  void set keyLog(Function(String line)? callback) {}
+  set keyLog(Function(String line)? callback) {}
   @override
   void close({bool force = false}) {}
 }
@@ -157,7 +157,7 @@ class MyHttpClient2 implements HttpClient {
   set badCertificateCallback(
       bool callback(X509Certificate cert, String host, int port)?) {}
   @override
-  void set keyLog(Function(String line)? callback) {}
+  set keyLog(Function(String line)? callback) {}
   @override
   void close({bool force = false}) {}
 }

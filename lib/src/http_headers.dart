@@ -142,7 +142,7 @@ class _HttpHeaders implements HttpHeaders {
   bool get persistentConnection => _persistentConnection;
 
   @override
-  void set persistentConnection(bool persistentConnection) {
+  set persistentConnection(bool persistentConnection) {
     _checkMutable();
     if (persistentConnection == _persistentConnection) return;
     final originalName = _originalHeaderName(HttpHeaders.connectionHeader);
@@ -171,7 +171,7 @@ class _HttpHeaders implements HttpHeaders {
   int get contentLength => _contentLength;
 
   @override
-  void set contentLength(int contentLength) {
+  set contentLength(int contentLength) {
     _checkMutable();
     if (protocolVersion == "1.0" &&
         persistentConnection &&
@@ -197,7 +197,7 @@ class _HttpHeaders implements HttpHeaders {
   bool get chunkedTransferEncoding => _chunkedTransferEncoding;
 
   @override
-  void set chunkedTransferEncoding(bool chunkedTransferEncoding) {
+  set chunkedTransferEncoding(bool chunkedTransferEncoding) {
     _checkMutable();
     if (chunkedTransferEncoding && protocolVersion == "1.0") {
       throw HttpException(
@@ -222,7 +222,7 @@ class _HttpHeaders implements HttpHeaders {
   String? get host => _host;
 
   @override
-  void set host(String? host) {
+  set host(String? host) {
     _checkMutable();
     _host = host;
     _updateHostHeader();
@@ -232,7 +232,7 @@ class _HttpHeaders implements HttpHeaders {
   int? get port => _port;
 
   @override
-  void set port(int? port) {
+  set port(int? port) {
     _checkMutable();
     _port = port;
     _updateHostHeader();
@@ -253,7 +253,7 @@ class _HttpHeaders implements HttpHeaders {
   }
 
   @override
-  void set ifModifiedSince(DateTime? ifModifiedSince) {
+  set ifModifiedSince(DateTime? ifModifiedSince) {
     _checkMutable();
     if (ifModifiedSince == null) {
       _headers.remove(HttpHeaders.ifModifiedSinceHeader);
@@ -279,7 +279,7 @@ class _HttpHeaders implements HttpHeaders {
   }
 
   @override
-  void set date(DateTime? date) {
+  set date(DateTime? date) {
     _checkMutable();
     if (date == null) {
       _headers.remove(HttpHeaders.dateHeader);
@@ -305,7 +305,7 @@ class _HttpHeaders implements HttpHeaders {
   }
 
   @override
-  void set expires(DateTime? expires) {
+  set expires(DateTime? expires) {
     _checkMutable();
     if (expires == null) {
       _headers.remove(HttpHeaders.expiresHeader);
@@ -327,7 +327,7 @@ class _HttpHeaders implements HttpHeaders {
   }
 
   @override
-  void set contentType(ContentType? contentType) {
+  set contentType(ContentType? contentType) {
     _checkMutable();
     if (contentType == null) {
       _headers.remove(HttpHeaders.contentTypeHeader);

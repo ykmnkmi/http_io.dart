@@ -1079,7 +1079,7 @@ class _IOSinkImpl extends _StreamSinkImpl<List<int>> implements IOSink {
   Encoding get encoding => _encoding;
 
   @override
-  void set encoding(Encoding value) {
+  set encoding(Encoding value) {
     if (!_encodingMutable) {
       throw StateError("IOSink encoding is not mutable");
     }
@@ -1155,17 +1155,17 @@ abstract class _HttpOutboundMessage<T> extends _IOSinkImpl {
   }
 
   int get contentLength => headers.contentLength;
-  void set contentLength(int contentLength) {
+  set contentLength(int contentLength) {
     headers.contentLength = contentLength;
   }
 
   bool get persistentConnection => headers.persistentConnection;
-  void set persistentConnection(bool p) {
+  set persistentConnection(bool p) {
     headers.persistentConnection = p;
   }
 
   bool get bufferOutput => _bufferOutput;
-  void set bufferOutput(bool bufferOutput) {
+  set bufferOutput(bool bufferOutput) {
     if (_outgoing.headersWritten) throw StateError("Header already sent");
     _bufferOutput = bufferOutput;
   }
@@ -1244,7 +1244,7 @@ class _HttpResponse extends _HttpOutboundMessage<HttpResponse>
   @override
   int get statusCode => _statusCode;
   @override
-  void set statusCode(int statusCode) {
+  set statusCode(int statusCode) {
     if (_outgoing.headersWritten) throw StateError("Header already sent");
     _statusCode = statusCode;
   }
@@ -1252,7 +1252,7 @@ class _HttpResponse extends _HttpOutboundMessage<HttpResponse>
   @override
   String get reasonPhrase => _findReasonPhrase(statusCode);
   @override
-  void set reasonPhrase(String reasonPhrase) {
+  set reasonPhrase(String reasonPhrase) {
     if (_outgoing.headersWritten) throw StateError("Header already sent");
     _reasonPhrase = reasonPhrase;
   }
@@ -1294,7 +1294,7 @@ class _HttpResponse extends _HttpOutboundMessage<HttpResponse>
   Duration? get deadline => _deadline;
 
   @override
-  void set deadline(Duration? d) {
+  set deadline(Duration? d) {
     _deadlineTimer?.cancel();
     _deadline = d;
 
@@ -1524,7 +1524,7 @@ class _HttpClientRequest extends _HttpOutboundMessage<HttpClientResponse>
   @override
   int get maxRedirects => _maxRedirects;
   @override
-  void set maxRedirects(int maxRedirects) {
+  set maxRedirects(int maxRedirects) {
     if (_outgoing.headersWritten) throw StateError("Request already sent");
     _maxRedirects = maxRedirects;
   }
@@ -1532,7 +1532,7 @@ class _HttpClientRequest extends _HttpOutboundMessage<HttpClientResponse>
   @override
   bool get followRedirects => _followRedirects;
   @override
-  void set followRedirects(bool followRedirects) {
+  set followRedirects(bool followRedirects) {
     if (_outgoing.headersWritten) throw StateError("Request already sent");
     _followRedirects = followRedirects;
   }
@@ -1991,7 +1991,7 @@ class _HttpOutgoing implements StreamConsumer<List<int>> {
     _length = length;
   }
 
-  void set gzip(bool value) {
+  set gzip(bool value) {
     _gzip = value;
     if (value) {
       _gzipBuffer = Uint8List(_OUTGOING_BUFFER_SIZE);
@@ -2655,7 +2655,7 @@ class _HttpClient implements HttpClient {
   _HttpClient(this._context);
 
   @override
-  void set idleTimeout(Duration timeout) {
+  set idleTimeout(Duration timeout) {
     _idleTimeout = timeout;
     for (var c in _connectionTargets.values) {
       for (var idle in c._idle) {
@@ -2673,7 +2673,7 @@ class _HttpClient implements HttpClient {
   }
 
   @override
-  void set keyLog(Function(String line)? callback) {
+  set keyLog(Function(String line)? callback) {
     _keyLog = callback;
   }
 
@@ -2787,7 +2787,7 @@ class _HttpClient implements HttpClient {
   }
 
   @override
-  void set connectionFactory(
+  set connectionFactory(
           Future<ConnectionTask<Socket>> Function(
                   Uri url, String? proxyHost, int? proxyPort)?
               f) =>
@@ -3331,7 +3331,7 @@ class _HttpServer extends Stream<HttpRequest>
   Duration? get idleTimeout => _idleTimeout;
 
   @override
-  void set idleTimeout(Duration? duration) {
+  set idleTimeout(Duration? duration) {
     var idleTimer = _idleTimer;
     if (idleTimer != null) {
       idleTimer.cancel();
@@ -3612,7 +3612,7 @@ class _DetachedSocket extends Stream<Uint8List> implements Socket {
   Encoding get encoding => _socket.encoding;
 
   @override
-  void set encoding(Encoding value) {
+  set encoding(Encoding value) {
     _socket.encoding = value;
   }
 
