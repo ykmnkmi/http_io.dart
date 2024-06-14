@@ -2,14 +2,14 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import "dart:async";
-import "dart:isolate";
-import "dart:math";
-import "dart:typed_data";
+import 'dart:async';
+import 'dart:isolate';
+import 'dart:math';
+import 'dart:typed_data';
 
-import "package:http_io/http_io.dart";
+import 'package:http_io/http_io.dart';
 
-import "expect.dart";
+import 'expect.dart';
 
 typedef _HttpHeaders = TestingClass$HttpHeaders;
 typedef _HttpParser = TestingClass$HttpParser;
@@ -19,14 +19,14 @@ class HttpParserTest {
   HttpParserTest(this.transform);
 
   static void runAllTests() {
-    final testCRLF = HttpParserTest((String s) => s);
+    var testCRLF = HttpParserTest((String s) => s);
     testCRLF.testParseRequest();
     testCRLF.testParseResponse();
     testCRLF.testParseInvalidRequest();
     testCRLF.testParseInvalidResponse();
 
     // Ensure http parser is CR?LF tolerant.
-    final testLF = HttpParserTest((String s) => s.replaceAll('\r', ''));
+    var testLF = HttpParserTest((String s) => s.replaceAll('\r', ''));
     testLF.testParseRequest();
     testLF.testParseResponse();
     testLF.testParseInvalidRequest();
@@ -42,7 +42,7 @@ class HttpParserTest {
       bool upgrade = false,
       int unparsedLength = 0,
       bool connectionClose = false,
-      String expectedVersion = "1.1"}) {
+      String expectedVersion = '1.1'}) {
     late StreamController<Uint8List> controller;
     void reset() {
       _HttpParser httpParser = _HttpParser.requestParser();
@@ -58,7 +58,7 @@ class HttpParserTest {
       bool upgraded = false;
 
       httpParser.listenToStream(controller.stream);
-      var subscription = httpParser.listen((incoming) {
+      httpParser.listen((incoming) {
         method = incoming.method;
         uri = incoming.uri;
         headers = incoming.headers;
@@ -107,7 +107,9 @@ class HttpParserTest {
     }
 
     void testWrite(List<int> requestData, [int chunkSize = -1]) {
-      if (chunkSize == -1) chunkSize = requestData.length;
+      if (chunkSize == -1) {
+        chunkSize = requestData.length;
+      }
       reset();
       for (int pos = 0; pos < requestData.length; pos += chunkSize) {
         int end = min(requestData.length, pos + chunkSize);
@@ -133,7 +135,7 @@ class HttpParserTest {
       bool upgrade = false,
       int unparsedLength = 0,
       bool connectionClose = false,
-      String expectedVersion = "1.1"}) {
+      String expectedVersion = '1.1'}) {
     _testParseRequest(request, expectedMethod, expectedUri,
         expectedTransferLength: expectedTransferLength,
         expectedBytesReceived: expectedBytesReceived,
@@ -166,7 +168,7 @@ class HttpParserTest {
       var port = ReceivePort();
       httpParser.listenToStream(controller.stream);
       var subscription = httpParser.listen((incoming) {
-        Expect.fail("Expected request");
+        Expect.fail('Expected request');
       });
       subscription.onError((e) {
         errorCalled = true;
@@ -179,7 +181,9 @@ class HttpParserTest {
     }
 
     void testWrite(List<int> requestData, [int chunkSize = -1]) {
-      if (chunkSize == -1) chunkSize = requestData.length;
+      if (chunkSize == -1) {
+        chunkSize = requestData.length;
+      }
       reset();
       for (int pos = 0;
           pos < requestData.length && !errorCalled;
@@ -209,9 +213,8 @@ class HttpParserTest {
       bool connectionClose = false,
       bool upgrade = false,
       int unparsedLength = 0,
-      String expectedVersion = "1.1"}) {
+      String expectedVersion = '1.1'}) {
     late StreamController<Uint8List> controller;
-    bool upgraded;
 
     void reset() {
       _HttpParser httpParser;
@@ -232,7 +235,9 @@ class HttpParserTest {
       // Only executed when both are done.
       void whenDone() {
         doneCallCount++;
-        if (doneCallCount < 2) return;
+        if (doneCallCount < 2) {
+          return;
+        }
         Expect.equals(expectedVersion, headers!.protocolVersion);
         Expect.equals(expectedStatusCode, statusCode);
         Expect.equals(expectedReasonPhrase, reasonPhrase);
@@ -240,12 +245,14 @@ class HttpParserTest {
         Expect.equals(expectedBytesReceived, bytesReceived);
         if (!upgrade) {
           Expect.isTrue(dataEndCalled);
-          if (close) Expect.isTrue(dataEndClose);
+          if (close) {
+            Expect.isTrue(dataEndClose);
+          }
           Expect.equals(dataEndClose, connectionClose);
         }
       }
 
-      var subscription = httpParser.listen((incoming) {
+      httpParser.listen((incoming) {
         port.close();
         statusCode = incoming.statusCode!;
         reasonPhrase = incoming.reasonPhrase;
@@ -275,13 +282,17 @@ class HttpParserTest {
     }
 
     void testWrite(List<int> requestData, [int chunkSize = -1]) {
-      if (chunkSize == -1) chunkSize = requestData.length;
+      if (chunkSize == -1) {
+        chunkSize = requestData.length;
+      }
       reset();
       for (int pos = 0; pos < requestData.length; pos += chunkSize) {
         int end = min(requestData.length, pos + chunkSize);
         controller.add(requestData.sublist(pos, end) as Uint8List);
       }
-      if (close) controller.close();
+      if (close) {
+        controller.close();
+      }
     }
 
     // Test parsing the request three times delivering the data in
@@ -292,18 +303,20 @@ class HttpParserTest {
     testWrite(responseData, 1);
   }
 
-  void _testParseInvalidResponse(String response, [bool close = false]) {
+  void _testParseInvalidResponse(String response) {
     void testWrite(List<int> requestData, [int chunkSize = -1]) {
       _HttpParser httpParser = _HttpParser.responseParser();
       StreamController<Uint8List> controller = StreamController(sync: true);
       bool errorCalled = false;
 
-      if (chunkSize == -1) chunkSize = requestData.length;
+      if (chunkSize == -1) {
+        chunkSize = requestData.length;
+      }
 
       var port = ReceivePort();
       httpParser.listenToStream(controller.stream);
       var subscription = httpParser.listen((incoming) {
-        incoming.listen((data) {}, onError: (e) {
+        incoming.listen((data) {}, onError: (Object e) {
           Expect.isFalse(errorCalled);
           errorCalled = true;
         });
@@ -340,89 +353,89 @@ class HttpParserTest {
     Map<String, String> headers;
     var methods = [
       // RFC 2616 methods.
-      "OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE", "TRACE", "CONNECT",
+      'OPTIONS', 'GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'TRACE', 'CONNECT',
       // WebDAV methods from RFC 4918.
-      "PROPFIND", "PROPPATCH", "MKCOL", "COPY", "MOVE", "LOCK", "UNLOCK",
+      'PROPFIND', 'PROPPATCH', 'MKCOL', 'COPY', 'MOVE', 'LOCK', 'UNLOCK',
       // WebDAV methods from RFC 5323.
-      "SEARCH",
+      'SEARCH',
       // Methods with HTTP prefix.
-      "H", "HT", "HTT", "HTTP", "HX", "HTX", "HTTX", "HTTPX"
+      'H', 'HT', 'HTT', 'HTTP', 'HX', 'HTX', 'HTTX', 'HTTPX'
     ];
     methods = ['GET'];
     for (var method in methods) {
-      request = "$method / HTTP/1.1\r\n\r\n";
-      _testParseRequestLean(request, method, "/");
-      request = "$method /index.html HTTP/1.1\r\n\r\n";
-      _testParseRequestLean(request, method, "/index.html");
+      request = '$method / HTTP/1.1\r\n\r\n';
+      _testParseRequestLean(request, method, '/');
+      request = '$method /index.html HTTP/1.1\r\n\r\n';
+      _testParseRequestLean(request, method, '/index.html');
     }
-    request = "GET / HTTP/1.0\r\n\r\n";
-    _testParseRequestLean(request, "GET", "/",
-        expectedVersion: "1.0", connectionClose: true);
+    request = 'GET / HTTP/1.0\r\n\r\n';
+    _testParseRequestLean(request, 'GET', '/',
+        expectedVersion: '1.0', connectionClose: true);
 
-    request = "GET / HTTP/1.0\r\nConnection: keep-alive\r\n\r\n";
-    _testParseRequestLean(request, "GET", "/", expectedVersion: "1.0");
+    request = 'GET / HTTP/1.0\r\nConnection: keep-alive\r\n\r\n';
+    _testParseRequestLean(request, 'GET', '/', expectedVersion: '1.0');
 
-    request = """
+    request = '''
 POST /test HTTP/1.1\r
 AAA: AAA\r
 \r
-""";
-    _testParseRequestLean(request, "POST", "/test");
+''';
+    _testParseRequestLean(request, 'POST', '/test');
 
-    request = """
+    request = '''
 POST /test HTTP/1.1\r
 \r
-""";
-    _testParseRequestLean(request, "POST", "/test");
+''';
+    _testParseRequestLean(request, 'POST', '/test');
 
-    request = """
+    request = '''
 POST /test HTTP/1.1\r
 Header-A: AAA  aaa\r
 X-Header-B: bbb  BBB\r
 \r
-""";
-    headers = Map();
-    headers["header-a"] = "AAA  aaa";
-    headers["x-header-b"] = "bbb  BBB";
-    _testParseRequestLean(request, "POST", "/test", expectedHeaders: headers);
+''';
+    headers = <String, String>{};
+    headers['header-a'] = 'AAA  aaa';
+    headers['x-header-b'] = 'bbb  BBB';
+    _testParseRequestLean(request, 'POST', '/test', expectedHeaders: headers);
 
-    request = """
+    request = '''
 POST /test HTTP/1.1\r
 Header-A:   \t AAA  aaa \t \r
 X-Header-B:   \t bbb  BBB  \t \r
 \r
-""";
-    headers = Map();
-    headers["header-a"] = "AAA  aaa";
-    headers["x-header-b"] = "bbb  BBB";
-    _testParseRequestLean(request, "POST", "/test", expectedHeaders: headers);
+''';
+    headers = <String, String>{};
+    headers['header-a'] = 'AAA  aaa';
+    headers['x-header-b'] = 'bbb  BBB';
+    _testParseRequestLean(request, 'POST', '/test', expectedHeaders: headers);
 
-    request = """
+    request = '''
 POST /test HTTP/1.1\r
 Empty-Header-1:\r
 Empty-Header-2:\r
         \r
 \r
-""";
-    headers = Map();
-    headers["empty-header-1"] = "";
-    headers["empty-header-2"] = "";
-    _testParseRequestLean(request, "POST", "/test", expectedHeaders: headers);
+''';
+    headers = <String, String>{};
+    headers['empty-header-1'] = '';
+    headers['empty-header-2'] = '';
+    _testParseRequestLean(request, 'POST', '/test', expectedHeaders: headers);
 
-    request = """
+    request = '''
 POST /test HTTP/1.1\r
 Empty-Header-1:\t  \t \r
 Empty-Header-2:\t  \t \r
         \r
 \r
-""";
-    headers = Map();
-    headers["empty-header-1"] = "";
-    headers["empty-header-2"] = "";
-    _testParseRequestLean(request, "POST", "/test", expectedHeaders: headers);
+''';
+    headers = <String, String>{};
+    headers['empty-header-1'] = '';
+    headers['empty-header-2'] = '';
+    _testParseRequestLean(request, 'POST', '/test', expectedHeaders: headers);
 
     // Test folded headers.
-    request = """
+    request = '''
 POST /test HTTP/1.1\r
 Header-A: h\r
  ell\r
@@ -433,15 +446,15 @@ X-Header-B: w\r
  l\r
  d\r
 \r
-""";
+''';
 
-    headers = Map();
-    headers["header-a"] = "h ell o";
-    headers["x-header-b"] = "w o r l d";
-    _testParseRequestLean(request, "POST", "/test", expectedHeaders: headers);
+    headers = <String, String>{};
+    headers['header-a'] = 'h ell o';
+    headers['x-header-b'] = 'w o r l d';
+    _testParseRequestLean(request, 'POST', '/test', expectedHeaders: headers);
 
     // Test folded headers with leading and trailing whitespace.
-    request = """
+    request = '''
 POST /test HTTP/1.1\r
 Header-A: \t  h \t \r
   \t ell \t  \t \r
@@ -452,39 +465,39 @@ X-Header-B:w\r
 \tl \r
 \td \t\r
 \r
-""";
+''';
 
-    headers = Map();
-    headers["header-a"] = "h \t  ell \t  \t  o";
-    headers["x-header-b"] = "w o\t\t r\t\t l  d";
-    _testParseRequestLean(request, "POST", "/test", expectedHeaders: headers);
+    headers = <String, String>{};
+    headers['header-a'] = 'h \t  ell \t  \t  o';
+    headers['x-header-b'] = 'w o\t\t r\t\t l  d';
+    _testParseRequestLean(request, 'POST', '/test', expectedHeaders: headers);
 
     // _testParseRequestLean encodes the request as ISO-8859-1. Test that the
     // HTTP parser decodes header values as ISO-8859-1.
-    request = """
+    request = '''
 POST /test HTTP/1.1\r
 latin1:   blåbærgrød\r
 \r
-""";
+''';
 
-    headers = Map();
-    headers["latin1"] = "blåbærgrød";
-    _testParseRequestLean(request, "POST", "/test", expectedHeaders: headers);
+    headers = <String, String>{};
+    headers['latin1'] = 'blåbærgrød';
+    _testParseRequestLean(request, 'POST', '/test', expectedHeaders: headers);
 
-    request = """
+    request = '''
 POST /test HTTP/1.1\r
 Content-Length: 10\r
 \r
-0123456789""";
-    _testParseRequestLean(request, "POST", "/test",
+0123456789''';
+    _testParseRequestLean(request, 'POST', '/test',
         expectedTransferLength: 10, expectedBytesReceived: 10);
 
     // Test connection close header.
-    request = "GET /test HTTP/1.1\r\nConnection: close\r\n\r\n";
-    _testParseRequest(request, "GET", "/test", connectionClose: true);
+    request = 'GET /test HTTP/1.1\r\nConnection: close\r\n\r\n';
+    _testParseRequest(request, 'GET', '/test', connectionClose: true);
 
     // Test chunked encoding.
-    request = """
+    request = '''
 POST /test HTTP/1.1\r
 Transfer-Encoding: chunked\r
 \r
@@ -492,12 +505,12 @@ Transfer-Encoding: chunked\r
 01234\r
 5\r
 56789\r
-0\r\n\r\n""";
-    _testParseRequest(request, "POST", "/test",
+0\r\n\r\n''';
+    _testParseRequest(request, 'POST', '/test',
         expectedTransferLength: -1, expectedBytesReceived: 10, chunked: true);
 
     // Test LWS around chunked encoding header value.
-    request = """
+    request = '''
 POST /test HTTP/1.1\r
 Transfer-Encoding:   \t   chunked  \t \r
 \r
@@ -505,12 +518,12 @@ Transfer-Encoding:   \t   chunked  \t \r
 01234\r
 5\r
 56789\r
-0\r\n\r\n""";
-    _testParseRequest(request, "POST", "/test",
+0\r\n\r\n''';
+    _testParseRequest(request, 'POST', '/test',
         expectedTransferLength: -1, expectedBytesReceived: 10, chunked: true);
 
     // Test upper and lower case hex digits in chunked encoding.
-    request = """
+    request = '''
 POST /test HTTP/1.1\r
 Transfer-Encoding: chunked\r
 \r
@@ -518,12 +531,12 @@ Transfer-Encoding: chunked\r
 012345678901234567890123456789\r
 1e\r
 012345678901234567890123456789\r
-0\r\n\r\n""";
-    _testParseRequest(request, "POST", "/test",
+0\r\n\r\n''';
+    _testParseRequest(request, 'POST', '/test',
         expectedTransferLength: -1, expectedBytesReceived: 60, chunked: true);
 
     // Test chunk extensions in chunked encoding.
-    request = """
+    request = '''
 POST /test HTTP/1.1\r
 Transfer-Encoding: chunked\r
 \r
@@ -531,12 +544,12 @@ Transfer-Encoding: chunked\r
 012345678901234567890123456789\r
 1E;yyy=zzz\r
 012345678901234567890123456789\r
-0\r\n\r\n""";
-    _testParseRequest(request, "POST", "/test",
+0\r\n\r\n''';
+    _testParseRequest(request, 'POST', '/test',
         expectedTransferLength: -1, expectedBytesReceived: 60, chunked: true);
 
     // Content-Length and "Transfer-Encoding: chunked" are specified.
-    request = """
+    request = '''
 POST /test HTTP/1.1\r
 Content-Length: 10\r
 Transfer-Encoding: chunked\r
@@ -545,8 +558,8 @@ Transfer-Encoding: chunked\r
 01234\r
 5\r
 56789\r
-0\r\n\r\n""";
-    _testParseRequest(request, "POST", "/test",
+0\r\n\r\n''';
+    _testParseRequest(request, 'POST', '/test',
         expectedTransferLength: -1,
         expectedBytesReceived: 10,
         chunked: true,
@@ -555,7 +568,7 @@ Transfer-Encoding: chunked\r
           'transfer-encoding': 'chunked'
         });
 
-    request = """
+    request = '''
 POST /test HTTP/1.1\r
 Transfer-Encoding: chunked\r
 Content-Length: 10\r
@@ -564,8 +577,8 @@ Content-Length: 10\r
 01234\r
 5\r
 56789\r
-0\r\n\r\n""";
-    _testParseRequest(request, "POST", "/test",
+0\r\n\r\n''';
+    _testParseRequest(request, 'POST', '/test',
         expectedTransferLength: -1,
         expectedBytesReceived: 10,
         chunked: true,
@@ -575,29 +588,29 @@ Content-Length: 10\r
         });
 
     // Test HTTP upgrade.
-    request = """
+    request = '''
 GET /irc HTTP/1.1\r
 Upgrade: irc/1.2\r
 Connection: Upgrade\r
-\r\n\x01\x01\x01\x01\x01\x02\x02\x02\x02\xFF""";
-    headers = Map();
-    headers["upgrade"] = "irc/1.2";
-    _testParseRequest(request, "GET", "/irc",
+\r\n\x01\x01\x01\x01\x01\x02\x02\x02\x02\xFF''';
+    headers = <String, String>{};
+    headers['upgrade'] = 'irc/1.2';
+    _testParseRequest(request, 'GET', '/irc',
         expectedHeaders: headers, upgrade: true, unparsedLength: 10);
 
     // Test HTTP upgrade with protocol data.
-    request = """
+    request = '''
 GET /irc HTTP/1.1\r
 Upgrade: irc/1.2\r
 Connection: Upgrade\r
-\r\n""";
-    headers = Map();
-    headers["upgrade"] = "irc/1.2";
-    _testParseRequest(request, "GET", "/irc",
+\r\n''';
+    headers = <String, String>{};
+    headers['upgrade'] = 'irc/1.2';
+    _testParseRequest(request, 'GET', '/irc',
         expectedHeaders: headers, upgrade: true);
 
     // Test websocket upgrade.
-    request = """
+    request = '''
 GET /chat HTTP/1.1\r
 Host: server.example.com\r
 Upgrade: websocket\r
@@ -605,14 +618,14 @@ Connection: Upgrade\r
 Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r
 Origin: http://example.com\r
 Sec-WebSocket-Version: 13\r
-\r\n""";
-    headers = Map();
-    headers["host"] = "server.example.com";
-    headers["upgrade"] = "websocket";
-    headers["sec-websocket-key"] = "dGhlIHNhbXBsZSBub25jZQ==";
-    headers["origin"] = "http://example.com";
-    headers["sec-websocket-version"] = "13";
-    _testParseRequest(request, "GET", "/chat",
+\r\n''';
+    headers = <String, String>{};
+    headers['host'] = 'server.example.com';
+    headers['upgrade'] = 'websocket';
+    headers['sec-websocket-key'] = 'dGhlIHNhbXBsZSBub25jZQ==';
+    headers['origin'] = 'http://example.com';
+    headers['sec-websocket-version'] = '13';
+    _testParseRequest(request, 'GET', '/chat',
         expectedHeaders: headers, upgrade: true);
 
     // Test websocket upgrade with protocol data. NOTE: When using the
@@ -620,7 +633,7 @@ Sec-WebSocket-Version: 13\r
     // should not send protocol data before processing the request
     // part of the opening handshake. However the HTTP parser should
     // still handle this.
-    request = """
+    request = '''
 GET /chat HTTP/1.1\r
 Host: server.example.com\r
 Upgrade: websocket\r
@@ -628,101 +641,101 @@ Connection: Upgrade\r
 Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r
 Origin: http://example.com\r
 Sec-WebSocket-Version: 13\r
-\r\n0123456""";
-    headers = Map();
-    headers["host"] = "server.example.com";
-    headers["upgrade"] = "websocket";
-    headers["sec-websocket-key"] = "dGhlIHNhbXBsZSBub25jZQ==";
-    headers["origin"] = "http://example.com";
-    headers["sec-websocket-version"] = "13";
-    _testParseRequest(request, "GET", "/chat",
+\r\n0123456''';
+    headers = <String, String>{};
+    headers['host'] = 'server.example.com';
+    headers['upgrade'] = 'websocket';
+    headers['sec-websocket-key'] = 'dGhlIHNhbXBsZSBub25jZQ==';
+    headers['origin'] = 'http://example.com';
+    headers['sec-websocket-version'] = '13';
+    _testParseRequest(request, 'GET', '/chat',
         expectedHeaders: headers, upgrade: true, unparsedLength: 7);
   }
 
   void testParseResponse() {
     String response;
     Map<String, String> headers;
-    response = "HTTP/1.1 100 Continue\r\nContent-Length: 0\r\n\r\n";
-    _testParseResponse(response, 100, "Continue");
+    response = 'HTTP/1.1 100 Continue\r\nContent-Length: 0\r\n\r\n';
+    _testParseResponse(response, 100, 'Continue');
 
-    response = "HTTP/1.1 100 Continue\r\nContent-Length: 0\r\n\r\n";
-    _testParseResponse(response, 100, "Continue");
+    response = 'HTTP/1.1 100 Continue\r\nContent-Length: 0\r\n\r\n';
+    _testParseResponse(response, 100, 'Continue');
 
-    response = "HTTP/1.1 100 Continue\r\nContent-Length: 10\r\n\r\n";
-    _testParseResponse(response, 100, "Continue",
+    response = 'HTTP/1.1 100 Continue\r\nContent-Length: 10\r\n\r\n';
+    _testParseResponse(response, 100, 'Continue',
         expectedTransferLength: 10, expectedBytesReceived: 0);
 
-    response = "HTTP/1.1 100 Continue\r\nContent-Length: \t  10 \t \r\n\r\n";
-    _testParseResponse(response, 100, "Continue",
+    response = 'HTTP/1.1 100 Continue\r\nContent-Length: \t  10 \t \r\n\r\n';
+    _testParseResponse(response, 100, 'Continue',
         expectedTransferLength: 10, expectedBytesReceived: 0);
 
-    response = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n"
-        "Connection: Close\r\n\r\n";
-    _testParseResponse(response, 200, "OK", connectionClose: true);
+    response = 'HTTP/1.1 200 OK\r\nContent-Length: 0\r\n'
+        'Connection: Close\r\n\r\n';
+    _testParseResponse(response, 200, 'OK', connectionClose: true);
 
-    response = "HTTP/1.0 200 OK\r\nContent-Length: 0\r\n\r\n";
-    _testParseResponse(response, 200, "OK",
-        expectedVersion: "1.0", connectionClose: true);
+    response = 'HTTP/1.0 200 OK\r\nContent-Length: 0\r\n\r\n';
+    _testParseResponse(response, 200, 'OK',
+        expectedVersion: '1.0', connectionClose: true);
 
-    response = "HTTP/1.0 200 OK\r\nContent-Length: 0\r\n"
-        "Connection: Keep-Alive\r\n\r\n";
-    _testParseResponse(response, 200, "OK", expectedVersion: "1.0");
+    response = 'HTTP/1.0 200 OK\r\nContent-Length: 0\r\n'
+        'Connection: Keep-Alive\r\n\r\n';
+    _testParseResponse(response, 200, 'OK', expectedVersion: '1.0');
 
-    response = "HTTP/1.1 204 No Content\r\nContent-Length: 11\r\n\r\n";
-    _testParseResponse(response, 204, "No Content",
+    response = 'HTTP/1.1 204 No Content\r\nContent-Length: 11\r\n\r\n';
+    _testParseResponse(response, 204, 'No Content',
         expectedTransferLength: 11, expectedBytesReceived: 0);
 
-    response = "HTTP/1.1 304 Not Modified\r\nContent-Length: 12\r\n\r\n";
-    _testParseResponse(response, 304, "Not Modified",
+    response = 'HTTP/1.1 304 Not Modified\r\nContent-Length: 12\r\n\r\n';
+    _testParseResponse(response, 304, 'Not Modified',
         expectedTransferLength: 12, expectedBytesReceived: 0);
 
-    response = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n";
-    _testParseResponse(response, 200, "OK");
+    response = 'HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n';
+    _testParseResponse(response, 200, 'OK');
 
-    response = "HTTP/1.1 404 Not found\r\nContent-Length: 0\r\n\r\n";
-    _testParseResponse(response, 404, "Not found");
+    response = 'HTTP/1.1 404 Not found\r\nContent-Length: 0\r\n\r\n';
+    _testParseResponse(response, 404, 'Not found');
 
-    response = "HTTP/1.1 500 Server error\r\nContent-Length: 0\r\n\r\n";
-    _testParseResponse(response, 500, "Server error");
+    response = 'HTTP/1.1 500 Server error\r\nContent-Length: 0\r\n\r\n';
+    _testParseResponse(response, 500, 'Server error');
 
     // Test response to HEAD request.
-    response = """
+    response = '''
 HTTP/1.1 200 OK\r
 Content-Length: 20\r
 Content-Type: text/html\r
-\r\n""";
-    headers = Map();
-    headers["content-length"] = "20";
-    headers["content-type"] = "text/html";
-    _testParseResponse(response, 200, "OK",
-        responseToMethod: "HEAD",
+\r\n''';
+    headers = <String, String>{};
+    headers['content-length'] = '20';
+    headers['content-type'] = 'text/html';
+    _testParseResponse(response, 200, 'OK',
+        responseToMethod: 'HEAD',
         expectedTransferLength: 20,
         expectedBytesReceived: 0,
         expectedHeaders: headers);
 
     // _testParseRequestLean encodes the request as ISO-8859-1. Test that the
     // HTTP parser decodes header values as ISO-8859-1.
-    response = """
+    response = '''
 HTTP/1.1 200 OK\r
 Content-Length: 0\r
 test-latin1: blåbærgrød\r
-\r\n""";
-    headers = Map();
-    headers["content-length"] = "0";
-    headers["test-latin1"] = "blåbærgrød";
-    _testParseResponse(response, 200, "OK", expectedHeaders: headers);
+\r\n''';
+    headers = <String, String>{};
+    headers['content-length'] = '0';
+    headers['test-latin1'] = 'blåbærgrød';
+    _testParseResponse(response, 200, 'OK', expectedHeaders: headers);
 
     // Test content.
-    response = """
+    response = '''
 HTTP/1.1 200 OK\r
 Content-Length: 20\r
 \r
-01234567890123456789""";
-    _testParseResponse(response, 200, "OK",
+01234567890123456789''';
+    _testParseResponse(response, 200, 'OK',
         expectedTransferLength: 20, expectedBytesReceived: 20);
 
     // Test upper and lower case hex digits in chunked encoding.
-    response = """
+    response = '''
 HTTP/1.1 200 OK\r
 Transfer-Encoding: chunked\r
 \r
@@ -730,154 +743,154 @@ Transfer-Encoding: chunked\r
 01234567890123456789012345\r
 1f\r
 0123456789012345678901234567890\r
-0\r\n\r\n""";
-    _testParseResponse(response, 200, "OK",
+0\r\n\r\n''';
+    _testParseResponse(response, 200, 'OK',
         expectedTransferLength: -1, expectedBytesReceived: 57, chunked: true);
 
     // Test connection close header.
-    response = """
+    response = '''
 HTTP/1.1 200 OK\r
 Content-Length: 0\r
 Connection: close\r
-\r\n""";
-    _testParseResponse(response, 200, "OK", connectionClose: true);
+\r\n''';
+    _testParseResponse(response, 200, 'OK', connectionClose: true);
 
     // Test HTTP response without any transfer length indications
     // where closing the connections indicates end of body.
-    response = """
+    response = '''
 HTTP/1.1 200 OK\r
 \r
 01234567890123456789012345
 0123456789012345678901234567890
-""";
-    _testParseResponse(response, 200, "OK",
+''';
+    _testParseResponse(response, 200, 'OK',
         expectedTransferLength: -1,
         expectedBytesReceived: 59,
         close: true,
         connectionClose: true);
 
     // Test HTTP upgrade.
-    response = """
+    response = '''
 HTTP/1.1 101 Switching Protocols\r
 Upgrade: irc/1.2\r
 Connection: Upgrade\r
-\r\n""";
-    headers = Map();
-    headers["upgrade"] = "irc/1.2";
-    _testParseResponse(response, 101, "Switching Protocols",
+\r\n''';
+    headers = <String, String>{};
+    headers['upgrade'] = 'irc/1.2';
+    _testParseResponse(response, 101, 'Switching Protocols',
         expectedHeaders: headers, upgrade: true);
 
     // Test HTTP upgrade with protocol data.
-    response = """
+    response = '''
 HTTP/1.1 101 Switching Protocols\r
 Upgrade: irc/1.2\r
 Connection: Upgrade\r
-\r\n\x00\x10\x20\x30\x40\x50\x60\x70\x80\x90\xA0\xB0\xC0\xD0\xE0\xF0""";
-    headers = Map();
-    headers["upgrade"] = "irc/1.2";
-    _testParseResponse(response, 101, "Switching Protocols",
+\r\n\x00\x10\x20\x30\x40\x50\x60\x70\x80\x90\xA0\xB0\xC0\xD0\xE0\xF0''';
+    headers = <String, String>{};
+    headers['upgrade'] = 'irc/1.2';
+    _testParseResponse(response, 101, 'Switching Protocols',
         expectedHeaders: headers, upgrade: true, unparsedLength: 16);
 
     // Test websocket upgrade.
-    response = """
+    response = '''
 HTTP/1.1 101 Switching Protocols\r
 Upgrade: websocket\r
 Connection: Upgrade\r
 Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r
-\r\n""";
-    headers = Map();
-    headers["upgrade"] = "websocket";
-    headers["sec-websocket-accept"] = "s3pPLMBiTxaQ9kYGzzhZRbK+xOo=";
-    _testParseResponse(response, 101, "Switching Protocols",
+\r\n''';
+    headers = <String, String>{};
+    headers['upgrade'] = 'websocket';
+    headers['sec-websocket-accept'] = 's3pPLMBiTxaQ9kYGzzhZRbK+xOo=';
+    _testParseResponse(response, 101, 'Switching Protocols',
         expectedHeaders: headers, upgrade: true);
 
     // Test websocket upgrade with protocol data.
-    response = """
+    response = '''
 HTTP/1.1 101 Switching Protocols\r
 Upgrade: websocket\r
 Connection: Upgrade\r
 Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r
-\r\nABCD""";
-    headers = Map();
-    headers["upgrade"] = "websocket";
-    headers["sec-websocket-accept"] = "s3pPLMBiTxaQ9kYGzzhZRbK+xOo=";
-    _testParseResponse(response, 101, "Switching Protocols",
+\r\nABCD''';
+    headers = <String, String>{};
+    headers['upgrade'] = 'websocket';
+    headers['sec-websocket-accept'] = 's3pPLMBiTxaQ9kYGzzhZRbK+xOo=';
+    _testParseResponse(response, 101, 'Switching Protocols',
         expectedHeaders: headers, upgrade: true, unparsedLength: 4);
   }
 
   void testParseInvalidRequest() {
     String request;
-    request = "GET /\r\n\r\n";
+    request = 'GET /\r\n\r\n';
     _testParseInvalidRequest(request);
 
-    request = "GET / \r\n\r\n";
+    request = 'GET / \r\n\r\n';
     _testParseInvalidRequest(request);
 
-    request = "/ HTTP/1.1\r\n\r\n";
+    request = '/ HTTP/1.1\r\n\r\n';
     _testParseInvalidRequest(request);
 
-    request = "GET HTTP/1.1\r\n\r\n";
+    request = 'GET HTTP/1.1\r\n\r\n';
     _testParseInvalidRequest(request);
 
-    request = " / HTTP/1.1\r\n\r\n";
+    request = ' / HTTP/1.1\r\n\r\n';
     _testParseInvalidRequest(request);
 
-    request = "@ / HTTP/1.1\r\n\r\n";
+    request = '@ / HTTP/1.1\r\n\r\n';
     _testParseInvalidRequest(request);
 
-    request = "GET / TTP/1.1\r\n\r\n";
+    request = 'GET / TTP/1.1\r\n\r\n';
     _testParseInvalidRequest(request);
 
-    request = "GET / HTTP/1.\r\n\r\n";
+    request = 'GET / HTTP/1.\r\n\r\n';
     _testParseInvalidRequest(request);
 
-    request = "GET / HTTP/1.1\r\nKeep-Alive: False\r\nbadheader\r\n\r\n";
+    request = 'GET / HTTP/1.1\r\nKeep-Alive: False\r\nbadheader\r\n\r\n';
     _testParseInvalidRequest(request);
   }
 
   void testParseInvalidResponse() {
     String response;
 
-    response = "HTTP/1.1\r\nContent-Length: 0\r\n\r\n";
+    response = 'HTTP/1.1\r\nContent-Length: 0\r\n\r\n';
     _testParseInvalidResponse(response);
 
-    response = "HTTP/1.1 \r\nContent-Length: 0\r\n\r\n";
+    response = 'HTTP/1.1 \r\nContent-Length: 0\r\n\r\n';
     _testParseInvalidResponse(response);
 
-    response = "HTTP/1.1 200\r\nContent-Length: 0\r\n\r\n";
+    response = 'HTTP/1.1 200\r\nContent-Length: 0\r\n\r\n';
     _testParseInvalidResponse(response);
 
-    response = "HTTP/1.1 200 \r\nContent-Length: 0\r\n\r\n";
+    response = 'HTTP/1.1 200 \r\nContent-Length: 0\r\n\r\n';
     _testParseInvalidResponse(response);
 
-    response = "HTTP/1.1 OK\r\nContent-Length: 0\r\n\r\n";
+    response = 'HTTP/1.1 OK\r\nContent-Length: 0\r\n\r\n';
     _testParseInvalidResponse(response);
 
-    response = "HTTP/1.1 20A OK\r\nContent-Length: 0\r\n\r\n";
+    response = 'HTTP/1.1 20A OK\r\nContent-Length: 0\r\n\r\n';
     _testParseInvalidResponse(response);
 
-    response = "200 OK\r\nContent-Length: 0\r\n\r\n";
+    response = '200 OK\r\nContent-Length: 0\r\n\r\n';
     _testParseInvalidResponse(response);
 
-    response = "HTTP/1. 200 OK\r\nContent-Length: 0\r\n\r\n";
+    response = 'HTTP/1. 200 OK\r\nContent-Length: 0\r\n\r\n';
     _testParseInvalidResponse(response);
 
-    response = "HTTP/1.1 200 O\rK\r\nContent-Length: 0\r\n\r\n";
+    response = 'HTTP/1.1 200 O\rK\r\nContent-Length: 0\r\n\r\n';
     _testParseInvalidResponse(response);
 
-    response = "HTTP/1.1 000 OK\r\nContent-Length: 0\r\n\r\n";
+    response = 'HTTP/1.1 000 OK\r\nContent-Length: 0\r\n\r\n';
     _testParseInvalidResponse(response);
 
-    response = "HTTP/1.1 999 Server Error\r\nContent-Length: 0\r\n\r\n";
+    response = 'HTTP/1.1 999 Server Error\r\nContent-Length: 0\r\n\r\n';
     _testParseInvalidResponse(response);
 
-    response = "HTTP/1.1 200 OK\r\nContent-Length: x\r\n\r\n";
+    response = 'HTTP/1.1 200 OK\r\nContent-Length: x\r\n\r\n';
     _testParseInvalidResponse(response);
 
-    response = "HTTP/1.1 200 OK\r\nbadheader\r\n\r\n";
+    response = 'HTTP/1.1 200 OK\r\nbadheader\r\n\r\n';
     _testParseInvalidResponse(response);
 
-    response = """
+    response = '''
 HTTP/1.1 200 OK\r
 Transfer-Encoding: chunked\r
 \r
@@ -885,7 +898,7 @@ Transfer-Encoding: chunked\r
 01234567890123456789012345\r
 1g\r
 0123456789012345678901234567890\r
-0\r\n\r\n""";
+0\r\n\r\n''';
     _testParseInvalidResponse(response);
   }
 }

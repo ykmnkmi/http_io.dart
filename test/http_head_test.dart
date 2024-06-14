@@ -2,27 +2,27 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import "package:http_io/http_io.dart";
+import 'package:http_io/http_io.dart';
 
-import "expect.dart";
+import 'expect.dart';
 
 void testHEAD(int totalConnections) {
-  HttpServer.bind("127.0.0.1", 0).then((server) {
+  HttpServer.bind('127.0.0.1', 0).then((server) {
     server.listen((request) {
       var response = request.response;
-      if (request.uri.path == "/test100") {
+      if (request.uri.path == '/test100') {
         response.contentLength = 100;
         response.close();
-      } else if (request.uri.path == "/test200") {
+      } else if (request.uri.path == '/test200') {
         response.contentLength = 200;
         List<int> data = List<int>.filled(200, 0);
         response.add(data);
         response.close();
-      } else if (request.uri.path == "/testChunked100") {
+      } else if (request.uri.path == '/testChunked100') {
         List<int> data = List<int>.filled(100, 0);
         response.add(data);
         response.close();
-      } else if (request.uri.path == "/testChunked200") {
+      } else if (request.uri.path == '/testChunked200') {
         List<int> data = List<int>.filled(200, 0);
         response.add(data);
         response.close();
@@ -35,7 +35,7 @@ void testHEAD(int totalConnections) {
 
     int count = 0;
 
-    requestDone() {
+    void requestDone() {
       count++;
       if (count == totalConnections * 2) {
         client.close();
@@ -46,20 +46,20 @@ void testHEAD(int totalConnections) {
     for (int i = 0; i < totalConnections; i++) {
       int len = (i % 2 == 0) ? 100 : 200;
       client
-          .open("HEAD", "127.0.0.1", server.port, "/test$len")
+          .open('HEAD', '127.0.0.1', server.port, '/test$len')
           .then((request) => request.close())
           .then((HttpClientResponse response) {
         Expect.equals(len, response.contentLength);
-        response.listen((_) => Expect.fail("Data from HEAD request"),
+        response.listen((_) => Expect.fail('Data from HEAD request'),
             onDone: requestDone);
       });
 
       client
-          .open("HEAD", "127.0.0.1", server.port, "/testChunked$len")
+          .open('HEAD', '127.0.0.1', server.port, '/testChunked$len')
           .then((request) => request.close())
           .then((HttpClientResponse response) {
         Expect.equals(-1, response.contentLength);
-        response.listen((_) => Expect.fail("Data from HEAD request"),
+        response.listen((_) => Expect.fail('Data from HEAD request'),
             onDone: requestDone);
       });
     }

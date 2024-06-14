@@ -4,17 +4,17 @@
 
 // ignore_for_file: avoid_print
 
-import "dart:async";
-import "dart:io" show Platform, Process, ProcessResult;
+import 'dart:async';
+import 'dart:io' show Platform, Process, ProcessResult;
 
-import "package:http_io/http_io.dart";
+import 'package:http_io/http_io.dart';
 
-import "expect.dart";
+import 'expect.dart';
 
-const hostName = "localhost";
-const certificate = "localhost_cert";
+const hostName = 'localhost';
+const certificate = 'localhost_cert';
 
-String localFile(path) => Platform.script.resolve(path).toFilePath();
+String localFile(String path) => Platform.script.resolve(path).toFilePath();
 
 SecurityContext untrustedServerContext = SecurityContext()
   ..useCertificateChain(localFile('certificates/untrusted_server_chain.pem'))
@@ -31,8 +31,10 @@ Future<HttpServer> runServer() {
       request.listen((_) {}, onDone: () {
         request.response.close();
       });
-    }, onError: (e) {
-      if (e is! HandshakeException) throw e;
+    }, onError: (Object e) {
+      if (e is! HandshakeException) {
+        throw e;
+      }
     });
     return server;
   });
@@ -40,18 +42,18 @@ Future<HttpServer> runServer() {
 
 void main() {
   var clientScript = localFile('https_unauthorized_client.dart');
-  Future clientProcess(int port) {
-    return Process.run(
-            Platform.executable,
-            []
-              ..addAll(Platform.executableArguments)
-              ..addAll([clientScript, port.toString()]))
-        .then((ProcessResult result) {
-      if (result.exitCode != 0 || !result.stdout.contains('SUCCESS')) {
-        print("Client failed");
-        print("  stdout:");
+  Future<void> clientProcess(int port) {
+    return Process.run(Platform.executable, <String>[
+      ...Platform.executableArguments,
+      clientScript,
+      port.toString()
+    ]).then((ProcessResult result) {
+      if (result.exitCode != 0 ||
+          !(result.stdout as String).contains('SUCCESS')) {
+        print('Client failed');
+        print('  stdout:');
         print(result.stdout);
-        print("  stderr:");
+        print('  stderr:');
         print(result.stderr);
         Expect.fail('Client subprocess exit code: ${result.exitCode}');
       }

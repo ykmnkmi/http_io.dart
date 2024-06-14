@@ -6,25 +6,23 @@ import 'dart:io' show Platform, Process;
 
 import 'package:http_io/http_io.dart';
 
-const clientScript = "http_server_close_response_after_error_client.dart";
+const clientScript = 'http_server_close_response_after_error_client.dart';
 
 void main() {
-  HttpServer.bind("127.0.0.1", 0).then((server) {
+  HttpServer.bind('127.0.0.1', 0).then((server) {
     server.listen((request) {
-      request.listen(null, onError: (e) {}, onDone: () {
+      request.listen(null, onError: (Object e) {}, onDone: () {
         request.response.close();
       });
     });
-    Process.run(
-            Platform.executable,
-            []
-              ..addAll(Platform.executableArguments)
-              ..addAll([
-                Platform.script.resolve(clientScript).toString(),
-                server.port.toString()
-              ]))
-        .then((result) {
-      if (result.exitCode != 0) throw "Bad exit code";
+    Process.run(Platform.executable, <String>[
+      ...Platform.executableArguments,
+      Platform.script.resolve(clientScript).toString(),
+      server.port.toString()
+    ]).then((result) {
+      if (result.exitCode != 0) {
+        throw 'Bad exit code';
+      }
       server.close();
     });
   });

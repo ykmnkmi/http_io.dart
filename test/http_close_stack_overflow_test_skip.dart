@@ -8,30 +8,30 @@
 import 'package:http_io/http_io.dart';
 
 Future<void> main() async {
-  final max = 10000;
-  final servers = <ServerSocket>[];
+  var max = 10000;
+  var servers = <ServerSocket>[];
   for (var i = 0; i < max; i++) {
-    final server = await ServerSocket.bind("localhost", 0);
+    var server = await ServerSocket.bind('localhost', 0);
     server.listen((Socket socket) {});
     servers.add(server);
   }
-  final client = HttpClient();
+  var client = HttpClient();
   var got = 0;
   for (var i = 0; i < max; i++) {
     Future(() async {
       try {
-        final request = await client
-            .getUrl(Uri.parse("http://localhost:${servers[i].port}/"));
+        var request = await client
+            .getUrl(Uri.parse('http://localhost:${servers[i].port}/'));
         got++;
         if (got == max) {
           // Test that no stack overflow happens.
           client.close(force: true);
-          for (final server in servers) {
+          for (var server in servers) {
             server.close();
           }
         }
-        final response = await request.close();
-        response.drain();
+        var response = await request.close();
+        response.drain<void>();
       } on HttpException catch (_) {}
     });
   }

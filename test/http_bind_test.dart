@@ -11,22 +11,22 @@ import 'package:http_io/http_io.dart';
 import 'async_helper.dart';
 import 'expect.dart';
 
-testBindShared(String host, bool v6Only) async {
+Future<void> testBindShared(String host, bool v6Only) async {
   asyncStart();
 
   // Sent a single request using a new HttpClient to ensure a new TCP
   // connection is used.
-  Future singleRequest(host, port, statusCode) async {
+  Future<void> singleRequest(String host, int port, int statusCode) async {
     var client = HttpClient();
     var request = await client.open('GET', host, port, '/');
     var response = await request.close();
-    await response.drain();
+    await response.drain<void>();
     Expect.equals(statusCode, response.statusCode);
     client.close(force: true);
   }
 
-  Completer server1Request = Completer();
-  Completer server2Request = Completer();
+  Completer<void> server1Request = Completer<void>();
+  Completer<void> server2Request = Completer();
 
   var server1 = await HttpServer.bind(host, 0, v6Only: v6Only, shared: true);
   var port = server1.port;
@@ -68,7 +68,7 @@ void main() {
     if (ok) {
       addresses.add('::1');
     }
-    var futures = <Future>[];
+    var futures = <Future<void>>[];
     for (var host in addresses) {
       futures.add(testBindShared(host, false));
       futures.add(testBindShared(host, true));

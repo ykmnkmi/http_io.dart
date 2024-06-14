@@ -2,11 +2,11 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import "dart:isolate";
+import 'dart:isolate';
 
-import "package:http_io/http_io.dart";
+import 'package:http_io/http_io.dart';
 
-import "expect.dart";
+import 'expect.dart';
 
 class IsolatedHttpServer {
   IsolatedHttpServer();
@@ -17,9 +17,9 @@ class IsolatedHttpServer {
 
   void start([bool chunkedEncoding = false]) {
     ReceivePort receivePort = ReceivePort();
-    var remote = Isolate.spawn(startIsolatedHttpServer, receivePort.sendPort);
-    receivePort.first.then((port) {
-      _serverPort = port;
+    Isolate.spawn(startIsolatedHttpServer, receivePort.sendPort);
+    receivePort.first.then((Object? port) {
+      _serverPort = port as SendPort;
 
       if (chunkedEncoding) {
         // Send chunked encoding message to the server.
@@ -36,6 +36,8 @@ class IsolatedHttpServer {
 
     // Handle status messages from the server.
     _statusPort.listen((var status) {
+      status as IsolatedHttpServerStatus;
+
       if (status.isStarted) {
         _startedCallback(status.port);
       }
@@ -51,7 +53,7 @@ class IsolatedHttpServer {
   final _statusPort =
       ReceivePort(); // Port for receiving messages from the server.
   late SendPort _serverPort; // Port for sending messages to the server.
-  var _startedCallback;
+  late void Function(int port) _startedCallback;
 }
 
 class IsolatedHttpServerCommand {
@@ -67,7 +69,7 @@ class IsolatedHttpServerCommand {
   bool get isStop => _command == _stop;
   bool get isChunkedEncoding => _command == _chunkedEncoding;
 
-  int _command;
+  final int _command;
 }
 
 class IsolatedHttpServerStatus {
@@ -85,12 +87,12 @@ class IsolatedHttpServerStatus {
 
   int get port => _port;
 
-  int _state;
+  final int _state;
   int _port = 0;
 }
 
 void startIsolatedHttpServer(Object replyToObj) {
-  final replyTo = replyToObj as SendPort;
+  var replyTo = replyToObj as SendPort;
   var server = TestServer();
   server.init();
   replyTo.send(server.dispatchSendPort);
@@ -100,7 +102,7 @@ class TestServer {
   // Echo the request content back to the response.
   void _echoHandler(HttpRequest request) {
     var response = request.response;
-    Expect.equals("POST", request.method);
+    Expect.equals('POST', request.method);
     response.contentLength = request.contentLength;
     request.cast<List<int>>().pipe(response);
   }
@@ -109,25 +111,27 @@ class TestServer {
   void _notFoundHandler(HttpRequest request) {
     var response = request.response;
     response.statusCode = HttpStatus.notFound;
-    response.headers.set("Content-Type", "text/html; charset=UTF-8");
-    response.write("Page not found");
+    response.headers.set('Content-Type', 'text/html; charset=UTF-8');
+    response.write('Page not found');
     response.close();
   }
 
   void init() {
     // Setup request handlers.
-    _requestHandlers["/echo"] = _echoHandler;
+    _requestHandlers['/echo'] = _echoHandler;
     _dispatchPort.listen(dispatch);
   }
 
   SendPort get dispatchSendPort => _dispatchPort.sendPort;
 
-  void dispatch(message) {
-    IsolatedHttpServerCommand command = message[0];
-    SendPort replyTo = message[1];
+  void dispatch(Object? message) {
+    message as List;
+
+    IsolatedHttpServerCommand command = message[0] as IsolatedHttpServerCommand;
+    SendPort replyTo = message[1] as SendPort;
     if (command.isStart) {
       try {
-        HttpServer.bind("127.0.0.1", 0).then((server) {
+        HttpServer.bind('127.0.0.1', 0).then((server) {
           _server = server;
           _server.listen(_requestReceivedHandler);
           replyTo.send(IsolatedHttpServerStatus.started(_server.port));
@@ -139,9 +143,7 @@ class TestServer {
       _server.close();
       _dispatchPort.close();
       replyTo.send(IsolatedHttpServerStatus.stopped());
-    } else if (command.isChunkedEncoding) {
-      _chunkedEncoding = true;
-    }
+    } else if (command.isChunkedEncoding) {}
   }
 
   void _requestReceivedHandler(HttpRequest request) {
@@ -155,13 +157,12 @@ class TestServer {
 
   late HttpServer _server; // HTTP server instance.
   final _dispatchPort = ReceivePort();
-  final _requestHandlers = {};
-  bool _chunkedEncoding = false;
+  final _requestHandlers = <String, void Function(HttpRequest)>{};
 }
 
 void testRead(bool chunkedEncoding) {
-  String data = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  final int kMessageCount = 10;
+  String data = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  int kMessageCount = 10;
 
   IsolatedHttpServer server = IsolatedHttpServer();
 
@@ -169,7 +170,7 @@ void testRead(bool chunkedEncoding) {
     int count = 0;
     HttpClient httpClient = HttpClient();
     void sendRequest() {
-      httpClient.post("127.0.0.1", port, "/echo").then((request) {
+      httpClient.post('127.0.0.1', port, '/echo').then((request) {
         if (chunkedEncoding) {
           request.write(data.substring(0, 10));
           request.write(data.substring(10, data.length));

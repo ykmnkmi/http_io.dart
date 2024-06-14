@@ -6,7 +6,7 @@ part of 'http.dart';
 
 class _CryptoUtils {
   static Uint8List getRandomBytes(int count) {
-    final Uint8List result = Uint8List(count);
+    Uint8List result = Uint8List(count);
     for (int i = 0; i < count; i++) {
       result[i] = Random.secure().nextInt(0xff);
     }
@@ -73,7 +73,7 @@ abstract class _HashBase {
   }
 
   // One round of the hash computation.
-  _updateHash(Uint32List m);
+  void _updateHash(Uint32List m);
 
   // Helper methods.
   int _add32(int x, int y) => (x + y) & _mask32;
@@ -81,9 +81,8 @@ abstract class _HashBase {
 
   // Rotate left limiting to unsigned 32-bit values.
   int _rotl32(int val, int shift) {
-    var mod_shift = shift & 31;
-    return ((val << mod_shift) & _mask32) |
-        ((val & _mask32) >> (32 - mod_shift));
+    var modShoft = shift & 31;
+    return ((val << modShoft) & _mask32) | ((val & _mask32) >> (32 - modShoft));
   }
 
   // Compute the final result as a list of bytes from the hash words.
@@ -108,7 +107,7 @@ abstract class _HashBase {
       var word = (w3 & 0xff) << 24;
       word |= (w2 & _mask8) << 16;
       word |= (w1 & _mask8) << 8;
-      word |= (w0 & _mask8);
+      word |= w0 & _mask8;
       _currentChunk[wordIndex] = word;
     }
   }
@@ -273,7 +272,7 @@ class _SHA1 extends _HashBase {
       if (i < 20) {
         t = _add32(_add32(t, (b & c) | (~b & d)), 0x5A827999);
       } else if (i < 40) {
-        t = _add32(_add32(t, (b ^ c ^ d)), 0x6ED9EBA1);
+        t = _add32(_add32(t, b ^ c ^ d), 0x6ED9EBA1);
       } else if (i < 60) {
         t = _add32(_add32(t, (b & c) | (b & d) | (c & d)), 0x8F1BBCDC);
       } else {

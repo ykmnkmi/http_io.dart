@@ -2,15 +2,15 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import "dart:io" show Platform;
+import 'dart:io' show Platform;
 
-import "package:http_io/http_io.dart";
+import 'package:http_io/http_io.dart';
 
-import "async_helper.dart";
-import "expect.dart";
+import 'async_helper.dart';
+import 'expect.dart';
 
-const hostName = "localhost";
-String localFile(path) => Platform.script.resolve(path).toFilePath();
+const hostName = 'localhost';
+String localFile(String path) => Platform.script.resolve(path).toFilePath();
 
 SecurityContext serverContext = SecurityContext()
   ..useCertificateChain(localFile('certificates/server_chain.pem'))
@@ -37,13 +37,13 @@ void main() {
     server.listen((HttpRequest request) {
       Expect.isNotNull(request.certificate);
       Expect.equals('/CN=user1', request.certificate!.subject);
-      request.response.write("Hello");
+      request.response.write('Hello');
       request.response.close();
     });
 
     HttpClient client = HttpClient(context: clientContext);
     client
-        .getUrl(Uri.parse("https://$hostName:${server.port}/"))
+        .getUrl(Uri.parse('https://$hostName:${server.port}/'))
         .then((request) => request.close())
         .then((response) {
       Expect.equals('/CN=localhost', response.certificate!.subject);
@@ -52,7 +52,7 @@ void main() {
           .fold<List<int>>(<int>[], (message, data) => message..addAll(data));
     }).then((message) {
       String received = String.fromCharCodes(message);
-      Expect.equals(received, "Hello");
+      Expect.equals(received, 'Hello');
       client.close();
       server.close();
       asyncEnd();

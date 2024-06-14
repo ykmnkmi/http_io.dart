@@ -4,19 +4,18 @@
 //
 // Tests that CR*LF sequence works as well as CRLF in http client parser.
 
-import "dart:async";
-import "dart:convert";
+import 'dart:async';
+import 'dart:convert';
 
-import "package:http_io/http_io.dart";
+import 'package:http_io/http_io.dart';
 
-import "async_helper.dart";
-import "expect.dart";
+import 'async_helper.dart';
+import 'expect.dart';
 
-Future testHttpClient(header) {
-  final completer = Completer();
-  ServerSocket.bind("127.0.0.1", 0).then((server) async {
+Future<void> testHttpClient(String header) {
+  var completer = Completer<void>();
+  ServerSocket.bind('127.0.0.1', 0).then((server) async {
     server.listen((socket) async {
-      int port = server.port;
       socket.write(header);
       await socket.flush();
       completer.future.catchError((_) {}).whenComplete(() {
@@ -28,7 +27,7 @@ Future testHttpClient(header) {
       var client = HttpClient();
       client.userAgent = null;
       client
-          .get("127.0.0.1", server.port, "/")
+          .get('127.0.0.1', server.port, '/')
           .then((request) => request.close())
           .then((response) {
         response.transform(utf8.decoder).listen((contents) {
@@ -48,26 +47,26 @@ Future testHttpClient(header) {
 
 void main() async {
   const good = <String>[
-    "HTTP/1.1 200 OK\n\nTest!",
-    "HTTP/1.1 200 OK\r\n\nTest!",
-    "HTTP/1.1 200 OK\n\r\nTest!",
-    "HTTP/1.1 200 OK\r\n\r\nTest!",
+    'HTTP/1.1 200 OK\n\nTest!',
+    'HTTP/1.1 200 OK\r\n\nTest!',
+    'HTTP/1.1 200 OK\n\r\nTest!',
+    'HTTP/1.1 200 OK\r\n\r\nTest!',
   ];
   asyncStart();
-  for (final header in good) {
+  for (var header in good) {
     await testHttpClient(header);
   }
   const bad = <String>[
-    "HTTP/1.1 200 OK\n\rTest!",
-    "HTTP/1.1 200 OK\r\r\n\nTest!",
-    "HTTP/1.1 200 OK\r\rTest!",
-    "HTTP/1.1 200 OK\rTest!",
+    'HTTP/1.1 200 OK\n\rTest!',
+    'HTTP/1.1 200 OK\r\r\n\nTest!',
+    'HTTP/1.1 200 OK\r\rTest!',
+    'HTTP/1.1 200 OK\rTest!',
   ];
-  for (final header in bad) {
-    var caught;
+  for (var header in bad) {
+    Object? caught;
     try {
       await testHttpClient(header);
-    } catch (e, st) {
+    } catch (e) {
       caught = e;
     }
     Expect.isTrue(caught is HttpException);

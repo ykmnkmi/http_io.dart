@@ -2,50 +2,51 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import "package:http_io/http_io.dart";
+import 'package:http_io/http_io.dart';
 
-import "async_helper.dart";
-import "expect.dart";
+import 'async_helper.dart';
+import 'expect.dart';
 
 const sampleData = <int>[1, 2, 3, 4, 5];
 
 void testBadHostName() {
   asyncStart();
   HttpClient client = HttpClient();
-  client.get("some.bad.host.name.7654321", 0, "/").then((request) {
-    Expect.fail("Should not open a request on bad hostname");
+  client.get('some.bad.host.name.7654321', 0, '/').then((request) {
+    Expect.fail('Should not open a request on bad hostname');
   }).catchError((error) {
     asyncEnd(); // We expect onError to be called, due to bad host name.
   }, test: (error) => error is! String);
 }
 
-void testConnect(InternetAddress loopback, {int expectedElapsedMs = 0}) async {
+Future<void> testConnect(InternetAddress loopback,
+    {int expectedElapsedMs = 0}) async {
   asyncStart();
-  final max = 10;
-  final servers = <ServerSocket>[];
+  var max = 10;
+  var servers = <ServerSocket>[];
   for (var i = 0; i < max; i++) {
-    final server = await ServerSocket.bind(loopback, 0);
+    var server = await ServerSocket.bind(loopback, 0);
     server.listen((Socket socket) {
       socket.add(sampleData);
       socket.destroy();
     });
     servers.add(server);
   }
-  final sw = Stopwatch()..start();
+  var sw = Stopwatch()..start();
   var got = 0;
   for (var i = 0; i < max; i++) {
-    final client = await Socket.connect('localhost', servers[i].port,
+    var client = await Socket.connect('localhost', servers[i].port,
         sourceAddress: loopback);
     client.listen((received) {
       Expect.listEquals(sampleData, received);
-    }, onError: (e) {
+    }, onError: (Object e) {
       Expect.fail('Unexpected failure $e');
     }, onDone: () {
       client.close();
       got++;
       if (got == max) {
         // Test that no stack overflow happens.
-        for (final server in servers) {
+        for (var server in servers) {
           server.close();
         }
         Expect.isTrue(sw.elapsedMilliseconds > expectedElapsedMs);

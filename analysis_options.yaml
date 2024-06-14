@@ -4,48 +4,22 @@ analyzer:
   language:
     # strict-casts: true
     strict-inference: true
-    # strict-raw-types: true
+    strict-raw-types: true
   errors:
-    inference_failure_on_collection_literal: ignore
-    inference_failure_on_function_invocation: ignore
-    inference_failure_on_function_return_type: ignore
-    inference_failure_on_instance_creation: ignore
-    inference_failure_on_uninitialized_variable: ignore
-    inference_failure_on_untyped_parameter: ignore
-    invalid_return_type_for_catch_error: ignore
-    library_private_types_in_public_api: ignore
-    no_leading_underscores_for_local_identifiers: ignore
-    non_constant_identifier_names: ignore
-    prefer_adjacent_string_concatenation: ignore
-    prefer_collection_literals: ignore
-    prefer_contains: ignore
-    prefer_final_fields: ignore
-    prefer_generic_function_type_aliases: ignore
-    prefer_interpolation_to_compose_strings: ignore
-    prefer_is_empty: ignore
-    prefer_spread_collections: ignore
-    prefer_typing_uninitialized_variables: ignore
     todo: ignore
-    unnecessary_brace_in_string_interps: ignore
-    unnecessary_type_check: ignore
-    unused_catch_clause: ignore
-    unused_catch_stack: ignore
-    unused_element: ignore
-    unused_field: ignore
-    unused_local_variable: ignore
 
 linter:
   rules:
-    # - always_declare_return_types
-    # - always_put_control_body_on_new_line
-    # - avoid_dynamic_calls
-    # - avoid_escaping_inner_quotes
+    - always_declare_return_types
+    - always_put_control_body_on_new_line
+    - avoid_dynamic_calls
+    - avoid_escaping_inner_quotes
     - avoid_final_parameters
     - avoid_print
-    # - avoid_void_async
+    - avoid_void_async
     - directives_ordering
-    # - prefer_single_quotes
-    # - unnecessary_final
-    # - unnecessary_lambdas
-    # - unnecessary_parenthesis
-    # - unnecessary_raw_strings
+    - prefer_single_quotes
+    - unnecessary_final
+    - unnecessary_lambdas
+    - unnecessary_parenthesis
+    - unnecessary_raw_strings

@@ -2,20 +2,20 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import "package:http_io/http_io.dart";
+import 'package:http_io/http_io.dart';
 
-import "async_helper.dart";
-import "expect.dart";
+import 'async_helper.dart';
+import 'expect.dart';
 
 // Client makes a HTTP 1.0 request without connection keep alive. The
 // server sets a content length but still needs to close the
 // connection as there is no keep alive.
 void testHttpIPv6() {
   asyncStart();
-  HttpServer.bind("::", 0).then((server) {
+  HttpServer.bind('::', 0).then((server) {
     server.listen((HttpRequest request) {
-      Expect.equals(request.headers["host"]![0], "[::1]:${server.port}");
-      Expect.equals(request.requestedUri.host, "::1");
+      Expect.equals(request.headers['host']![0], '[::1]:${server.port}');
+      Expect.equals(request.requestedUri.host, '::1');
       request.response.close();
     });
 

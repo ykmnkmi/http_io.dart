@@ -2,47 +2,54 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import "dart:async";
+import 'dart:async';
 
-import "package:http_io/http_io.dart";
+import 'package:http_io/http_io.dart';
 
 void testHttp10Close(bool closeRequest) {
-  HttpServer.bind("127.0.0.1", 0).then((server) {
+  HttpServer.bind('127.0.0.1', 0).then((server) {
     server.listen((request) {
       request.response.close();
     });
 
-    Socket.connect("127.0.0.1", server.port).then((socket) {
-      socket.write("GET / HTTP/1.0\r\n\r\n");
+    Socket.connect('127.0.0.1', server.port).then((socket) {
+      socket.write('GET / HTTP/1.0\r\n\r\n');
       socket.listen((data) {}, onDone: () {
-        if (!closeRequest) socket.destroy();
+        if (!closeRequest) {
+          socket.destroy();
+        }
         server.close();
       });
-      if (closeRequest) socket.close();
+      if (closeRequest) {
+        socket.close();
+      }
     });
   });
 }
 
 void testHttp11Close(bool closeRequest) {
-  HttpServer.bind("127.0.0.1", 0).then((server) {
+  HttpServer.bind('127.0.0.1', 0).then((server) {
     server.listen((request) {
       request.response.close();
     });
 
-    Socket.connect("127.0.0.1", server.port).then((socket) {
-      List<int> buffer = List<int>.filled(1024, 0);
-      socket.write("GET / HTTP/1.1\r\nConnection: close\r\n\r\n");
+    Socket.connect('127.0.0.1', server.port).then((socket) {
+      socket.write('GET / HTTP/1.1\r\nConnection: close\r\n\r\n');
       socket.listen((data) {}, onDone: () {
-        if (!closeRequest) socket.destroy();
+        if (!closeRequest) {
+          socket.destroy();
+        }
         server.close();
       });
-      if (closeRequest) socket.close();
+      if (closeRequest) {
+        socket.close();
+      }
     });
   });
 }
 
 void testStreamResponse() {
-  HttpServer.bind("127.0.0.1", 0).then((server) {
+  HttpServer.bind('127.0.0.1', 0).then((server) {
     server.listen((request) {
       var timer = Timer.periodic(const Duration(milliseconds: 0), (_) {
         request.response
@@ -55,7 +62,7 @@ void testStreamResponse() {
 
     var client = HttpClient();
     client
-        .getUrl(Uri.parse("http://127.0.0.1:${server.port}"))
+        .getUrl(Uri.parse('http://127.0.0.1:${server.port}'))
         .then((request) => request.close())
         .then((response) {
       int bytes = 0;
@@ -71,7 +78,7 @@ void testStreamResponse() {
   });
 }
 
-main() {
+void main() {
   testHttp10Close(false);
   testHttp10Close(true);
   testHttp11Close(false);

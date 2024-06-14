@@ -4,13 +4,13 @@
 
 import 'dart:async';
 
-import "package:http_io/http_io.dart";
+import 'package:http_io/http_io.dart';
 
-import "async_helper.dart";
+import 'async_helper.dart';
 
 Future<int> runServer(int port, int connections, bool clean) {
   var completer = Completer<int>();
-  HttpServer.bind("127.0.0.1", port).then((server) {
+  HttpServer.bind('127.0.0.1', port).then((server) {
     int i = 0;
     server.listen((request) {
       request.cast<List<int>>().pipe(request.response);
@@ -24,11 +24,13 @@ Future<int> runServer(int port, int connections, bool clean) {
     Future.wait(List.generate(connections, (_) {
       var client = HttpClient();
       return client
-          .get("127.0.0.1", server.port, "/")
+          .get('127.0.0.1', server.port, '/')
           .then((request) => request.close())
-          .then((response) => response.drain())
-          .catchError((e) {
-        if (clean) throw e;
+          .then((response) => response.drain<void>())
+          .catchError((Object e) {
+        if (clean) {
+          throw e;
+        }
       });
     })).then((_) {
       if (clean) {

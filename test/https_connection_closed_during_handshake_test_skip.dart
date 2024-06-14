@@ -10,46 +10,46 @@ import 'dart:io' show Platform, Process, exit;
 
 import 'package:http_io/http_io.dart';
 
-import "async_helper.dart";
-import "expect.dart";
+import 'async_helper.dart';
+import 'expect.dart';
 
 String getFilename(String path) => Platform.script.resolve(path).toFilePath();
 
 final SecurityContext serverSecurityContext = () {
-  final context = SecurityContext();
+  var context = SecurityContext();
   context.usePrivateKey(getFilename('localhost.key'));
   context.useCertificateChain(getFilename('localhost.crt'));
   return context;
 }();
 
 final SecurityContext clientSecurityContext = () {
-  final context = SecurityContext(withTrustedRoots: true);
+  var context = SecurityContext(withTrustedRoots: true);
   context.setTrustedCertificates(getFilename('localhost.crt'));
   return context;
 }();
 
 void main(List<String> args) async {
-  if (args.length >= 1 && args[0] == 'server') {
-    final server =
+  if (args.isNotEmpty && args[0] == 'server') {
+    var server =
         await SecureServerSocket.bind('localhost', 0, serverSecurityContext);
     print('ok ${server.port}');
     server.listen((socket) {
       print('server: got connection');
       socket.close();
     });
-    await Future.delayed(Duration(seconds: 2));
+    await Future<void>.delayed(Duration(seconds: 2));
     print('server: exiting');
     exit(1);
   }
 
   asyncStart();
 
-  final serverProcess = await Process.start(Platform.executable, [
+  var serverProcess = await Process.start(Platform.executable, [
     ...Platform.executableArguments,
     Platform.script.toFilePath(),
     'server'
   ]);
-  final serverPortCompleter = Completer<int>();
+  var serverPortCompleter = Completer<int>();
 
   serverProcess.stdout
       .transform(utf8.decoder)
@@ -67,7 +67,7 @@ void main(List<String> args) async {
 
   int port = await serverPortCompleter.future;
 
-  final errorCompleter = Completer();
+  var errorCompleter = Completer<Object?>();
   await runZonedGuarded(() async {
     var socket = await SecureSocket.connect('localhost', port,
         context: clientSecurityContext);

@@ -9,7 +9,7 @@ import 'dart:async';
 import 'package:http_io/http_io.dart';
 
 import 'async_helper.dart';
-import "expect.dart";
+import 'expect.dart';
 
 void main() {
   // A virtual tun/tap interface should be created with following instructions:
@@ -41,7 +41,7 @@ void main() {
 
       var client = HttpClient();
       client
-          .getUrl(Uri.parse("http://[${ipv6}]:${server.port}"))
+          .getUrl(Uri.parse('http://[$ipv6]:${server.port}'))
           .then((request) => request.close())
           .then((response) {
         print(

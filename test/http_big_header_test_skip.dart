@@ -4,13 +4,13 @@
 
 // ignore_for_file: avoid_print
 
-import "package:http_io/http_io.dart";
+import 'package:http_io/http_io.dart';
 
-import "expect.dart";
+import 'expect.dart';
 
 Future<void> testClient(int limit) async {
-  final server = await HttpServer.bind('127.0.0.1', 0);
-  final str = 'a' * (1000);
+  var server = await HttpServer.bind('127.0.0.1', 0);
+  var str = 'a' * (1000);
   int size = 0;
   server.listen((request) async {
     for (int i = 0; i < 10000; i++) {
@@ -24,8 +24,8 @@ Future<void> testClient(int limit) async {
     server.close();
   });
 
-  final client = HttpClient();
-  final request = await client.get('127.0.0.1', server.port, '/');
+  var client = HttpClient();
+  var request = await client.get('127.0.0.1', server.port, '/');
   await request.close();
 }
 
@@ -44,9 +44,9 @@ Future<void> client() async {
 }
 
 Future<void> testServer(int limit, int port) async {
-  final str = 'a' * (1000);
-  final client = HttpClient();
-  final request = await client.get('127.0.0.1', port, '/');
+  var str = 'a' * (1000);
+  var client = HttpClient();
+  var request = await client.get('127.0.0.1', port, '/');
   for (int size = 0; size < limit; size += 1000) {
     request.headers.add('dummy', str);
   }
@@ -54,7 +54,7 @@ Future<void> testServer(int limit, int port) async {
 }
 
 Future<void> server() async {
-  final server = await HttpServer.bind('127.0.0.1', 0);
+  var server = await HttpServer.bind('127.0.0.1', 0);
   int i = 64;
   try {
     server.listen((request) async {

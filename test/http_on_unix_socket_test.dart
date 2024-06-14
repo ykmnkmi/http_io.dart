@@ -7,13 +7,13 @@ import 'dart:io' show Directory, Platform, Process;
 
 import 'package:http_io/http_io.dart';
 
-import "expect.dart";
+import 'expect.dart';
 
-Future testHttpServer(String name) async {
-  var sockname = "$name/sock";
+Future<void> testHttpServer(String name) async {
+  var sockname = '$name/sock';
   var address = InternetAddress(sockname, type: InternetAddressType.unix);
   var httpServer = await HttpServer.bind(address, 0);
-  var sub;
+  late StreamSubscription<HttpRequest> sub;
   sub = httpServer.listen((HttpRequest request) {
     request.response.write('Hello, world!');
     request.response.close();
@@ -22,19 +22,18 @@ Future testHttpServer(String name) async {
     httpServer.close();
   });
 
-  var option = "--unix-socket $sockname";
   var result =
-      await Process.run("curl", ["--unix-socket", sockname, "localhost"]);
+      await Process.run('curl', ['--unix-socket', sockname, 'localhost']);
   Expect.isTrue(result.stdout.toString().contains('Hello, world!'));
 }
 
-main() async {
+Future<void> main() async {
   var tmpDir = Directory.systemTemp.createTempSync('http_on_unix_socket_test');
   try {
     await testHttpServer(tmpDir.path);
   } catch (e) {
     if (Platform.isMacOS || Platform.isLinux || Platform.isAndroid) {
-      Expect.fail("Unexpected exception $e is thrown");
+      Expect.fail('Unexpected exception $e is thrown');
     } else {
       Expect.isTrue(e is SocketException);
       Expect.isTrue(e.toString().contains('not available'));

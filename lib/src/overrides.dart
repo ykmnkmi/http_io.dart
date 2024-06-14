@@ -93,9 +93,13 @@ class _HttpOverridesScope extends HttpOverrides {
   @override
   HttpClient createHttpClient(SecurityContext? context) {
     var createHttpClient = _createHttpClient;
-    if (createHttpClient != null) return createHttpClient(context);
+    if (createHttpClient != null) {
+      return createHttpClient(context);
+    }
     var previous = _previous;
-    if (previous != null) return previous.createHttpClient(context);
+    if (previous != null) {
+      return previous.createHttpClient(context);
+    }
     return super.createHttpClient(context);
   }
 

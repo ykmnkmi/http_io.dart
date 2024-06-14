@@ -2,10 +2,10 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import "package:http_io/http_io.dart";
+import 'package:http_io/http_io.dart';
 
 void testTimeoutAfterRequest() {
-  HttpServer.bind("127.0.0.1", 0).then((server) {
+  HttpServer.bind('127.0.0.1', 0).then((server) {
     server.idleTimeout = null;
 
     server.listen((request) {
@@ -13,8 +13,8 @@ void testTimeoutAfterRequest() {
       request.response.close();
     });
 
-    Socket.connect("127.0.0.1", server.port).then((socket) {
-      var data = "GET / HTTP/1.1\r\nContent-Length: 0\r\n\r\n";
+    Socket.connect('127.0.0.1', server.port).then((socket) {
+      var data = 'GET / HTTP/1.1\r\nContent-Length: 0\r\n\r\n';
       socket.write(data);
       socket.listen(null, onDone: () {
         socket.close();
@@ -25,12 +25,12 @@ void testTimeoutAfterRequest() {
 }
 
 void testTimeoutBeforeRequest() {
-  HttpServer.bind("127.0.0.1", 0).then((server) {
+  HttpServer.bind('127.0.0.1', 0).then((server) {
     server.idleTimeout = const Duration(milliseconds: 100);
 
     server.listen((request) => request.response.close());
 
-    Socket.connect("127.0.0.1", server.port).then((socket) {
+    Socket.connect('127.0.0.1', server.port).then((socket) {
       socket.listen(null, onDone: () {
         socket.close();
         server.close();

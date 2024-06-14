@@ -2,36 +2,36 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import "package:http_io/http_io.dart";
+import 'package:http_io/http_io.dart';
 
-import "async_helper.dart";
-import "expect.dart";
+import 'async_helper.dart';
+import 'expect.dart';
 
 const sendPath = '/path?a=b#c';
 const expectedPath = '/path?a=b';
 
-void test(String expected, Map headers) {
+void test(String expected, Map<String, Object?> headers) {
   asyncStart();
-  HttpServer.bind("localhost", 0).then((server) {
+  HttpServer.bind('localhost', 0).then((server) {
     expected = expected.replaceAll('%PORT', server.port.toString());
     server.listen((request) {
-      Expect.equals("$expected$expectedPath", request.requestedUri.toString());
+      Expect.equals('$expected$expectedPath', request.requestedUri.toString());
       request.response.close();
     });
     HttpClient client = HttpClient();
     client
-        .get("localhost", server.port, sendPath)
+        .get('localhost', server.port, sendPath)
         .then((request) {
           for (var v in headers.keys) {
             if (headers[v] != null) {
-              request.headers.set(v, headers[v]);
+              request.headers.set(v, headers[v]!);
             } else {
               request.headers.removeAll(v);
             }
           }
           return request.close();
         })
-        .then((response) => response.drain())
+        .then((response) => response.drain<void>())
         .then((_) {
           server.close();
           asyncEnd();
@@ -44,19 +44,19 @@ void test(String expected, Map headers) {
 void testAbsoluteUriInRequest() {
   asyncStart();
   Uri? requestedUri;
-  HttpServer.bind("localhost", 0).then((server) {
+  HttpServer.bind('localhost', 0).then((server) {
     server.listen((request) {
       requestedUri = request.requestedUri;
       request.response.close();
     });
 
-    Socket.connect("localhost", server.port).then((socket) {
-      socket.write("GET http://google.com/ HTTP/1.1\r\n");
-      socket.write("Host: google.com\r\n");
-      socket.write("Connection: close\r\n");
-      socket.write("\r\n");
-      socket.flush().then((_) => socket.drain().then((_) {
-            Expect.equals(Uri.http("google.com", "/"), requestedUri);
+    Socket.connect('localhost', server.port).then((socket) {
+      socket.write('GET http://google.com/ HTTP/1.1\r\n');
+      socket.write('Host: google.com\r\n');
+      socket.write('Connection: close\r\n');
+      socket.write('\r\n');
+      socket.flush().then((_) => socket.drain<void>().then((_) {
+            Expect.equals(Uri.http('google.com', '/'), requestedUri);
             socket.close();
             server.close();
             asyncEnd();

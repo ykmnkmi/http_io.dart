@@ -25,11 +25,28 @@ Future<void> main() async {
 
     if (vmOptions.isEmpty) {
       stdout.writeln('dart ${entity.path}');
-      await Isolate.spawnUri(
+
+      ReceivePort receivePort = ReceivePort();
+      SendPort sendPort = receivePort.sendPort;
+
+      Isolate isolate = await Isolate.spawnUri(
         Directory.current.uri.resolveUri(entity.uri),
         <String>[],
         null,
+        onExit: sendPort,
+        onError: sendPort,
       );
+
+      Object? message = await receivePort.first;
+      isolate.kill(priority: Isolate.immediate);
+      receivePort.close();
+
+      if (message is List) {
+        Error.throwWithStackTrace(
+          message[0] as Object,
+          StackTrace.fromString(message[1] as String),
+        );
+      }
     } else {
       for (List<String> options in vmOptions) {
         options = <String>[...options, entity.path];

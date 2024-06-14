@@ -25,7 +25,6 @@ import 'dart:io'
         InternetAddressType,
         Platform,
         RawSocketOption,
-        RawZLibFilter,
         SecureSocket,
         SecureServerSocket,
         SecurityContext,
@@ -49,8 +48,6 @@ part 'http_parser.dart';
 part 'http_session.dart';
 part 'http_testing.dart';
 part 'overrides.dart';
-part 'websocket.dart';
-part 'websocket_impl.dart';
 
 /// A server that delivers content, such as web pages, using the HTTP protocol.
 ///
@@ -200,7 +197,7 @@ abstract class HttpServer implements Stream<HttpRequest> {
   /// isolates are bound to the port, then the incoming connections will be
   /// distributed among all the bound `HttpServer`s. Connections can be
   /// distributed over multiple isolates this way.
-  static Future<HttpServer> bind(address, int port,
+  static Future<HttpServer> bind(Object address, int port,
           {int backlog = 0, bool v6Only = false, bool shared = false}) =>
       _HttpServer.bind(address, port, backlog, v6Only, shared);
 
@@ -243,7 +240,7 @@ abstract class HttpServer implements Stream<HttpRequest> {
   /// distributed over multiple isolates this way.
 
   static Future<HttpServer> bindSecure(
-          address, int port, SecurityContext context,
+          Object address, int port, SecurityContext context,
           {int backlog = 0,
           bool v6Only = false,
           bool requestClientCertificate = false,
@@ -264,7 +261,7 @@ abstract class HttpServer implements Stream<HttpRequest> {
   /// means that the port listened on no longer in use.
   ///
   /// If [force] is `true`, active connections will be closed immediately.
-  Future close({bool force = false});
+  Future<void> close({bool force = false});
 
   /// The port that the server is listening on.
   ///
@@ -335,11 +332,11 @@ class HttpConnectionsInfo {
 /// The most common mode of operation is to use `set()` for setting a value,
 /// and `value()` for retrieving a value.
 abstract interface class HttpHeaders {
-  static const acceptHeader = "accept";
-  static const acceptCharsetHeader = "accept-charset";
-  static const acceptEncodingHeader = "accept-encoding";
-  static const acceptLanguageHeader = "accept-language";
-  static const acceptRangesHeader = "accept-ranges";
+  static const acceptHeader = 'accept';
+  static const acceptCharsetHeader = 'accept-charset';
+  static const acceptEncodingHeader = 'accept-encoding';
+  static const acceptLanguageHeader = 'accept-language';
+  static const acceptRangesHeader = 'accept-ranges';
   static const accessControlAllowCredentialsHeader =
       'access-control-allow-credentials';
   static const accessControlAllowHeadersHeader = 'access-control-allow-headers';
@@ -352,53 +349,53 @@ abstract interface class HttpHeaders {
       'access-control-request-headers';
   static const accessControlRequestMethodHeader =
       'access-control-request-method';
-  static const ageHeader = "age";
-  static const allowHeader = "allow";
-  static const authorizationHeader = "authorization";
-  static const cacheControlHeader = "cache-control";
-  static const connectionHeader = "connection";
-  static const contentEncodingHeader = "content-encoding";
-  static const contentLanguageHeader = "content-language";
-  static const contentLengthHeader = "content-length";
-  static const contentLocationHeader = "content-location";
-  static const contentMD5Header = "content-md5";
-  static const contentRangeHeader = "content-range";
-  static const contentTypeHeader = "content-type";
-  static const dateHeader = "date";
-  static const etagHeader = "etag";
-  static const expectHeader = "expect";
-  static const expiresHeader = "expires";
-  static const fromHeader = "from";
-  static const hostHeader = "host";
-  static const ifMatchHeader = "if-match";
-  static const ifModifiedSinceHeader = "if-modified-since";
-  static const ifNoneMatchHeader = "if-none-match";
-  static const ifRangeHeader = "if-range";
-  static const ifUnmodifiedSinceHeader = "if-unmodified-since";
-  static const lastModifiedHeader = "last-modified";
-  static const locationHeader = "location";
-  static const maxForwardsHeader = "max-forwards";
-  static const pragmaHeader = "pragma";
-  static const proxyAuthenticateHeader = "proxy-authenticate";
-  static const proxyAuthorizationHeader = "proxy-authorization";
-  static const rangeHeader = "range";
-  static const refererHeader = "referer";
-  static const retryAfterHeader = "retry-after";
-  static const serverHeader = "server";
-  static const teHeader = "te";
-  static const trailerHeader = "trailer";
-  static const transferEncodingHeader = "transfer-encoding";
-  static const upgradeHeader = "upgrade";
-  static const userAgentHeader = "user-agent";
-  static const varyHeader = "vary";
-  static const viaHeader = "via";
-  static const warningHeader = "warning";
-  static const wwwAuthenticateHeader = "www-authenticate";
-  static const contentDisposition = "content-disposition";
+  static const ageHeader = 'age';
+  static const allowHeader = 'allow';
+  static const authorizationHeader = 'authorization';
+  static const cacheControlHeader = 'cache-control';
+  static const connectionHeader = 'connection';
+  static const contentEncodingHeader = 'content-encoding';
+  static const contentLanguageHeader = 'content-language';
+  static const contentLengthHeader = 'content-length';
+  static const contentLocationHeader = 'content-location';
+  static const contentMD5Header = 'content-md5';
+  static const contentRangeHeader = 'content-range';
+  static const contentTypeHeader = 'content-type';
+  static const dateHeader = 'date';
+  static const etagHeader = 'etag';
+  static const expectHeader = 'expect';
+  static const expiresHeader = 'expires';
+  static const fromHeader = 'from';
+  static const hostHeader = 'host';
+  static const ifMatchHeader = 'if-match';
+  static const ifModifiedSinceHeader = 'if-modified-since';
+  static const ifNoneMatchHeader = 'if-none-match';
+  static const ifRangeHeader = 'if-range';
+  static const ifUnmodifiedSinceHeader = 'if-unmodified-since';
+  static const lastModifiedHeader = 'last-modified';
+  static const locationHeader = 'location';
+  static const maxForwardsHeader = 'max-forwards';
+  static const pragmaHeader = 'pragma';
+  static const proxyAuthenticateHeader = 'proxy-authenticate';
+  static const proxyAuthorizationHeader = 'proxy-authorization';
+  static const rangeHeader = 'range';
+  static const refererHeader = 'referer';
+  static const retryAfterHeader = 'retry-after';
+  static const serverHeader = 'server';
+  static const teHeader = 'te';
+  static const trailerHeader = 'trailer';
+  static const transferEncodingHeader = 'transfer-encoding';
+  static const upgradeHeader = 'upgrade';
+  static const userAgentHeader = 'user-agent';
+  static const varyHeader = 'vary';
+  static const viaHeader = 'via';
+  static const warningHeader = 'warning';
+  static const wwwAuthenticateHeader = 'www-authenticate';
+  static const contentDisposition = 'content-disposition';
 
   // Cookie headers from RFC 6265.
-  static const cookieHeader = "cookie";
-  static const setCookieHeader = "set-cookie";
+  static const cookieHeader = 'cookie';
+  static const setCookieHeader = 'set-cookie';
 
   // TODO(39783): Document this.
   static const generalHeaders = [
@@ -612,14 +609,14 @@ abstract interface class HttpHeaders {
 abstract interface class HeaderValue {
   /// Creates a new header value object setting the value and parameters.
   factory HeaderValue(
-      [String value = "", Map<String, String?> parameters = const {}]) {
+      [String value = '', Map<String, String?> parameters = const {}]) {
     return _HeaderValue(value, parameters);
   }
 
   /// Creates a new header value object from parsing a header value
   /// string with both value and optional parameters.
   static HeaderValue parse(String value,
-      {String parameterSeparator = ";",
+      {String parameterSeparator = ';',
       String? valueSeparator,
       bool preserveBackslash = false}) {
     return _HeaderValue.parse(value,
@@ -672,7 +669,7 @@ abstract interface class HeaderValue {
 ///   });
 /// }
 /// ```
-abstract interface class HttpSession implements Map {
+abstract interface class HttpSession implements Map<Object?, Object?> {
   /// The id of the current session.
   String get id;
 
@@ -699,22 +696,22 @@ abstract interface class ContentType implements HeaderValue {
   /// Content type for plain text using UTF-8 encoding.
   ///
   ///     text/plain; charset=utf-8
-  static final text = ContentType("text", "plain", charset: "utf-8");
+  static final text = ContentType('text', 'plain', charset: 'utf-8');
 
   /// Content type for HTML using UTF-8 encoding.
   ///
   ///    text/html; charset=utf-8
-  static final html = ContentType("text", "html", charset: "utf-8");
+  static final html = ContentType('text', 'html', charset: 'utf-8');
 
   /// Content type for JSON using UTF-8 encoding.
   ///
   ///    application/json; charset=utf-8
-  static final json = ContentType("application", "json", charset: "utf-8");
+  static final json = ContentType('application', 'json', charset: 'utf-8');
 
   /// Content type for binary data.
   ///
   ///    application/octet-stream
-  static final binary = ContentType("application", "octet-stream");
+  static final binary = ContentType('application', 'octet-stream');
 
   /// Creates a new content type object setting the primary type and
   /// sub type. The charset and additional parameters can also be set
@@ -778,16 +775,16 @@ abstract interface class ContentType implements HeaderValue {
 final class SameSite {
   /// Default value, cookie with this value will generally not be sent on
   /// cross-site requests, unless the user is navigated to the original site.
-  static const lax = SameSite._("Lax");
+  static const lax = SameSite._('Lax');
 
   /// Cookie with this value will never be sent on cross-site requests.
-  static const strict = SameSite._("Strict");
+  static const strict = SameSite._('Strict');
 
   /// Cookie with this value will be sent in all requests.
   ///
   /// [Cookie.secure] must also be set to true, otherwise the `none` value
   /// will have no effect.
-  static const none = SameSite._("None");
+  static const none = SameSite._('None');
 
   static const List<SameSite> values = [lax, strict, none];
 
@@ -796,7 +793,7 @@ final class SameSite {
   const SameSite._(this.name);
 
   @override
-  String toString() => "SameSite=$name";
+  String toString() => 'SameSite=$name';
 }
 
 /// Representation of a cookie. For cookies received by the server as Cookie
@@ -1109,7 +1106,8 @@ abstract interface class HttpResponse implements IOSink {
   ///
   /// This method will also call `close`, and the returned future is
   /// the future returned by `close`.
-  Future redirect(Uri location, {int status = HttpStatus.movedTemporarily});
+  Future<void> redirect(Uri location,
+      {int status = HttpStatus.movedTemporarily});
 
   /// Detaches the underlying socket from the HTTP server. When the
   /// socket is detached the HTTP server will no longer perform any
@@ -1240,10 +1238,9 @@ abstract interface class HttpClient {
   /// timeline.
   ///
   /// Default is `false`.
-  static set enableTimelineLogging(bool value) {
-    final enabled = value;
+  static set enableTimelineLogging(bool enabled) {
     if (enabled != _enableTimelineLogging) {
-      if (!const bool.fromEnvironment("dart.vm.product")) {
+      if (!const bool.fromEnvironment('dart.vm.product')) {
         postEvent('HttpTimelineLoggingStateChange', {
           'isolateId': Service.getIsolateId(Isolate.current),
           'enabled': enabled,
@@ -1670,7 +1667,7 @@ abstract interface class HttpClient {
   ///     final client = HttpClient();
   ///     client.keyLog = (line) => log.writeAsStringSync(line,
   ///         mode: FileMode.append);
-  set keyLog(Function(String line)? callback);
+  set keyLog(void Function(String line)? callback);
 
   /// Shuts down the HTTP client.
   ///
@@ -2073,7 +2070,7 @@ class RedirectException implements HttpException {
   const RedirectException(this.message, this.redirects);
 
   @override
-  String toString() => "RedirectException: $message";
+  String toString() => 'RedirectException: $message';
 
   @override
   Uri? get uri => redirects.isEmpty ? null : redirects.last.location;

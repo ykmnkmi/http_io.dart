@@ -38,32 +38,14 @@ typedef TestingClass$Cookie = _Cookie;
 typedef TestingClass$HttpHeaders = _HttpHeaders;
 typedef TestingClass$HttpParser = _HttpParser;
 typedef TestingClass$SHA1 = _SHA1;
-typedef TestingClass$WebSocketProtocolTransformer
-    = _WebSocketProtocolTransformer;
-typedef TestingClass$WebSocketImpl = _WebSocketImpl;
 
 extension Testing$HttpDate on HttpDate {
-  static DateTime test$_parseCookieDate(String date) =>
+  static DateTime test$parseCookieDate(String date) =>
       HttpDate._parseCookieDate(date);
 }
 
+// ignore: library_private_types_in_public_api
 extension Testing$HttpHeaders on _HttpHeaders {
-  void test$_build(BytesBuilder builder) => _build(builder);
-  List<Cookie> test$_parseCookies() => _parseCookies();
-}
-
-extension Testing$WebSocketProtocolTransformer
-    on _WebSocketProtocolTransformer {
-  int get test$_state => _state;
-}
-
-extension Testing$WebSocketImpl on _WebSocketImpl {
-  static Future<WebSocket> connect(String url, Iterable<String>? protocols,
-          Map<String, dynamic>? headers,
-          {CompressionOptions compression =
-              CompressionOptions.compressionDefault,
-          HttpClient? customClient}) =>
-      _WebSocketImpl.connect(url, protocols, headers,
-          compression: compression, customClient: customClient);
-  Timer? get test$_pingTimer => _pingTimer;
+  void test$build(BytesBuilder builder) => _build(builder);
+  List<Cookie> test$parseCookies() => _parseCookies();
 }

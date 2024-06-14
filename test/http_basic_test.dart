@@ -2,11 +2,11 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import "dart:isolate";
+import 'dart:isolate';
 
-import "package:http_io/http_io.dart";
+import 'package:http_io/http_io.dart';
 
-import "expect.dart";
+import 'expect.dart';
 
 class TestServerMain {
   TestServerMain();
@@ -17,9 +17,9 @@ class TestServerMain {
 
   void start([bool chunkedEncoding = false]) {
     ReceivePort receivePort = ReceivePort();
-    var remote = Isolate.spawn(startTestServer, receivePort.sendPort);
-    receivePort.first.then((port) {
-      _serverPort = port;
+    Isolate.spawn(startTestServer, receivePort.sendPort);
+    receivePort.first.then((Object? port) {
+      _serverPort = port as SendPort;
 
       if (chunkedEncoding) {
         // Send chunked encoding message to the server.
@@ -32,7 +32,9 @@ class TestServerMain {
     });
 
     // Handle status messages from the server.
-    _statusPort.listen((var status) {
+    _statusPort.listen((Object? status) {
+      status as TestServerStatus;
+
       if (status.isStarted) {
         _startedCallback(status.port);
       }
@@ -48,7 +50,7 @@ class TestServerMain {
   final _statusPort =
       ReceivePort(); // Port for receiving messages from the server.
   late SendPort _serverPort; // Port for sending messages to the server.
-  var _startedCallback;
+  late void Function(int port) _startedCallback;
 }
 
 class TestServerCommand {
@@ -64,7 +66,7 @@ class TestServerCommand {
   bool get isStop => _command == _stop;
   bool get isChunkedEncoding => _command == _chunkedEncoding;
 
-  int _command;
+  final int _command;
 }
 
 class TestServerStatus {
@@ -82,12 +84,12 @@ class TestServerStatus {
 
   int get port => _port;
 
-  int _state;
+  final int _state;
   int _port = 0;
 }
 
 void startTestServer(Object replyToObj) {
-  final replyTo = replyToObj as SendPort;
+  var replyTo = replyToObj as SendPort;
   var server = TestServer();
   server.init();
   replyTo.send(server.dispatchSendPort);
@@ -97,7 +99,7 @@ class TestServer {
   // Echo the request content back to the response.
   void _echoHandler(HttpRequest request) {
     var response = request.response;
-    Expect.equals("POST", request.method);
+    Expect.equals('POST', request.method);
     response.contentLength = request.contentLength;
     request.cast<List<int>>().pipe(response);
   }
@@ -105,9 +107,9 @@ class TestServer {
   // Echo the request content back to the response.
   void _zeroToTenHandler(HttpRequest request) {
     var response = request.response;
-    Expect.equals("GET", request.method);
+    Expect.equals('GET', request.method);
     request.listen((_) {}, onDone: () {
-      response.write("01234567890");
+      response.write('01234567890');
       response.close();
     });
   }
@@ -116,8 +118,8 @@ class TestServer {
   void _notFoundHandler(HttpRequest request) {
     var response = request.response;
     response.statusCode = HttpStatus.notFound;
-    response.headers.set("Content-Type", "text/html; charset=UTF-8");
-    response.write("Page not found");
+    response.headers.set('Content-Type', 'text/html; charset=UTF-8');
+    response.write('Page not found');
     response.close();
   }
 
@@ -132,9 +134,9 @@ class TestServer {
   // Check the "Host" header.
   void _hostHandler(HttpRequest request) {
     var response = request.response;
-    Expect.equals(1, request.headers["Host"]?.length);
-    Expect.equals("www.dartlang.org:1234", request.headers["Host"]![0]);
-    Expect.equals("www.dartlang.org", request.headers.host);
+    Expect.equals(1, request.headers['Host']?.length);
+    Expect.equals('www.dartlang.org:1234', request.headers['Host']![0]);
+    Expect.equals('www.dartlang.org', request.headers.host);
     Expect.equals(1234, request.headers.port);
     response.statusCode = HttpStatus.ok;
     response.close();
@@ -142,21 +144,23 @@ class TestServer {
 
   void init() {
     // Setup request handlers.
-    _requestHandlers["/echo"] = _echoHandler;
-    _requestHandlers["/0123456789"] = _zeroToTenHandler;
-    _requestHandlers["/reasonformoving"] = _reasonForMovingHandler;
-    _requestHandlers["/host"] = _hostHandler;
+    _requestHandlers['/echo'] = _echoHandler;
+    _requestHandlers['/0123456789'] = _zeroToTenHandler;
+    _requestHandlers['/reasonformoving'] = _reasonForMovingHandler;
+    _requestHandlers['/host'] = _hostHandler;
     _dispatchPort.listen(dispatch);
   }
 
   SendPort get dispatchSendPort => _dispatchPort.sendPort;
 
-  void dispatch(var message) {
-    TestServerCommand command = message[0];
-    SendPort replyTo = message[1];
+  void dispatch(Object? message) {
+    message as List;
+
+    TestServerCommand command = message[0] as TestServerCommand;
+    SendPort replyTo = message[1] as SendPort;
     if (command.isStart) {
       try {
-        HttpServer.bind("127.0.0.1", 0).then((server) {
+        HttpServer.bind('127.0.0.1', 0).then((server) {
           _server = server;
           _server.listen(_requestReceivedHandler);
           replyTo.send(TestServerStatus.started(_server.port));
@@ -168,9 +172,7 @@ class TestServer {
       _server.close();
       _dispatchPort.close();
       replyTo.send(TestServerStatus.stopped());
-    } else if (command.isChunkedEncoding) {
-      _chunkedEncoding = true;
-    }
+    } else if (command.isChunkedEncoding) {}
   }
 
   void _requestReceivedHandler(HttpRequest request) {
@@ -184,8 +186,7 @@ class TestServer {
 
   late HttpServer _server; // HTTP server instance.
   final ReceivePort _dispatchPort = ReceivePort();
-  final _requestHandlers = {};
-  bool _chunkedEncoding = false;
+  final _requestHandlers = <String, void Function(HttpRequest)>{};
 }
 
 void testStartStop() {
@@ -201,14 +202,14 @@ void testGET() {
   testServerMain.setServerStartedHandler((int port) {
     HttpClient httpClient = HttpClient();
     httpClient
-        .get("127.0.0.1", port, "/0123456789")
+        .get('127.0.0.1', port, '/0123456789')
         .then((request) => request.close())
         .then((response) {
       Expect.equals(HttpStatus.ok, response.statusCode);
       StringBuffer body = StringBuffer();
       response.listen((data) => body.write(String.fromCharCodes(data)),
           onDone: () {
-        Expect.equals("01234567890", body.toString());
+        Expect.equals('01234567890', body.toString());
         httpClient.close();
         testServerMain.close();
       });
@@ -218,8 +219,8 @@ void testGET() {
 }
 
 void testPOST(bool chunkedEncoding) {
-  String data = "ABCDEFGHIJKLMONPQRSTUVWXYZ";
-  final int kMessageCount = 10;
+  String data = 'ABCDEFGHIJKLMONPQRSTUVWXYZ';
+  int kMessageCount = 10;
 
   TestServerMain testServerMain = TestServerMain();
 
@@ -227,7 +228,7 @@ void testPOST(bool chunkedEncoding) {
     int count = 0;
     HttpClient httpClient = HttpClient();
     void sendRequest() {
-      httpClient.post("127.0.0.1", port, "/echo").then((request) {
+      httpClient.post('127.0.0.1', port, '/echo').then((request) {
         if (chunkedEncoding) {
           request.write(data.substring(0, 10));
           request.write(data.substring(10, data.length));
@@ -265,14 +266,14 @@ void test404() {
   testServerMain.setServerStartedHandler((int port) {
     HttpClient httpClient = HttpClient();
     httpClient
-        .get("127.0.0.1", port, "/thisisnotfound")
+        .get('127.0.0.1', port, '/thisisnotfound')
         .then((request) => request.close())
         .then((response) {
       Expect.equals(HttpStatus.notFound, response.statusCode);
       var body = StringBuffer();
       response.listen((data) => body.write(String.fromCharCodes(data)),
           onDone: () {
-        Expect.equals("Page not found", body.toString());
+        Expect.equals('Page not found', body.toString());
         httpClient.close();
         testServerMain.close();
       });
@@ -285,13 +286,13 @@ void testReasonPhrase() {
   TestServerMain testServerMain = TestServerMain();
   testServerMain.setServerStartedHandler((int port) {
     HttpClient httpClient = HttpClient();
-    httpClient.get("127.0.0.1", port, "/reasonformoving").then((request) {
+    httpClient.get('127.0.0.1', port, '/reasonformoving').then((request) {
       request.followRedirects = false;
       return request.close();
     }).then((response) {
       Expect.equals(HttpStatus.movedPermanently, response.statusCode);
       Expect.equals("Don't come looking here any more", response.reasonPhrase);
-      response.listen((data) => Expect.fail("No data expected"), onDone: () {
+      response.listen((data) => Expect.fail('No data expected'), onDone: () {
         httpClient.close();
         testServerMain.close();
       });

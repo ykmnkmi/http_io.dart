@@ -2,20 +2,20 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import "package:http_io/http_io.dart";
+import 'package:http_io/http_io.dart';
 
-import "expect.dart";
+import 'expect.dart';
 
 // Test that a HTTP "CONNECT" request with 200 status code won't close the
 // underlying socket.
 // issue: https://github.com/dart-lang/sdk/issues/37808
 Future<void> testConnect(int statusCode, int port) async {
-  final url = "https://domain.invalid";
+  var url = 'https://domain.invalid';
   var client = HttpClient();
   try {
-    client.findProxy = (uri) => "PROXY 127.0.0.1:$port";
+    client.findProxy = (uri) => 'PROXY 127.0.0.1:$port';
     try {
-      final request = await client.getUrl(Uri.parse(url));
+      var request = await client.getUrl(Uri.parse(url));
       await request.close();
       Expect.fail('request should have thrown an exception');
     } catch (e) {
@@ -32,16 +32,16 @@ Future<void> testConnect(int statusCode, int port) async {
 }
 
 Future<void> main() async {
-  final server = await HttpServer.bind('127.0.0.1', 0);
+  var server = await HttpServer.bind('127.0.0.1', 0);
   try {
-    final statusCodes = <int>[200, 299, 199, 300];
+    var statusCodes = <int>[200, 299, 199, 300];
     int index = 0;
     server.listen((request) {
       request.response.statusCode = statusCodes[index++];
       request.response.headers.contentLength = 0;
       request.response.close();
     });
-    for (final statusCode in statusCodes) {
+    for (var statusCode in statusCodes) {
       await testConnect(statusCode, server.port);
     }
   } finally {

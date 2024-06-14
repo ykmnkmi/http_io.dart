@@ -122,7 +122,7 @@ class _HttpDetachedStreamSubscription implements StreamSubscription<Uint8List> {
       _subscription.asFuture<T>(futureValue as T);
 
   @override
-  Future cancel() {
+  Future<void> cancel() {
     _isCanceled = true;
     _injectData = null;
     return _subscription.cancel();
@@ -145,7 +145,7 @@ class _HttpDetachedStreamSubscription implements StreamSubscription<Uint8List> {
   }
 
   @override
-  void pause([Future? resumeSignal]) {
+  void pause([Future<void>? resumeSignal]) {
     if (_injectData == null) {
       _subscription.pause(resumeSignal);
     } else {
@@ -167,12 +167,18 @@ class _HttpDetachedStreamSubscription implements StreamSubscription<Uint8List> {
   }
 
   void _maybeScheduleData() {
-    if (_scheduled) return;
-    if (_pauseCount != 0) return;
+    if (_scheduled) {
+      return;
+    }
+    if (_pauseCount != 0) {
+      return;
+    }
     _scheduled = true;
     scheduleMicrotask(() {
       _scheduled = false;
-      if (_pauseCount > 0 || _isCanceled) return;
+      if (_pauseCount > 0 || _isCanceled) {
+        return;
+      }
       var data = _injectData!;
       _injectData = null;
       // To ensure that 'subscription.isPaused' is false, we resume the
@@ -362,7 +368,9 @@ class _HttpParser extends Stream<_HttpIncoming> {
     _transferLength = headers.contentLength;
     // Ignore the Content-Length header if Transfer-Encoding
     // is chunked (RFC 2616 section 4.4)
-    if (_chunked) _transferLength = -1;
+    if (_chunked) {
+      _transferLength = -1;
+    }
 
     // If a request message has neither Content-Length nor
     // Transfer-Encoding the message must not have a body (RFC
@@ -432,10 +440,10 @@ class _HttpParser extends Stream<_HttpIncoming> {
     assert(!_parserCalled);
     _parserCalled = true;
     if (_state == _State.closed) {
-      throw HttpException("Data on closed connection");
+      throw HttpException('Data on closed connection');
     }
     if (_state == _State.failure) {
-      throw HttpException("Data on failed connection");
+      throw HttpException('Data on failed connection');
     }
     while (_buffer != null &&
         _index < _buffer!.length &&
@@ -459,11 +467,11 @@ class _HttpParser extends Stream<_HttpIncoming> {
           } else {
             // Start parsing method.
             if (!_isTokenChar(byte)) {
-              throw HttpException("Invalid request method");
+              throw HttpException('Invalid request method');
             }
             _addWithValidation(_method, byte);
             if (!_requestParser) {
-              throw HttpException("Invalid response line");
+              throw HttpException('Invalid response line');
             }
             _state = _State.requestLineMethod;
           }
@@ -481,7 +489,7 @@ class _HttpParser extends Stream<_HttpIncoming> {
             // method anymore.
             _httpVersionIndex = httpVersionIndex + 1;
             if (_requestParser) {
-              throw HttpException("Invalid request line");
+              throw HttpException('Invalid request line');
             }
             _state = _State.responseHttpVersion;
           } else {
@@ -495,7 +503,7 @@ class _HttpParser extends Stream<_HttpIncoming> {
               _addWithValidation(_method, byte);
               _httpVersion = _HttpVersion.undetermined;
               if (!_requestParser) {
-                throw HttpException("Invalid response line");
+                throw HttpException('Invalid response line');
               }
               _state = _State.requestLineMethod;
             }
@@ -526,7 +534,7 @@ class _HttpParser extends Stream<_HttpIncoming> {
             _state = _State.responseLineStatusCode;
           } else {
             throw HttpException(
-                "Invalid response line, failed to parse HTTP version");
+                'Invalid response line, failed to parse HTTP version');
           }
           break;
 
@@ -537,7 +545,7 @@ class _HttpParser extends Stream<_HttpIncoming> {
             if (_Const.separatorMap[byte] ||
                 byte == _CharCode.cr ||
                 byte == _CharCode.lf) {
-              throw HttpException("Invalid request method");
+              throw HttpException('Invalid request method');
             }
             _addWithValidation(_method, byte);
           }
@@ -546,13 +554,13 @@ class _HttpParser extends Stream<_HttpIncoming> {
         case _State.requestLineUri:
           if (byte == _CharCode.sp) {
             if (_uriOrReasonPhrase.isEmpty) {
-              throw HttpException("Invalid request, empty URI");
+              throw HttpException('Invalid request, empty URI');
             }
             _state = _State.requestLineHttpVersion;
             _httpVersionIndex = 0;
           } else {
             if (byte == _CharCode.cr || byte == _CharCode.lf) {
-              throw HttpException("Invalid request, unexpected $byte in URI");
+              throw HttpException('Invalid request, unexpected $byte in URI');
             }
             _addWithValidation(_uriOrReasonPhrase, byte);
           }
@@ -575,7 +583,7 @@ class _HttpParser extends Stream<_HttpIncoming> {
               _persistentConnection = false;
               _httpVersionIndex = httpVersionIndex + 1;
             } else {
-              throw HttpException("Invalid response, invalid HTTP version");
+              throw HttpException('Invalid response, invalid HTTP version');
             }
           } else {
             if (byte == _CharCode.cr) {
@@ -606,10 +614,10 @@ class _HttpParser extends Stream<_HttpIncoming> {
           } else {
             _statusCodeLength++;
             if (byte < 0x30 || byte > 0x39) {
-              throw HttpException("Invalid response status code with $byte");
+              throw HttpException('Invalid response status code with $byte');
             } else if (_statusCodeLength > 3) {
               throw HttpException(
-                  "Invalid response, status code is over 3 digits");
+                  'Invalid response, status code is over 3 digits');
             } else {
               _statusCode = _statusCode * 10 + byte - 0x30;
             }
@@ -656,7 +664,7 @@ class _HttpParser extends Stream<_HttpIncoming> {
             _state = _State.headerValueStart;
           } else {
             if (!_isTokenChar(byte)) {
-              throw HttpException("Invalid header field name, with $byte");
+              throw HttpException('Invalid header field name, with $byte');
             }
             _addWithValidation(_headerField, _toLowerCaseByte(byte));
           }
@@ -714,14 +722,14 @@ class _HttpParser extends Stream<_HttpIncoming> {
             if (headerField == HttpHeaders.contentLengthHeader) {
               // Content Length header should not have more than one occurrence.
               if (_contentLength) {
-                throw HttpException("The Content-Length header occurred "
-                    "more than once, at most one is allowed.");
+                throw HttpException('The Content-Length header occurred '
+                    'more than once, at most one is allowed.');
               } else if (!_transferEncoding) {
                 _contentLength = true;
               }
             } else if (headerField == HttpHeaders.transferEncodingHeader) {
               _transferEncoding = true;
-              if (_caseInsensitiveCompare("chunked".codeUnits, _headerValue)) {
+              if (_caseInsensitiveCompare('chunked'.codeUnits, _headerValue)) {
                 _chunked = true;
               }
               _contentLength = false;
@@ -729,13 +737,13 @@ class _HttpParser extends Stream<_HttpIncoming> {
             var headers = _headers!;
             if (headerField == HttpHeaders.connectionHeader) {
               List<String> tokens = _tokenizeFieldValue(headerValue);
-              final bool isResponse = _messageType == _MessageType.response;
-              final bool isUpgradeCode =
+              bool isResponse = _messageType == _MessageType.response;
+              bool isUpgradeCode =
                   (_statusCode == HttpStatus.upgradeRequired) ||
                       (_statusCode == HttpStatus.switchingProtocols);
               for (int i = 0; i < tokens.length; i++) {
-                final bool isUpgrade = _caseInsensitiveCompare(
-                    "upgrade".codeUnits, tokens[i].codeUnits);
+                bool isUpgrade = _caseInsensitiveCompare(
+                    'upgrade'.codeUnits, tokens[i].codeUnits);
                 if ((isUpgrade && !isResponse) ||
                     (isUpgrade && isResponse && isUpgradeCode)) {
                   _connectionUpgrade = true;
@@ -900,14 +908,16 @@ class _HttpParser extends Stream<_HttpIncoming> {
   void _onDone() {
     // onDone cancels the subscription.
     _socketSubscription = null;
-    if (_state == _State.closed || _state == _State.failure) return;
+    if (_state == _State.closed || _state == _State.failure) {
+      return;
+    }
 
     if (_incoming != null) {
       if (_state != _State.upgrade &&
           !(_state == _State.start && !_requestParser) &&
           !(_state == _State.body && !_chunked && _transferLength == -1)) {
         _reportBodyError(
-            HttpException("Connection closed while receiving data"));
+            HttpException('Connection closed while receiving data'));
       }
       _closeIncoming(true);
       _controller.close();
@@ -917,7 +927,7 @@ class _HttpParser extends Stream<_HttpIncoming> {
     if (_state == _State.start) {
       if (!_requestParser) {
         _reportHttpError(
-            HttpException("Connection closed before full header was received"));
+            HttpException('Connection closed before full header was received'));
       }
       _controller.close();
       return;
@@ -933,7 +943,7 @@ class _HttpParser extends Stream<_HttpIncoming> {
       // Report the error through the error callback if any. Otherwise
       // throw the error.
       _reportHttpError(
-          HttpException("Connection closed before full header was received"));
+          HttpException('Connection closed before full header was received'));
       _controller.close();
       return;
     }
@@ -945,7 +955,7 @@ class _HttpParser extends Stream<_HttpIncoming> {
       // Report the error through the error callback if any. Otherwise
       // throw the error.
       _reportHttpError(
-          HttpException("Connection closed before full body was received"));
+          HttpException('Connection closed before full body was received'));
     }
     _controller.close();
   }
@@ -953,9 +963,9 @@ class _HttpParser extends Stream<_HttpIncoming> {
   String? get version {
     switch (_httpVersion) {
       case _HttpVersion.http10:
-        return "1.0";
+        return '1.0';
       case _HttpVersion.http11:
-        return "1.1";
+        return '1.1';
     }
     return null;
   }
@@ -977,16 +987,22 @@ class _HttpParser extends Stream<_HttpIncoming> {
 
   Uint8List? readUnparsedData() {
     var buffer = _buffer;
-    if (buffer == null) return null;
+    if (buffer == null) {
+      return null;
+    }
     var index = _index;
-    if (index == buffer.length) return null;
+    if (index == buffer.length) {
+      return null;
+    }
     var result = buffer.sublist(index);
     _releaseBuffer();
     return result;
   }
 
   void _reset() {
-    if (_state == _State.upgrade) return;
+    if (_state == _State.upgrade) {
+      return;
+    }
     _state = _State.start;
     _messageType = _MessageType.undetermined;
     _headerField.clear();
@@ -1042,10 +1058,10 @@ class _HttpParser extends Stream<_HttpIncoming> {
     int start = 0;
     int index = 0;
     while (index < headerValue.length) {
-      if (headerValue[index] == ",") {
+      if (headerValue[index] == ',') {
         tokens.add(headerValue.substring(start, index));
         start = index + 1;
-      } else if (headerValue[index] == " " || headerValue[index] == "\t") {
+      } else if (headerValue[index] == ' ' || headerValue[index] == '\t') {
         start++;
       }
       index++;
@@ -1065,16 +1081,20 @@ class _HttpParser extends Stream<_HttpIncoming> {
 
   // expected should already be lowercase.
   static bool _caseInsensitiveCompare(List<int> expected, List<int> value) {
-    if (expected.length != value.length) return false;
+    if (expected.length != value.length) {
+      return false;
+    }
     for (int i = 0; i < expected.length; i++) {
-      if (expected[i] != _toLowerCaseByte(value[i])) return false;
+      if (expected[i] != _toLowerCaseByte(value[i])) {
+        return false;
+      }
     }
     return true;
   }
 
   void _expect(int val1, int val2) {
     if (val1 != val2) {
-      throw HttpException("Failed to parse HTTP, $val1 does not match $val2");
+      throw HttpException('Failed to parse HTTP, $val1 does not match $val2');
     }
   }
 
@@ -1087,7 +1107,7 @@ class _HttpParser extends Stream<_HttpIncoming> {
       return byte - 0x61 + 10; // a - f
     } else {
       throw HttpException(
-          "Failed to parse HTTP, $byte is expected to be a Hex digit");
+          'Failed to parse HTTP, $byte is expected to be a Hex digit');
     }
   }
 
@@ -1101,37 +1121,37 @@ class _HttpParser extends Stream<_HttpIncoming> {
   }
 
   void _reportSizeLimitError() {
-    String method = "";
+    String method = '';
     switch (_state) {
       case _State.start:
       case _State.methodOrResponseHttpVersion:
       case _State.requestLineMethod:
-        method = "Method";
+        method = 'Method';
         break;
 
       case _State.requestLineUri:
-        method = "URI";
+        method = 'URI';
         break;
 
       case _State.responseLineReasonPhrase:
-        method = "Reason phrase";
+        method = 'Reason phrase';
         break;
 
       case _State.headerStart:
       case _State.headerField:
-        method = "Header field";
+        method = 'Header field';
         break;
 
       case _State.headerValueStart:
       case _State.headerValue:
-        method = "Header value";
+        method = 'Header value';
         break;
 
       default:
-        throw UnsupportedError("Unexpected state: $_state");
+        throw UnsupportedError('Unexpected state: $_state');
     }
     throw HttpException(
-        "$method exceeds the $_headerTotalSizeLimit size limit");
+        '$method exceeds the $_headerTotalSizeLimit size limit');
   }
 
   _HttpIncoming _createIncoming(int transferLength) {
@@ -1143,25 +1163,33 @@ class _HttpParser extends Stream<_HttpIncoming> {
         _incoming = _HttpIncoming(_headers!, transferLength, controller.stream);
     controller
       ..onListen = () {
-        if (incoming != _incoming) return;
+        if (incoming != _incoming) {
+          return;
+        }
         assert(_bodyPaused);
         _bodyPaused = false;
         _pauseStateChanged();
       }
       ..onPause = () {
-        if (incoming != _incoming) return;
+        if (incoming != _incoming) {
+          return;
+        }
         assert(!_bodyPaused);
         _bodyPaused = true;
         _pauseStateChanged();
       }
       ..onResume = () {
-        if (incoming != _incoming) return;
+        if (incoming != _incoming) {
+          return;
+        }
         assert(_bodyPaused);
         _bodyPaused = false;
         _pauseStateChanged();
       }
       ..onCancel = () {
-        if (incoming != _incoming) return;
+        if (incoming != _incoming) {
+          return;
+        }
         _socketSubscription?.cancel();
         _closeIncoming(true);
         _controller.close();
@@ -1174,7 +1202,9 @@ class _HttpParser extends Stream<_HttpIncoming> {
   void _closeIncoming([bool closing = false]) {
     // Ignore multiple close (can happen in re-entrance).
     var tmp = _incoming;
-    if (tmp == null) return;
+    if (tmp == null) {
+      return;
+    }
     tmp.close(closing);
     _incoming = null;
     var controller = _bodyController;
@@ -1198,14 +1228,14 @@ class _HttpParser extends Stream<_HttpIncoming> {
     }
   }
 
-  void _reportHttpError(error, [stackTrace]) {
+  void _reportHttpError(Object error, [StackTrace? stackTrace]) {
     _socketSubscription?.cancel();
     _state = _State.failure;
     _controller.addError(error, stackTrace);
     _controller.close();
   }
 
-  void _reportBodyError(error, [stackTrace]) {
+  void _reportBodyError(Object error, [StackTrace? stackTrace]) {
     _socketSubscription?.cancel();
     _state = _State.failure;
     _bodyController?.addError(error, stackTrace);

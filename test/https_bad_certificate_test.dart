@@ -2,16 +2,16 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import "dart:async";
-import "dart:io" show Platform;
+import 'dart:async';
+import 'dart:io' show Platform;
 
-import "package:http_io/http_io.dart";
+import 'package:http_io/http_io.dart';
 
-import "expect.dart";
+import 'expect.dart';
 
-final HOST_NAME = 'localhost';
+final hostName = 'localhost';
 
-String localFile(path) => Platform.script.resolve(path).toFilePath();
+String localFile(String path) => Platform.script.resolve(path).toFilePath();
 
 SecurityContext serverContext = SecurityContext()
   ..useCertificateChain(localFile('certificates/server_chain.pem'))
@@ -20,9 +20,9 @@ SecurityContext serverContext = SecurityContext()
 
 class CustomException {}
 
-main() async {
-  var HOST = (await InternetAddress.lookup(HOST_NAME)).first;
-  var server = await HttpServer.bindSecure(HOST, 0, serverContext, backlog: 5);
+Future<void> main() async {
+  var host = (await InternetAddress.lookup(hostName)).first;
+  var server = await HttpServer.bindSecure(host, 0, serverContext, backlog: 5);
   server.listen((request) {
     request.listen((_) {}, onDone: () {
       request.response.close();
@@ -49,19 +49,21 @@ main() async {
   server.close();
 }
 
-Future runClient(
-    int port, SecurityContext context, callbackReturns, result) async {
+Future<void> runClient(int port, SecurityContext context,
+    Object callbackReturns, String result) async {
   HttpClient client = HttpClient(context: context);
   client.badCertificateCallback = (X509Certificate certificate, host, port) {
     Expect.isTrue(certificate.subject.contains('rootauthority'));
     Expect.isTrue(certificate.issuer.contains('rootauthority'));
     // Throw exception if one is requested.
-    if (callbackReturns == 'exception') throw CustomException();
-    return callbackReturns;
+    if (callbackReturns == 'exception') {
+      throw CustomException();
+    }
+    return callbackReturns as bool;
   };
 
   try {
-    var request = await client.getUrl(Uri.parse('https://$HOST_NAME:$port/'));
+    var request = await client.getUrl(Uri.parse('https://$hostName:$port/'));
     Expect.equals('pass', result);
     await request.close();
   } catch (error) {

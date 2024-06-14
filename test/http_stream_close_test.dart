@@ -4,15 +4,15 @@
 
 import 'package:http_io/http_io.dart';
 
-main() {
+void main() {
   bool serverOnClosed = false;
   bool clientOnClosed = false;
   bool requestOnClosed = false;
 
-  HttpServer.bind("127.0.0.1", 0).then((server) {
+  HttpServer.bind('127.0.0.1', 0).then((server) {
     var client = HttpClient();
 
-    checkDone() {
+    void checkDone() {
       if (serverOnClosed && clientOnClosed && requestOnClosed) {
         server.close();
         client.close();
@@ -25,20 +25,20 @@ main() {
           serverOnClosed = true;
           checkDone();
         });
-        request.response.write("hello!");
+        request.response.write('hello!');
         request.response.close();
       });
     });
 
     client
-        .postUrl(Uri.parse("http://127.0.0.1:${server.port}"))
+        .postUrl(Uri.parse('http://127.0.0.1:${server.port}'))
         .then((request) {
-      request.contentLength = "hello!".length;
+      request.contentLength = 'hello!'.length;
       request.done.then((_) {
         clientOnClosed = true;
         checkDone();
       });
-      request.write("hello!");
+      request.write('hello!');
       return request.close();
     }).then((response) {
       response.listen((_) {}, onDone: () {

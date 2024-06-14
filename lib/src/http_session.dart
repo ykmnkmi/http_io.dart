@@ -4,7 +4,7 @@
 
 part of 'http.dart';
 
-const String _dartSessionId = "DARTSESSID";
+const String _dartSessionId = 'DARTSESSID';
 
 // A _HttpSession is a node in a double-linked list, with _next and _prev being
 // the previous and next pointers.
@@ -21,7 +21,7 @@ class _HttpSession implements HttpSession {
   @override
   final String id;
 
-  final Map _data = HashMap();
+  final Map<Object?, Object?> _data = HashMap<Object?, Object?>();
 
   _HttpSession(this._sessionManager, this.id) : _lastSeen = DateTime.now();
 
@@ -56,18 +56,18 @@ class _HttpSession implements HttpSession {
   @override
   bool containsKey(key) => _data.containsKey(key);
   @override
-  operator [](key) => _data[key];
+  dynamic operator [](key) => _data[key];
   @override
   void operator []=(key, value) {
     _data[key] = value;
   }
 
   @override
-  putIfAbsent(key, ifAbsent) => _data.putIfAbsent(key, ifAbsent);
+  dynamic putIfAbsent(key, ifAbsent) => _data.putIfAbsent(key, ifAbsent);
   @override
-  addAll(Map other) => _data.addAll(other);
+  void addAll(Map<Object?, Object?> other) => _data.addAll(other);
   @override
-  remove(key) => _data.remove(key);
+  dynamic remove(key) => _data.remove(key);
   @override
   void clear() {
     _data.clear();
@@ -79,10 +79,10 @@ class _HttpSession implements HttpSession {
   }
 
   @override
-  Iterable<MapEntry> get entries => _data.entries;
+  Iterable<MapEntry<Object?, Object?>> get entries => _data.entries;
 
   @override
-  void addEntries(Iterable<MapEntry> entries) {
+  void addEntries(Iterable<MapEntry<Object?, Object?>> entries) {
     _data.addEntries(entries);
   }
 
@@ -99,7 +99,8 @@ class _HttpSession implements HttpSession {
   @override
   Map<K, V> cast<K, V>() => _data.cast<K, V>();
   @override
-  update(key, Function(dynamic value) update, {Function()? ifAbsent}) =>
+  dynamic update(key, dynamic Function(dynamic value) update,
+          {dynamic Function()? ifAbsent}) =>
       _data.update(key, update, ifAbsent: ifAbsent);
 
   @override
@@ -108,9 +109,9 @@ class _HttpSession implements HttpSession {
   }
 
   @override
-  Iterable get keys => _data.keys;
+  Iterable<Object?> get keys => _data.keys;
   @override
-  Iterable get values => _data.values;
+  Iterable<Object?> get values => _data.values;
   @override
   int get length => _data.length;
   @override
@@ -137,8 +138,8 @@ class _HttpSessionManager {
   _HttpSessionManager() : _sessions = {};
 
   String createSessionId() {
-    const int _keyLength = 16; // 128 bits.
-    var data = _CryptoUtils.getRandomBytes(_keyLength);
+    const int keyLength = 16; // 128 bits.
+    var data = _CryptoUtils.getRandomBytes(keyLength);
     return _CryptoUtils.bytesToHex(data);
   }
 

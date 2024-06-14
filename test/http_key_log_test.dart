@@ -2,17 +2,17 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import "dart:async";
-import "dart:io" show FileSystemException, Platform;
+import 'dart:async';
+import 'dart:io' show FileSystemException, Platform;
 
-import "package:http_io/http_io.dart";
+import 'package:http_io/http_io.dart';
 
-import "async_helper.dart";
-import "expect.dart";
+import 'async_helper.dart';
+import 'expect.dart';
 
-late InternetAddress HOST;
+late InternetAddress host;
 
-String localFile(path) => Platform.script.resolve(path).toFilePath();
+String localFile(String path) => Platform.script.resolve(path).toFilePath();
 
 SecurityContext serverContext = SecurityContext()
   ..useCertificateChain(localFile('certificates/server_chain.pem'))
@@ -20,55 +20,55 @@ SecurityContext serverContext = SecurityContext()
       password: 'dartdart');
 
 Future<HttpServer> startEchoServer() {
-  return HttpServer.bindSecure(HOST, 0, serverContext).then((server) {
+  return HttpServer.bindSecure(host, 0, serverContext).then((server) {
     server.listen((HttpRequest req) {
-      final res = req.response;
-      res.write("Test");
+      var res = req.response;
+      res.write('Test');
       res.close();
     });
     return server;
   });
 }
 
-testSuccess(HttpServer server) async {
-  var log = "";
+Future<void> testSuccess(HttpServer server) async {
+  var log = '';
   SecurityContext clientContext = SecurityContext()
     ..setTrustedCertificates(localFile('certificates/trusted_certs.pem'));
 
-  final client = HttpClient(context: clientContext);
+  var client = HttpClient(context: clientContext);
   client.keyLog = (String line) {
     log += line;
   };
-  final request =
+  var request =
       await client.getUrl(Uri.parse('https://localhost:${server.port}/test'));
-  final response = await request.close();
-  await response.drain();
+  var response = await request.close();
+  await response.drain<void>();
 
-  Expect.contains("CLIENT_HANDSHAKE_TRAFFIC_SECRET", log);
+  Expect.contains('CLIENT_HANDSHAKE_TRAFFIC_SECRET', log);
 }
 
-testExceptionInKeyLogFunction(HttpServer server) async {
+Future<void> testExceptionInKeyLogFunction(HttpServer server) async {
   SecurityContext clientContext = SecurityContext()
     ..setTrustedCertificates(localFile('certificates/trusted_certs.pem'));
 
-  final client = HttpClient(context: clientContext);
+  var client = HttpClient(context: clientContext);
   var numCalls = 0;
   client.keyLog = (String line) {
     ++numCalls;
-    throw FileSystemException("Something bad happened");
+    throw FileSystemException('Something bad happened');
   };
-  final request =
+  var request =
       await client.getUrl(Uri.parse('https://localhost:${server.port}/test'));
-  final response = await request.close();
-  await response.drain();
+  var response = await request.close();
+  await response.drain<void>();
 
   Expect.notEquals(0, numCalls);
 }
 
 void main() async {
   asyncStart();
-  await InternetAddress.lookup("localhost").then((hosts) => HOST = hosts.first);
-  final server = await startEchoServer();
+  await InternetAddress.lookup('localhost').then((hosts) => host = hosts.first);
+  var server = await startEchoServer();
 
   await testSuccess(server);
   await testExceptionInKeyLogFunction(server);

@@ -7,7 +7,7 @@ import 'dart:isolate';
 
 import 'package:http_io/http_io.dart';
 
-import "expect.dart";
+import 'expect.dart';
 
 class IsolatedHttpServer {
   IsolatedHttpServer() : _statusPort = ReceivePort();
@@ -18,9 +18,9 @@ class IsolatedHttpServer {
 
   void start() {
     ReceivePort receivePort = ReceivePort();
-    var remote = Isolate.spawn(startIsolatedHttpServer, receivePort.sendPort);
-    receivePort.first.then((port) {
-      _serverPort = port;
+    Isolate.spawn(startIsolatedHttpServer, receivePort.sendPort);
+    receivePort.first.then((Object? port) {
+      _serverPort = port as SendPort;
 
       // Send server start message to the server.
       var command = IsolatedHttpServerCommand.start();
@@ -28,7 +28,9 @@ class IsolatedHttpServer {
     });
 
     // Handle status messages from the server.
-    _statusPort.listen((var status) {
+    _statusPort.listen((Object? status) {
+      status as IsolatedHttpServerStatus;
+
       if (status.isStarted) {
         _startedCallback(status.port);
       }
@@ -47,9 +49,9 @@ class IsolatedHttpServer {
         [IsolatedHttpServerCommand.chunkedEncoding(), _statusPort.sendPort]);
   }
 
-  ReceivePort _statusPort; // Port for receiving messages from the server.
+  final ReceivePort _statusPort; // Port for receiving messages from the server.
   late SendPort _serverPort; // Port for sending messages to the server.
-  var _startedCallback;
+  late void Function(int port) _startedCallback;
 }
 
 class IsolatedHttpServerCommand {
@@ -65,7 +67,7 @@ class IsolatedHttpServerCommand {
   bool get isStop => _command == _stop;
   bool get isChunkedEncoding => _command == _chunkedEncoding;
 
-  int _command;
+  final int _command;
 }
 
 class IsolatedHttpServerStatus {
@@ -83,12 +85,12 @@ class IsolatedHttpServerStatus {
 
   int get port => _port;
 
-  int _state;
+  final int _state;
   int _port = 0;
 }
 
 void startIsolatedHttpServer(Object replyToObj) {
-  final replyTo = replyToObj as SendPort;
+  var replyTo = replyToObj as SendPort;
   var server = TestServer();
   server.init();
   replyTo.send(server.dispatchSendPort);
@@ -99,17 +101,17 @@ class TestServer {
   void _notFoundHandler(HttpRequest request) {
     var response = request.response;
     response.statusCode = HttpStatus.notFound;
-    response.headers.set("Content-Type", "text/html; charset=UTF-8");
-    response.write("Page not found");
+    response.headers.set('Content-Type', 'text/html; charset=UTF-8');
+    response.write('Page not found');
     response.close();
   }
 
   // Check the "Host" header.
   void _hostHandler(HttpRequest request) {
     var response = request.response;
-    Expect.equals(1, request.headers["Host"]!.length);
-    Expect.equals("www.dartlang.org:1234", request.headers["Host"]![0]);
-    Expect.equals("www.dartlang.org", request.headers.host);
+    Expect.equals(1, request.headers['Host']!.length);
+    Expect.equals('www.dartlang.org:1234', request.headers['Host']![0]);
+    Expect.equals('www.dartlang.org', request.headers.host);
     Expect.equals(1234, request.headers.port);
     response.statusCode = HttpStatus.ok;
     response.close();
@@ -127,7 +129,7 @@ class TestServer {
   // Set the "Expires" header.
   void _expires2Handler(HttpRequest request) {
     var response = request.response;
-    response.headers.set("Expires", "Fri, 11 Jun 1999 18:46:53 GMT");
+    response.headers.set('Expires', 'Fri, 11 Jun 1999 18:46:53 GMT');
     DateTime date = DateTime.utc(1999, DateTime.june, 11, 18, 46, 53, 0);
     Expect.equals(date, response.headers.expires);
     response.close();
@@ -135,25 +137,25 @@ class TestServer {
 
   void _contentType1Handler(HttpRequest request) {
     var response = request.response;
-    Expect.equals("text/html", request.headers.contentType!.value);
-    Expect.equals("text", request.headers.contentType!.primaryType);
-    Expect.equals("html", request.headers.contentType!.subType);
-    Expect.equals("utf-8", request.headers.contentType!.parameters["charset"]);
+    Expect.equals('text/html', request.headers.contentType!.value);
+    Expect.equals('text', request.headers.contentType!.primaryType);
+    Expect.equals('html', request.headers.contentType!.subType);
+    Expect.equals('utf-8', request.headers.contentType!.parameters['charset']);
 
-    ContentType contentType = ContentType("text", "html", charset: "utf-8");
+    ContentType contentType = ContentType('text', 'html', charset: 'utf-8');
     response.headers.contentType = contentType;
     response.close();
   }
 
   void _contentType2Handler(HttpRequest request) {
     var response = request.response;
-    Expect.equals("text/html", request.headers.contentType!.value);
-    Expect.equals("text", request.headers.contentType!.primaryType);
-    Expect.equals("html", request.headers.contentType!.subType);
-    Expect.equals("utf-8", request.headers.contentType!.parameters["charset"]);
+    Expect.equals('text/html', request.headers.contentType!.value);
+    Expect.equals('text', request.headers.contentType!.primaryType);
+    Expect.equals('html', request.headers.contentType!.subType);
+    Expect.equals('utf-8', request.headers.contentType!.parameters['charset']);
 
     response.headers
-        .set(HttpHeaders.contentTypeHeader, "text/html;  charset = utf-8");
+        .set(HttpHeaders.contentTypeHeader, 'text/html;  charset = utf-8');
     response.close();
   }
 
@@ -163,16 +165,16 @@ class TestServer {
     // No cookies passed with this request.
     Expect.equals(0, request.cookies.length);
 
-    Cookie cookie1 = Cookie("name1", "value1");
+    Cookie cookie1 = Cookie('name1', 'value1');
     DateTime date = DateTime.utc(2014, DateTime.january, 5, 23, 59, 59, 0);
     cookie1.expires = date;
-    cookie1.domain = "www.example.com";
+    cookie1.domain = 'www.example.com';
     cookie1.httpOnly = true;
     response.cookies.add(cookie1);
-    Cookie cookie2 = Cookie("name2", "value2");
+    Cookie cookie2 = Cookie('name2', 'value2');
     cookie2.maxAge = 100;
-    cookie2.domain = ".example.com";
-    cookie2.path = "/shop";
+    cookie2.domain = '.example.com';
+    cookie2.path = '/shop';
     response.cookies.add(cookie2);
     response.close();
   }
@@ -187,24 +189,26 @@ class TestServer {
 
   void init() {
     // Setup request handlers.
-    _requestHandlers["/host"] = _hostHandler;
-    _requestHandlers["/expires1"] = _expires1Handler;
-    _requestHandlers["/expires2"] = _expires2Handler;
-    _requestHandlers["/contenttype1"] = _contentType1Handler;
-    _requestHandlers["/contenttype2"] = _contentType2Handler;
-    _requestHandlers["/cookie1"] = _cookie1Handler;
-    _requestHandlers["/cookie2"] = _cookie2Handler;
+    _requestHandlers['/host'] = _hostHandler;
+    _requestHandlers['/expires1'] = _expires1Handler;
+    _requestHandlers['/expires2'] = _expires2Handler;
+    _requestHandlers['/contenttype1'] = _contentType1Handler;
+    _requestHandlers['/contenttype2'] = _contentType2Handler;
+    _requestHandlers['/cookie1'] = _cookie1Handler;
+    _requestHandlers['/cookie2'] = _cookie2Handler;
     _dispatchPort.listen(dispatch);
   }
 
   SendPort get dispatchSendPort => _dispatchPort.sendPort;
 
-  void dispatch(message) {
-    IsolatedHttpServerCommand command = message[0];
-    SendPort replyTo = message[1];
+  void dispatch(Object? message) {
+    message as List;
+
+    IsolatedHttpServerCommand command = message[0] as IsolatedHttpServerCommand;
+    SendPort replyTo = message[1] as SendPort;
     if (command.isStart) {
       try {
-        HttpServer.bind("127.0.0.1", 0).then((server) {
+        HttpServer.bind('127.0.0.1', 0).then((server) {
           _server = server;
           _server.listen(_requestReceivedHandler);
           replyTo.send(IsolatedHttpServerStatus.started(_server.port));
@@ -216,9 +220,7 @@ class TestServer {
       _server.close();
       _dispatchPort.close();
       replyTo.send(IsolatedHttpServerStatus.stopped());
-    } else if (command.isChunkedEncoding) {
-      _chunkedEncoding = true;
-    }
+    } else if (command.isChunkedEncoding) {}
   }
 
   void _requestReceivedHandler(HttpRequest request) {
@@ -232,35 +234,34 @@ class TestServer {
 
   late HttpServer _server; // HTTP server instance.
   final _dispatchPort = ReceivePort();
-  final _requestHandlers = {};
-  bool _chunkedEncoding = false;
+  final _requestHandlers = <String, void Function(HttpRequest request)>{};
 }
 
-Future testHost() {
-  Completer completer = Completer();
+Future<void> testHost() {
+  Completer<void> completer = Completer<void>();
   IsolatedHttpServer server = IsolatedHttpServer();
   server.setServerStartedHandler((int port) {
     HttpClient httpClient = HttpClient();
-    httpClient.get("127.0.0.1", port, "/host").then((request) {
-      Expect.equals("127.0.0.1:$port", request.headers["host"]![0]);
-      request.headers.host = "www.dartlang.com";
-      Expect.equals("www.dartlang.com:$port", request.headers["host"]![0]);
-      Expect.equals("www.dartlang.com", request.headers.host);
+    httpClient.get('127.0.0.1', port, '/host').then((request) {
+      Expect.equals('127.0.0.1:$port', request.headers['host']![0]);
+      request.headers.host = 'www.dartlang.com';
+      Expect.equals('www.dartlang.com:$port', request.headers['host']![0]);
+      Expect.equals('www.dartlang.com', request.headers.host);
       Expect.equals(port, request.headers.port);
       request.headers.port = 1234;
-      Expect.equals("www.dartlang.com:1234", request.headers["host"]![0]);
+      Expect.equals('www.dartlang.com:1234', request.headers['host']![0]);
       Expect.equals(1234, request.headers.port);
       request.headers.port = HttpClient.defaultHttpPort;
       Expect.equals(HttpClient.defaultHttpPort, request.headers.port);
-      Expect.equals("www.dartlang.com", request.headers["host"]![0]);
-      request.headers.set("Host", "www.dartlang.org");
-      Expect.equals("www.dartlang.org", request.headers.host);
+      Expect.equals('www.dartlang.com', request.headers['host']![0]);
+      request.headers.set('Host', 'www.dartlang.org');
+      Expect.equals('www.dartlang.org', request.headers.host);
       Expect.equals(HttpClient.defaultHttpPort, request.headers.port);
-      request.headers.set("Host", "www.dartlang.org:");
-      Expect.equals("www.dartlang.org", request.headers.host);
+      request.headers.set('Host', 'www.dartlang.org:');
+      Expect.equals('www.dartlang.org', request.headers.host);
       Expect.equals(HttpClient.defaultHttpPort, request.headers.port);
-      request.headers.set("Host", "www.dartlang.org:1234");
-      Expect.equals("www.dartlang.org", request.headers.host);
+      request.headers.set('Host', 'www.dartlang.org:1234');
+      Expect.equals('www.dartlang.org', request.headers.host);
       Expect.equals(1234, request.headers.port);
       return request.close();
     }).then((response) {
@@ -268,7 +269,7 @@ Future testHost() {
       response.listen((_) {}, onDone: () {
         httpClient.close();
         server.shutdown();
-        completer.complete(true);
+        completer.complete();
       });
     });
   });
@@ -276,8 +277,8 @@ Future testHost() {
   return completer.future;
 }
 
-Future testExpires() {
-  Completer completer = Completer();
+Future<void> testExpires() {
+  Completer<void> completer = Completer<void>();
   IsolatedHttpServer server = IsolatedHttpServer();
   server.setServerStartedHandler((int port) {
     int responses = 0;
@@ -286,7 +287,7 @@ Future testExpires() {
     void processResponse(HttpClientResponse response) {
       Expect.equals(HttpStatus.ok, response.statusCode);
       Expect.equals(
-          "Fri, 11 Jun 1999 18:46:53 GMT", response.headers["expires"]![0]);
+          'Fri, 11 Jun 1999 18:46:53 GMT', response.headers['expires']![0]);
       Expect.equals(DateTime.utc(1999, DateTime.june, 11, 18, 46, 53, 0),
           response.headers.expires);
       response.listen((_) {}, onDone: () {
@@ -294,17 +295,17 @@ Future testExpires() {
         if (responses == 2) {
           httpClient.close();
           server.shutdown();
-          completer.complete(true);
+          completer.complete();
         }
       });
     }
 
     httpClient
-        .get("127.0.0.1", port, "/expires1")
+        .get('127.0.0.1', port, '/expires1')
         .then((request) => request.close())
         .then(processResponse);
     httpClient
-        .get("127.0.0.1", port, "/expires2")
+        .get('127.0.0.1', port, '/expires2')
         .then((request) => request.close())
         .then(processResponse);
   });
@@ -312,8 +313,8 @@ Future testExpires() {
   return completer.future;
 }
 
-Future testContentType() {
-  Completer completer = Completer();
+Future<void> testContentType() {
+  Completer<void> completer = Completer<void>();
   IsolatedHttpServer server = IsolatedHttpServer();
   server.setServerStartedHandler((int port) {
     int responses = 0;
@@ -322,31 +323,31 @@ Future testContentType() {
     void processResponse(HttpClientResponse response) {
       Expect.equals(HttpStatus.ok, response.statusCode);
       Expect.equals(
-          "text/html; charset=utf-8", response.headers.contentType.toString());
-      Expect.equals("text/html", response.headers.contentType!.value);
-      Expect.equals("text", response.headers.contentType!.primaryType);
-      Expect.equals("html", response.headers.contentType!.subType);
+          'text/html; charset=utf-8', response.headers.contentType.toString());
+      Expect.equals('text/html', response.headers.contentType!.value);
+      Expect.equals('text', response.headers.contentType!.primaryType);
+      Expect.equals('html', response.headers.contentType!.subType);
       Expect.equals(
-          "utf-8", response.headers.contentType!.parameters["charset"]);
+          'utf-8', response.headers.contentType!.parameters['charset']);
       response.listen((_) {}, onDone: () {
         responses++;
         if (responses == 2) {
           httpClient.close();
           server.shutdown();
-          completer.complete(true);
+          completer.complete();
         }
       });
     }
 
-    httpClient.get("127.0.0.1", port, "/contenttype1").then((request) {
+    httpClient.get('127.0.0.1', port, '/contenttype1').then((request) {
       request.headers.contentType =
-          ContentType("text", "html", charset: "utf-8");
+          ContentType('text', 'html', charset: 'utf-8');
       return request.close();
     }).then(processResponse);
 
-    httpClient.get("127.0.0.1", port, "/contenttype2").then((request) {
+    httpClient.get('127.0.0.1', port, '/contenttype2').then((request) {
       request.headers
-          .set(HttpHeaders.contentTypeHeader, "text/html;  charset = utf-8");
+          .set(HttpHeaders.contentTypeHeader, 'text/html;  charset = utf-8');
       return request.close();
     }).then(processResponse);
   });
@@ -354,38 +355,37 @@ Future testContentType() {
   return completer.future;
 }
 
-Future testCookies() {
-  Completer completer = Completer();
+Future<void> testCookies() {
+  Completer<void> completer = Completer<void>();
   IsolatedHttpServer server = IsolatedHttpServer();
   server.setServerStartedHandler((int port) {
-    int responses = 0;
     HttpClient httpClient = HttpClient();
 
     httpClient
-        .get("127.0.0.1", port, "/cookie1")
+        .get('127.0.0.1', port, '/cookie1')
         .then((request) => request.close())
         .then((response) {
       Expect.equals(2, response.cookies.length);
       for (var cookie in response.cookies) {
-        if (cookie.name == "name1") {
-          Expect.equals("value1", cookie.value);
+        if (cookie.name == 'name1') {
+          Expect.equals('value1', cookie.value);
           DateTime date =
               DateTime.utc(2014, DateTime.january, 5, 23, 59, 59, 0);
           Expect.equals(date, cookie.expires);
-          Expect.equals("www.example.com", cookie.domain);
+          Expect.equals('www.example.com', cookie.domain);
           Expect.isTrue(cookie.httpOnly);
-        } else if (cookie.name == "name2") {
-          Expect.equals("value2", cookie.value);
+        } else if (cookie.name == 'name2') {
+          Expect.equals('value2', cookie.value);
           Expect.equals(100, cookie.maxAge);
-          Expect.equals(".example.com", cookie.domain);
-          Expect.equals("/shop", cookie.path);
+          Expect.equals('.example.com', cookie.domain);
+          Expect.equals('/shop', cookie.path);
         } else {
-          Expect.fail("Unexpected cookie");
+          Expect.fail('Unexpected cookie');
         }
       }
 
       response.listen((_) {}, onDone: () {
-        httpClient.get("127.0.0.1", port, "/cookie2").then((request) {
+        httpClient.get('127.0.0.1', port, '/cookie2').then((request) {
           request.cookies.add(response.cookies[0]);
           request.cookies.add(response.cookies[1]);
           return request.close();
@@ -393,7 +393,7 @@ Future testCookies() {
           response.listen((_) {}, onDone: () {
             httpClient.close();
             server.shutdown();
-            completer.complete(true);
+            completer.complete();
           });
         });
       });

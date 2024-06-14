@@ -8,38 +8,38 @@
 
 // ignore_for_file: avoid_print
 
-import "dart:async";
+import 'dart:async';
 
-import "package:http_io/http_io.dart";
+import 'package:http_io/http_io.dart';
 
 class ExpectException implements Exception {
   ExpectException(this.message);
   @override
-  String toString() => "ExpectException: $message";
+  String toString() => 'ExpectException: $message';
   String message;
 }
 
-void expect(condition, message) {
+void expect(bool condition, String message) {
   if (!condition) {
     throw ExpectException(message);
   }
 }
 
-const hostName = "localhost";
+const hostName = 'localhost';
 
-Future runClients(int port) {
+Future<void> runClients(int port) {
   HttpClient client = HttpClient();
 
-  var testFutures = <Future>[];
+  var testFutures = <Future<void>>[];
   for (int i = 0; i < 20; ++i) {
     testFutures.add(client.getUrl(Uri.parse('https://$hostName:$port/')).then(
         (HttpClientRequest request) {
-      expect(false, "Request succeeded");
-    }, onError: (e) {
+      expect(false, 'Request succeeded');
+    }, onError: (Object e) {
       // Remove ArgumentError once null default context is supported.
       expect(
           e is HandshakeException || e is SocketException || e is ArgumentError,
-          "Error is wrong type: $e");
+          'Error is wrong type: $e');
     }));
   }
   return Future.wait(testFutures);

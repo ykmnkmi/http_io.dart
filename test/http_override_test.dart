@@ -4,13 +4,13 @@
 
 import 'dart:async';
 
-import "package:http_io/http_io.dart";
+import 'package:http_io/http_io.dart';
 
-import "expect.dart";
+import 'expect.dart';
 
 class MyHttpClient1 implements HttpClient {
   @override
-  String? userAgent = "MyHttpClient1";
+  String? userAgent = 'MyHttpClient1';
 
   MyHttpClient1(SecurityContext? context);
 
@@ -27,37 +27,37 @@ class MyHttpClient1 implements HttpClient {
   @override
   Future<HttpClientRequest> open(
           String method, String host, int port, String path) =>
-      throw "";
+      throw '';
   @override
-  Future<HttpClientRequest> openUrl(String method, Uri url) => throw "";
+  Future<HttpClientRequest> openUrl(String method, Uri url) => throw '';
   @override
-  Future<HttpClientRequest> get(String host, int port, String path) => throw "";
+  Future<HttpClientRequest> get(String host, int port, String path) => throw '';
   @override
-  Future<HttpClientRequest> getUrl(Uri url) => throw "";
+  Future<HttpClientRequest> getUrl(Uri url) => throw '';
   @override
   Future<HttpClientRequest> post(String host, int port, String path) =>
-      throw "";
+      throw '';
   @override
-  Future<HttpClientRequest> postUrl(Uri url) => throw "";
+  Future<HttpClientRequest> postUrl(Uri url) => throw '';
   @override
-  Future<HttpClientRequest> put(String host, int port, String path) => throw "";
+  Future<HttpClientRequest> put(String host, int port, String path) => throw '';
   @override
-  Future<HttpClientRequest> putUrl(Uri url) => throw "";
+  Future<HttpClientRequest> putUrl(Uri url) => throw '';
   @override
   Future<HttpClientRequest> delete(String host, int port, String path) =>
-      throw "";
+      throw '';
   @override
-  Future<HttpClientRequest> deleteUrl(Uri url) => throw "";
+  Future<HttpClientRequest> deleteUrl(Uri url) => throw '';
   @override
   Future<HttpClientRequest> patch(String host, int port, String path) =>
-      throw "";
+      throw '';
   @override
-  Future<HttpClientRequest> patchUrl(Uri url) => throw "";
+  Future<HttpClientRequest> patchUrl(Uri url) => throw '';
   @override
   Future<HttpClientRequest> head(String host, int port, String path) =>
-      throw "";
+      throw '';
   @override
-  Future<HttpClientRequest> headUrl(Uri url) => throw "";
+  Future<HttpClientRequest> headUrl(Uri url) => throw '';
   @override
   set authenticate(
       Future<bool> Function(Uri url, String scheme, String realm)? f) {}
@@ -82,14 +82,14 @@ class MyHttpClient1 implements HttpClient {
   set badCertificateCallback(
       bool Function(X509Certificate cert, String host, int port)? callback) {}
   @override
-  set keyLog(Function(String line)? callback) {}
+  set keyLog(void Function(String line)? callback) {}
   @override
   void close({bool force = false}) {}
 }
 
 class MyHttpClient2 implements HttpClient {
   @override
-  String? userAgent = "MyHttpClient2";
+  String? userAgent = 'MyHttpClient2';
 
   MyHttpClient2(SecurityContext? context);
 
@@ -106,37 +106,37 @@ class MyHttpClient2 implements HttpClient {
   @override
   Future<HttpClientRequest> open(
           String method, String host, int port, String path) =>
-      throw "";
+      throw '';
   @override
-  Future<HttpClientRequest> openUrl(String method, Uri url) => throw "";
+  Future<HttpClientRequest> openUrl(String method, Uri url) => throw '';
   @override
-  Future<HttpClientRequest> get(String host, int port, String path) => throw "";
+  Future<HttpClientRequest> get(String host, int port, String path) => throw '';
   @override
-  Future<HttpClientRequest> getUrl(Uri url) => throw "";
+  Future<HttpClientRequest> getUrl(Uri url) => throw '';
   @override
   Future<HttpClientRequest> post(String host, int port, String path) =>
-      throw "";
+      throw '';
   @override
-  Future<HttpClientRequest> postUrl(Uri url) => throw "";
+  Future<HttpClientRequest> postUrl(Uri url) => throw '';
   @override
-  Future<HttpClientRequest> put(String host, int port, String path) => throw "";
+  Future<HttpClientRequest> put(String host, int port, String path) => throw '';
   @override
-  Future<HttpClientRequest> putUrl(Uri url) => throw "";
+  Future<HttpClientRequest> putUrl(Uri url) => throw '';
   @override
   Future<HttpClientRequest> delete(String host, int port, String path) =>
-      throw "";
+      throw '';
   @override
-  Future<HttpClientRequest> deleteUrl(Uri url) => throw "";
+  Future<HttpClientRequest> deleteUrl(Uri url) => throw '';
   @override
   Future<HttpClientRequest> patch(String host, int port, String path) =>
-      throw "";
+      throw '';
   @override
-  Future<HttpClientRequest> patchUrl(Uri url) => throw "";
+  Future<HttpClientRequest> patchUrl(Uri url) => throw '';
   @override
   Future<HttpClientRequest> head(String host, int port, String path) =>
-      throw "";
+      throw '';
   @override
-  Future<HttpClientRequest> headUrl(Uri url) => throw "";
+  Future<HttpClientRequest> headUrl(Uri url) => throw '';
   @override
   set authenticate(
       Future<bool> Function(Uri url, String scheme, String realm)? f) {}
@@ -161,7 +161,7 @@ class MyHttpClient2 implements HttpClient {
   set badCertificateCallback(
       bool Function(X509Certificate cert, String host, int port)? callback) {}
   @override
-  set keyLog(Function(String line)? callback) {}
+  set keyLog(void Function(String line)? callback) {}
   @override
   void close({bool force = false}) {}
 }
@@ -182,107 +182,112 @@ HttpClient myCreateHttp2Client(SecurityContext? context) {
 }
 
 String myFindProxyFromEnvironment(Uri url, Map<String, String>? environment) {
-  return "proxy";
+  return 'proxy';
 }
 
-withHttpOverridesTest() {
+void withHttpOverridesTest() {
   HttpOverrides.runZoned(() {
     var httpClient = HttpClient();
     Expect.isNotNull(httpClient);
     Expect.isTrue(httpClient is MyHttpClient1);
-    Expect.equals((MyHttpClient1(null)).userAgent, httpClient.userAgent);
+    Expect.equals(MyHttpClient1(null).userAgent, httpClient.userAgent);
   }, createHttpClient: myCreateHttp1Client);
   var httpClient = HttpClient();
+  // ignore: unnecessary_type_check
   Expect.isTrue(httpClient is HttpClient);
   Expect.isTrue(httpClient is! MyHttpClient1);
 }
 
-nestedWithHttpOverridesTest() {
+void nestedWithHttpOverridesTest() {
   HttpOverrides.runZoned(() {
     var httpClient = HttpClient();
     Expect.isNotNull(httpClient);
     Expect.isTrue(httpClient is MyHttpClient1);
-    Expect.equals((MyHttpClient1(null)).userAgent, httpClient.userAgent);
+    Expect.equals(MyHttpClient1(null).userAgent, httpClient.userAgent);
     HttpOverrides.runZoned(() {
       var httpClient = HttpClient();
       Expect.isNotNull(httpClient);
       Expect.isTrue(httpClient is MyHttpClient2);
-      Expect.equals((MyHttpClient2(null)).userAgent, httpClient.userAgent);
+      Expect.equals(MyHttpClient2(null).userAgent, httpClient.userAgent);
     }, createHttpClient: myCreateHttp2Client);
     httpClient = HttpClient();
     Expect.isNotNull(httpClient);
     Expect.isTrue(httpClient is MyHttpClient1);
-    Expect.equals((MyHttpClient1(null)).userAgent, httpClient.userAgent);
+    Expect.equals(MyHttpClient1(null).userAgent, httpClient.userAgent);
   }, createHttpClient: myCreateHttp1Client);
   var httpClient = HttpClient();
+  // ignore: unnecessary_type_check
   Expect.isTrue(httpClient is HttpClient);
   Expect.isTrue(httpClient is! MyHttpClient1);
   Expect.isTrue(httpClient is! MyHttpClient2);
 }
 
-nestedDifferentOverridesTest() {
+void nestedDifferentOverridesTest() {
   HttpOverrides.runZoned(() {
     var httpClient = HttpClient();
     Expect.isNotNull(httpClient);
     Expect.isTrue(httpClient is MyHttpClient1);
-    Expect.equals((MyHttpClient1(null)).userAgent, httpClient.userAgent);
+    Expect.equals(MyHttpClient1(null).userAgent, httpClient.userAgent);
     HttpOverrides.runZoned(() {
       var httpClient = HttpClient();
       Expect.isNotNull(httpClient);
       Expect.isTrue(httpClient is MyHttpClient1);
-      Expect.equals((MyHttpClient1(null)).userAgent, httpClient.userAgent);
+      Expect.equals(MyHttpClient1(null).userAgent, httpClient.userAgent);
       Expect.equals(myFindProxyFromEnvironment(Uri(), null),
           HttpClient.findProxyFromEnvironment(Uri()));
     }, findProxyFromEnvironment: myFindProxyFromEnvironment);
     httpClient = HttpClient();
     Expect.isNotNull(httpClient);
     Expect.isTrue(httpClient is MyHttpClient1);
-    Expect.equals((MyHttpClient1(null)).userAgent, httpClient.userAgent);
+    Expect.equals(MyHttpClient1(null).userAgent, httpClient.userAgent);
   }, createHttpClient: myCreateHttp1Client);
   var httpClient = HttpClient();
+  // ignore: unnecessary_type_check
   Expect.isTrue(httpClient is HttpClient);
   Expect.isTrue(httpClient is! MyHttpClient1);
   Expect.isTrue(httpClient is! MyHttpClient2);
 }
 
-zonedWithHttpOverridesTest() {
+void zonedWithHttpOverridesTest() {
   HttpOverrides.runWithHttpOverrides(() {
     var httpClient = HttpClient();
     Expect.isNotNull(httpClient);
     Expect.isTrue(httpClient is MyHttpClient1);
-    Expect.equals((MyHttpClient1(null)).userAgent, httpClient.userAgent);
+    Expect.equals(MyHttpClient1(null).userAgent, httpClient.userAgent);
   }, MyHttpOverrides());
 }
 
-globalHttpOverridesTest() {
+void globalHttpOverridesTest() {
   HttpOverrides.global = MyHttpOverrides();
   var httpClient = HttpClient();
   Expect.isNotNull(httpClient);
   Expect.isTrue(httpClient is MyHttpClient1);
-  Expect.equals((MyHttpClient1(null)).userAgent, httpClient.userAgent);
+  Expect.equals(MyHttpClient1(null).userAgent, httpClient.userAgent);
   HttpOverrides.global = null;
   httpClient = HttpClient();
+  // ignore: unnecessary_type_check
   Expect.isTrue(httpClient is HttpClient);
   Expect.isTrue(httpClient is! MyHttpClient1);
 }
 
-globalHttpOverridesZoneTest() {
+void globalHttpOverridesZoneTest() {
   HttpOverrides.global = MyHttpOverrides();
   runZoned(() {
     runZoned(() {
       var httpClient = HttpClient();
       Expect.isNotNull(httpClient);
       Expect.isTrue(httpClient is MyHttpClient1);
-      Expect.equals((MyHttpClient1(null)).userAgent, httpClient.userAgent);
+      Expect.equals(MyHttpClient1(null).userAgent, httpClient.userAgent);
     });
   });
   HttpOverrides.global = null;
   var httpClient = HttpClient();
+  // ignore: unnecessary_type_check
   Expect.isTrue(httpClient is HttpClient);
   Expect.isTrue(httpClient is! MyHttpClient1);
 }
 
-main() {
+void main() {
   withHttpOverridesTest();
   nestedWithHttpOverridesTest();
   nestedDifferentOverridesTest();
