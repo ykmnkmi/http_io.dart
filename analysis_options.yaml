@@ -6,9 +6,6 @@ analyzer:
     strict-inference: true
     # strict-raw-types: true
   errors:
-    avoid_returning_null_for_void: ignore
-    avoid_single_cascade_in_expression_statements: ignore
-    await_only_futures: ignore
     body_might_complete_normally_catch_error: ignore
     camel_case_extensions: ignore
     camel_case_types: ignore

@@ -24,7 +24,7 @@ Future testHttpClient(header) {
       });
     });
 
-    await runZonedGuarded(() {
+    runZonedGuarded(() {
       var client = new HttpClient();
       client.userAgent = null;
       client

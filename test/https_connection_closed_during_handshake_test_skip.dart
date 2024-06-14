@@ -85,7 +85,7 @@ void main(List<String> args) async {
     errorCompleter.complete(e);
   });
   Expect.isTrue((await errorCompleter.future) is SocketException);
-  await serverProcess.kill();
+  serverProcess.kill();
 
   asyncEnd();
 }

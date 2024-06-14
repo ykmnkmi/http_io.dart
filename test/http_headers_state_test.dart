@@ -27,7 +27,7 @@ void test(int totalConnections, [String? body]) {
               () => response.headers.add("X-Request-Header", "value2"),
               (e) => e is HttpException);
         }
-        response..close();
+        response.close();
         // Cannot change state or reason after connection is closed.
         Expect.throwsStateError(() => response.statusCode = 200);
         Expect.throwsStateError(() => response.reasonPhrase = "OK");
