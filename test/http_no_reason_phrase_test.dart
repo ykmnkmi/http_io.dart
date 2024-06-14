@@ -13,7 +13,7 @@ import "expect.dart";
 
 // Test that a response line without any reason phrase is handled.
 void missingReasonPhrase(int statusCode, bool includeSpace) {
-  var client = new HttpClient();
+  var client = HttpClient();
   ServerSocket.bind("127.0.0.1", 0).then((server) {
     server.listen((client) {
       client.listen(null);

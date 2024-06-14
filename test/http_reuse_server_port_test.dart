@@ -14,7 +14,7 @@ import "package:http_io/http_io.dart";
 import "async_helper.dart";
 
 Future<int> runServer(int port, int connections, bool clean) {
-  var completer = new Completer<int>();
+  var completer = Completer<int>();
   HttpServer.bind("127.0.0.1", port).then((server) {
     int i = 0;
     server.listen((request) {
@@ -26,8 +26,8 @@ Future<int> runServer(int port, int connections, bool clean) {
       }
     });
 
-    Future.wait(new List.generate(connections, (_) {
-      var client = new HttpClient();
+    Future.wait(List.generate(connections, (_) {
+      var client = HttpClient();
       return client
           .get("127.0.0.1", server.port, "/")
           .then((request) => request.close())

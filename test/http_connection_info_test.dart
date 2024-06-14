@@ -24,7 +24,7 @@ void testHttpConnectionInfo() {
       });
     });
 
-    HttpClient client = new HttpClient();
+    HttpClient client = HttpClient();
     client.get("127.0.0.1", server.port, "/").then((request) {
       Expect.isTrue(request.connectionInfo!.remoteAddress is InternetAddress);
       Expect.equals(request.connectionInfo!.remotePort, server.port);

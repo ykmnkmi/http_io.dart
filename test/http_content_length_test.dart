@@ -45,7 +45,7 @@ void testNoBody(int totalConnections, bool explicitContentLength) {
       Expect.fail(msg);
     });
 
-    HttpClient client = new HttpClient();
+    HttpClient client = HttpClient();
     for (int i = 0; i < totalConnections; i++) {
       client.get("127.0.0.1", server.port, "/").then((request) {
         if (explicitContentLength) {
@@ -101,7 +101,7 @@ void testBody(int totalConnections, bool useHeader) {
     });
 
     int clientCount = 0;
-    HttpClient client = new HttpClient();
+    HttpClient client = HttpClient();
     for (int i = 0; i < totalConnections; i++) {
       client.get("127.0.0.1", server.port, "/").then((request) {
         if (useHeader) {
@@ -163,7 +163,7 @@ void testBodyChunked(int totalConnections, bool useHeader) {
     });
 
     int count = 0;
-    HttpClient client = new HttpClient();
+    HttpClient client = HttpClient();
     for (int i = 0; i < totalConnections; i++) {
       client.get("127.0.0.1", server.port, "/").then((request) {
         if (useHeader) {
@@ -210,7 +210,7 @@ void testSetContentLength() {
       response.close();
     });
 
-    var client = new HttpClient();
+    var client = HttpClient();
     client
         .get("127.0.0.1", server.port, "/")
         .then((request) => request.close())

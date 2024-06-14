@@ -21,12 +21,12 @@ class Server {
 
   static Future<Server> start(String? algorithm, String? qop,
       {int? nonceStaleAfter, bool useNextNonce = false}) {
-    return new Server()._start(algorithm, qop, nonceStaleAfter, useNextNonce);
+    return Server()._start(algorithm, qop, nonceStaleAfter, useNextNonce);
   }
 
   Future<Server> _start(String? serverAlgorithm, String? serverQop,
       int? nonceStaleAfter, bool useNextNonce) {
-    Set ncs = new Set();
+    Set ncs = Set();
     // Calculate ha1.
     String realm = "test";
     String username = "dart";
@@ -36,13 +36,13 @@ class Server {
 
     var nonce = "12345678"; // No need for random nonce in test.
 
-    var completer = new Completer<Server>();
+    var completer = Completer<Server>();
     HttpServer.bind("127.0.0.1", 0).then((s) {
       server = s;
       server.listen((HttpRequest request) {
         sendUnauthorizedResponse(HttpResponse response, {stale = false}) {
           response.statusCode = HttpStatus.unauthorized;
-          StringBuffer authHeader = new StringBuffer();
+          StringBuffer authHeader = StringBuffer();
           authHeader.write('Digest');
           authHeader.write(', realm="$realm"');
           authHeader.write(', nonce="$nonce"');
@@ -142,15 +142,15 @@ class Server {
 
 void testNoCredentials(String? algorithm, String? qop) {
   Server.start(algorithm, qop).then((server) {
-    HttpClient client = new HttpClient();
+    HttpClient client = HttpClient();
 
     // Add digest credentials which does not match the path requested.
     client.addCredentials(Uri.parse("http://127.0.0.1:${server.port}/xxx"),
-        "test", new HttpClientDigestCredentials("dart", "password"));
+        "test", HttpClientDigestCredentials("dart", "password"));
 
     // Add basic credentials for the path requested.
     client.addCredentials(Uri.parse("http://127.0.0.1:${server.port}/digest"),
-        "test", new HttpClientBasicCredentials("dart", "password"));
+        "test", HttpClientBasicCredentials("dart", "password"));
 
     Future makeRequest(Uri url) {
       return client
@@ -176,7 +176,7 @@ void testNoCredentials(String? algorithm, String? qop) {
 
 void testCredentials(String? algorithm, String? qop) {
   Server.start(algorithm, qop).then((server) {
-    HttpClient client = new HttpClient();
+    HttpClient client = HttpClient();
 
     Future makeRequest(Uri url) {
       return client
@@ -190,7 +190,7 @@ void testCredentials(String? algorithm, String? qop) {
     }
 
     client.addCredentials(Uri.parse("http://127.0.0.1:${server.port}/digest"),
-        "test", new HttpClientDigestCredentials("dart", "password"));
+        "test", HttpClientDigestCredentials("dart", "password"));
 
     var futures = <Future>[];
     for (int i = 0; i < 2; i++) {
@@ -208,17 +208,17 @@ void testCredentials(String? algorithm, String? qop) {
 
 void testAuthenticateCallback(String? algorithm, String? qop) {
   Server.start(algorithm, qop).then((server) {
-    HttpClient client = new HttpClient();
+    HttpClient client = HttpClient();
 
     client.authenticate = (url, scheme, realm) {
       Expect.equals("Digest", scheme);
       Expect.equals("test", realm);
-      final completer = new Completer<bool>();
-      new Timer(const Duration(milliseconds: 10), () {
+      final completer = Completer<bool>();
+      Timer(const Duration(milliseconds: 10), () {
         client.addCredentials(
             Uri.parse("http://127.0.0.1:${server.port}/digest"),
             "test",
-            new HttpClientDigestCredentials("dart", "password"));
+            HttpClientDigestCredentials("dart", "password"));
         completer.complete(true);
       });
       return completer.future;
@@ -249,7 +249,7 @@ void testAuthenticateCallback(String? algorithm, String? qop) {
 
 void testStaleNonce() {
   Server.start("MD5", "auth", nonceStaleAfter: 2).then((server) {
-    HttpClient client = new HttpClient();
+    HttpClient client = HttpClient();
 
     Future makeRequest(Uri url) {
       return client
@@ -263,7 +263,7 @@ void testStaleNonce() {
     }
 
     Uri uri = Uri.parse("http://127.0.0.1:${server.port}/digest");
-    var credentials = new HttpClientDigestCredentials("dart", "password");
+    var credentials = HttpClientDigestCredentials("dart", "password");
     client.addCredentials(uri, "test", credentials);
 
     makeRequest(uri)
@@ -282,7 +282,7 @@ void testStaleNonce() {
 void testNextNonce() {
   Server.start("MD5", "auth", nonceStaleAfter: 2, useNextNonce: true)
       .then((server) {
-    HttpClient client = new HttpClient();
+    HttpClient client = HttpClient();
 
     Future makeRequest(Uri url) {
       return client
@@ -296,7 +296,7 @@ void testNextNonce() {
     }
 
     Uri uri = Uri.parse("http://127.0.0.1:${server.port}/digest");
-    var credentials = new HttpClientDigestCredentials("dart", "password");
+    var credentials = HttpClientDigestCredentials("dart", "password");
     client.addCredentials(uri, "test", credentials);
 
     makeRequest(uri)
@@ -334,7 +334,7 @@ void testNextNonce() {
 
 void testLocalServerDigest() {
   int count = 0;
-  HttpClient client = new HttpClient();
+  HttpClient client = HttpClient();
 
   Future makeRequest() {
     return client
@@ -349,12 +349,12 @@ void testLocalServerDigest() {
   }
 
   client.addCredentials(Uri.parse("http://127.0.0.1/digest"), "test",
-      new HttpClientDigestCredentials("dart", "password"));
+      HttpClientDigestCredentials("dart", "password"));
 
   client.authenticate = (url, scheme, realm) {
     client.addCredentials(Uri.parse("http://127.0.0.1/digest"), "test",
-        new HttpClientDigestCredentials("dart", "password"));
-    return new Future.value(true);
+        HttpClientDigestCredentials("dart", "password"));
+    return Future.value(true);
   };
 
   next() {

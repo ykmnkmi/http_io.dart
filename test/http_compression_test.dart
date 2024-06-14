@@ -22,7 +22,7 @@ Future<void> testServerCompress({bool clientAutoUncompress = true}) async {
       request.response.add(data);
       request.response.close();
     });
-    var client = new HttpClient();
+    var client = HttpClient();
     client.autoUncompress = clientAutoUncompress;
     final request = await client.get("127.0.0.1", server.port, "/");
     request.headers.set(HttpHeaders.acceptEncodingHeader, "gzip,deflate");
@@ -41,7 +41,7 @@ Future<void> testServerCompress({bool clientAutoUncompress = true}) async {
   }
 
   await test("My raw server provided data".codeUnits);
-  var longBuffer = new Uint8List(1024 * 1024);
+  var longBuffer = Uint8List(1024 * 1024);
   for (int i = 0; i < longBuffer.length; i++) {
     longBuffer[i] = i & 0xFF;
   }
@@ -56,7 +56,7 @@ Future<void> testAcceptEncodingHeader() async {
       request.response.write("data");
       request.response.close();
     });
-    var client = new HttpClient();
+    var client = HttpClient();
     final request = await client.get("127.0.0.1", server.port, "/");
     request.headers.set(HttpHeaders.acceptEncodingHeader, encoding);
     final response = await request.close();
@@ -90,7 +90,7 @@ Future<void> testDisableCompressTest() async {
     request.response.write("data");
     request.response.close();
   });
-  final client = new HttpClient();
+  final client = HttpClient();
   final request = await client.get("127.0.0.1", server.port, "/");
   final response = await request.close();
   Expect.equals(

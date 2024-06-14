@@ -13,18 +13,18 @@ late InternetAddress HOST;
 
 String localFile(path) => Platform.script.resolve(path).toFilePath();
 
-SecurityContext serverContext = new SecurityContext()
+SecurityContext serverContext = SecurityContext()
   ..useCertificateChain(localFile('certificates/server_chain.pem'))
   ..usePrivateKey(localFile('certificates/server_key.pem'),
       password: 'dartdart');
 
-SecurityContext clientContext = new SecurityContext()
+SecurityContext clientContext = SecurityContext()
   ..setTrustedCertificates(localFile('certificates/trusted_certs.pem'));
 
 void testListenOn() {
   void test(void onDone()) {
     HttpServer.bindSecure(HOST, 0, serverContext, backlog: 5).then((server) {
-      ReceivePort serverPort = new ReceivePort();
+      ReceivePort serverPort = ReceivePort();
       server.listen((HttpRequest request) {
         request.listen((_) {}, onDone: () {
           request.response.close();
@@ -32,8 +32,8 @@ void testListenOn() {
         });
       });
 
-      HttpClient client = new HttpClient(context: clientContext);
-      ReceivePort clientPort = new ReceivePort();
+      HttpClient client = HttpClient(context: clientContext);
+      ReceivePort clientPort = ReceivePort();
       client
           .getUrl(Uri.parse("https://${HOST.host}:${server.port}/"))
           .then((HttpClientRequest request) {
@@ -64,7 +64,7 @@ void testEarlyClientClose() {
   HttpServer.bindSecure(HOST, 0, serverContext).then((server) {
     server.listen((request) {
       String name = Platform.script.toFilePath();
-      new File(name)
+      File(name)
           .openRead()
           .cast<List<int>>()
           .pipe(request.response)

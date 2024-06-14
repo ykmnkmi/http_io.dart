@@ -9,7 +9,7 @@ import "expect.dart";
 
 void testBadHostName() {
   asyncStart();
-  HttpClient client = new HttpClient();
+  HttpClient client = HttpClient();
   client
       .getUrl(Uri.parse("https://some.bad.host.name.7654321/"))
       .then((HttpClientRequest request) {

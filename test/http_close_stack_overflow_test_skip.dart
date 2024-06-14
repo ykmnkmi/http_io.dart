@@ -18,7 +18,7 @@ Future<void> main() async {
   final client = HttpClient();
   var got = 0;
   for (var i = 0; i < max; i++) {
-    new Future(() async {
+    Future(() async {
       try {
         final request = await client
             .getUrl(Uri.parse("http://localhost:${servers[i].port}/"));

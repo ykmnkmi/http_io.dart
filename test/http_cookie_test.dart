@@ -25,18 +25,18 @@ void testCookies() {
       Expect.mapEquals(cookies[index], cookiesMap);
       // Return the same cookies to the client.
       cookiesMap.forEach((k, v) {
-        request.response.cookies.add(new Cookie(k, v));
+        request.response.cookies.add(Cookie(k, v));
       });
       request.response.close();
     });
 
     int count = 0;
-    HttpClient client = new HttpClient();
+    HttpClient client = HttpClient();
     for (int i = 0; i < cookies.length; i++) {
       client.get("127.0.0.1", server.port, "/$i").then((request) {
         // Send the cookies to the server.
         cookies[i].forEach((k, v) {
-          request.cookies.add(new Cookie(k, v));
+          request.cookies.add(Cookie(k, v));
         });
         return request.close();
       }).then((response) {

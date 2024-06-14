@@ -18,7 +18,7 @@ void test(String expected, Map headers) {
       Expect.equals("$expected$expectedPath", request.requestedUri.toString());
       request.response.close();
     });
-    HttpClient client = new HttpClient();
+    HttpClient client = HttpClient();
     client
         .get("localhost", server.port, sendPath)
         .then((request) {

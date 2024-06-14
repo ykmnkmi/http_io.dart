@@ -11,7 +11,7 @@ import "expect.dart";
 
 Future testHttpServer(String name) async {
   var sockname = "$name/sock";
-  var address = InternetAddress('$sockname', type: InternetAddressType.unix);
+  var address = InternetAddress(sockname, type: InternetAddressType.unix);
   var httpServer = await HttpServer.bind(address, 0);
   var sub;
   sub = httpServer.listen((HttpRequest request) {
@@ -24,7 +24,7 @@ Future testHttpServer(String name) async {
 
   var option = "--unix-socket $sockname";
   var result =
-      await Process.run("curl", ["--unix-socket", "$sockname", "localhost"]);
+      await Process.run("curl", ["--unix-socket", sockname, "localhost"]);
   Expect.isTrue(result.stdout.toString().contains('Hello, world!'));
 }
 

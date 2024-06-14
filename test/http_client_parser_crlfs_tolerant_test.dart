@@ -25,7 +25,7 @@ Future testHttpClient(header) {
     });
 
     runZonedGuarded(() {
-      var client = new HttpClient();
+      var client = HttpClient();
       client.userAgent = null;
       client
           .get("127.0.0.1", server.port, "/")

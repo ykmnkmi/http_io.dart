@@ -58,7 +58,7 @@ Future runClientProcess(int port) {
 }
 
 runClient(int port) {
-  var client = new HttpClient();
+  var client = HttpClient();
   client
       .get('127.0.0.1', port, "/")
       .then((request) => request.close())

@@ -12,9 +12,9 @@ import "package:http_io/http_io.dart";
 import "expect.dart";
 
 Future<HttpServer> setupServer({Uri? targetServer}) {
-  final completer = new Completer<HttpServer>();
+  final completer = Completer<HttpServer>();
   HttpServer.bind("127.0.0.1", 0).then((server) {
-    var handlers = new Map<String, Function>();
+    var handlers = Map<String, Function>();
     addRequestHandler(
         String path, void handler(HttpRequest request, HttpResponse response)) {
       handlers[path] = handler;
@@ -207,9 +207,9 @@ Future<HttpServer> setupServer({Uri? targetServer}) {
 // A second HTTP server used to validate that redirect requests across domains
 // do *not* include security-related headers.
 Future<HttpServer> setupTargetServer() {
-  final completer = new Completer<HttpServer>();
+  final completer = Completer<HttpServer>();
   HttpServer.bind("127.0.0.1", 0).then((server) {
-    var handlers = new Map<String, Function>();
+    var handlers = Map<String, Function>();
     addRequestHandler(
         String path, void handler(HttpRequest request, HttpResponse response)) {
       handlers[path] = handler;
@@ -247,7 +247,7 @@ void checkRedirects(int redirectCount, HttpClientResponse response) {
 
 void testManualRedirect() {
   setupServer().then((server) {
-    HttpClient client = new HttpClient();
+    HttpClient client = HttpClient();
 
     int redirectCount = 0;
     handleResponse(HttpClientResponse response) {
@@ -277,7 +277,7 @@ void testManualRedirect() {
 
 void testManualRedirectWithHeaders() {
   setupServer().then((server) {
-    HttpClient client = new HttpClient();
+    HttpClient client = HttpClient();
 
     int redirectCount = 0;
 
@@ -309,7 +309,7 @@ void testManualRedirectWithHeaders() {
 
 void testAutoRedirect() {
   setupServer().then((server) {
-    HttpClient client = new HttpClient();
+    HttpClient client = HttpClient();
 
     client
         .getUrl(Uri.parse("http://127.0.0.1:${server.port}/redirect"))
@@ -328,7 +328,7 @@ void testAutoRedirect() {
 
 void testAutoRedirectZeroMaxRedirects() {
   setupServer().then((server) {
-    HttpClient client = new HttpClient();
+    HttpClient client = HttpClient();
 
     client
         .getUrl(Uri.parse("http://127.0.0.1:${server.port}/redirect"))
@@ -353,7 +353,7 @@ void testAutoRedirectZeroMaxRedirects() {
 
 void testAutoRedirectWithHeaders() {
   setupServer().then((server) {
-    HttpClient client = new HttpClient();
+    HttpClient client = HttpClient();
 
     client
         .getUrl(Uri.parse("http://127.0.0.1:${server.port}/src"))
@@ -467,7 +467,7 @@ void testCrossDomainAutoRedirectWithHeaders() {
             targetServer:
                 Uri.parse("http://127.0.0.1:${targetServer.port}/target"))
         .then((server) {
-      HttpClient client = new HttpClient();
+      HttpClient client = HttpClient();
 
       client
           .getUrl(Uri.parse("http://127.0.0.1:${server.port}/src-crossdomain"))
@@ -490,7 +490,7 @@ void testCrossDomainAutoRedirectWithHeaders() {
 
 void testAutoRedirect301POST() {
   setupServer().then((server) {
-    HttpClient client = new HttpClient();
+    HttpClient client = HttpClient();
 
     client
         .postUrl(Uri.parse("http://127.0.0.1:${server.port}/301src"))
@@ -510,7 +510,7 @@ void testAutoRedirect301POST() {
 
 void testAutoRedirect303POST() {
   setupServer().then((server) {
-    HttpClient client = new HttpClient();
+    HttpClient client = HttpClient();
 
     client
         .postUrl(Uri.parse("http://127.0.0.1:${server.port}/303src"))
@@ -530,7 +530,7 @@ void testAutoRedirect303POST() {
 
 void testAutoRedirectLimit() {
   setupServer().then((server) {
-    HttpClient client = new HttpClient();
+    HttpClient client = HttpClient();
 
     Future<HttpClientResponse?>.value(client
             .getUrl(Uri.parse("http://127.0.0.1:${server.port}/1"))
@@ -546,7 +546,7 @@ void testAutoRedirectLimit() {
 
 void testRedirectLoop() {
   setupServer().then((server) {
-    HttpClient client = new HttpClient();
+    HttpClient client = HttpClient();
 
     int redirectCount = 0;
     Future<HttpClientResponse?>.value(client
@@ -563,7 +563,7 @@ void testRedirectLoop() {
 
 void testRedirectClosingConnection() {
   setupServer().then((server) {
-    HttpClient client = new HttpClient();
+    HttpClient client = HttpClient();
 
     client
         .getUrl(Uri.parse("http://127.0.0.1:${server.port}/closing"))
@@ -581,7 +581,7 @@ void testRedirectClosingConnection() {
 void testRedirectRelativeUrl() {
   testPath(String path) {
     setupServer().then((server) {
-      HttpClient client = new HttpClient();
+      HttpClient client = HttpClient();
 
       print(path);
       client
@@ -608,7 +608,7 @@ void testRedirectRelativeUrl() {
 
 void testRedirectRelativeToAbsolute() {
   setupServer().then((server) {
-    HttpClient client = new HttpClient();
+    HttpClient client = HttpClient();
 
     int redirectCount = 0;
     handleResponse(HttpClientResponse response) {

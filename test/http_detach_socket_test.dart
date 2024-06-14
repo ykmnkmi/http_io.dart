@@ -21,8 +21,8 @@ void testServerDetachSocket() {
       response.contentLength = 0;
       response.detachSocket().then((socket) {
         Expect.isNotNull(socket);
-        var body = new StringBuffer();
-        socket.listen((data) => body.write(new String.fromCharCodes(data)),
+        var body = StringBuffer();
+        socket.listen((data) => body.write(String.fromCharCodes(data)),
             onDone: () => Expect.equals("Some data", body.toString()));
         socket.write("Test!");
         socket.close();
@@ -34,8 +34,8 @@ void testServerDetachSocket() {
       socket.write("GET / HTTP/1.1\r\n"
           "content-length: 0\r\n\r\n"
           "Some data");
-      var body = new StringBuffer();
-      socket.listen((data) => body.write(new String.fromCharCodes(data)),
+      var body = StringBuffer();
+      socket.listen((data) => body.write(String.fromCharCodes(data)),
           onDone: () {
         Expect.equals(
             "HTTP/1.1 200 OK\r\n"
@@ -56,8 +56,8 @@ void testServerDetachSocketNoWriteHeaders() {
       response.contentLength = 0;
       response.detachSocket(writeHeaders: false).then((socket) {
         Expect.isNotNull(socket);
-        var body = new StringBuffer();
-        socket.listen((data) => body.write(new String.fromCharCodes(data)),
+        var body = StringBuffer();
+        socket.listen((data) => body.write(String.fromCharCodes(data)),
             onDone: () => Expect.equals("Some data", body.toString()));
         socket.write("Test!");
         socket.close();
@@ -69,8 +69,8 @@ void testServerDetachSocketNoWriteHeaders() {
       socket.write("GET / HTTP/1.1\r\n"
           "content-length: 0\r\n\r\n"
           "Some data");
-      var body = new StringBuffer();
-      socket.listen((data) => body.write(new String.fromCharCodes(data)),
+      var body = StringBuffer();
+      socket.listen((data) => body.write(String.fromCharCodes(data)),
           onDone: () {
         Expect.equals("Test!", body.toString());
         socket.close();
@@ -106,8 +106,8 @@ void testClientDetachSocket() {
       socket.write("HTTP/1.1 200 OK\r\n"
           "\r\n"
           "Test!");
-      var body = new StringBuffer();
-      socket.listen((data) => body.write(new String.fromCharCodes(data)),
+      var body = StringBuffer();
+      socket.listen((data) => body.write(String.fromCharCodes(data)),
           onDone: () {
         List<String> lines = body.toString().split("\r\n");
         Expect.equals(5, lines.length);
@@ -122,15 +122,15 @@ void testClientDetachSocket() {
       server.close();
     });
 
-    var client = new HttpClient();
+    var client = HttpClient();
     client.userAgent = null;
     client
         .get("127.0.0.1", server.port, "/")
         .then((request) => request.close())
         .then((response) {
       response.detachSocket().then((socket) {
-        var body = new StringBuffer();
-        socket.listen((data) => body.write(new String.fromCharCodes(data)),
+        var body = StringBuffer();
+        socket.listen((data) => body.write(String.fromCharCodes(data)),
             onDone: () {
           Expect.equals("Test!", body.toString());
           client.close();
@@ -159,7 +159,7 @@ void testUpgradedConnection() {
       }
     });
 
-    var client = new HttpClient();
+    var client = HttpClient();
     client.userAgent = null;
     client.get("127.0.0.1", server.port, "/").then((request) {
       request.headers.set('upgrade', 'mine');

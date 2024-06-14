@@ -21,7 +21,7 @@ void testGetEmptyRequest() {
       request.cast<List<int>>().pipe(request.response);
     });
 
-    var client = new HttpClient();
+    var client = HttpClient();
     client
         .get("127.0.0.1", server.port, "/")
         .then((request) => request.close())
@@ -39,7 +39,7 @@ void testGetDataRequest() {
       request.cast<List<int>>().pipe(request.response);
     });
 
-    var client = new HttpClient();
+    var client = HttpClient();
     client
         .get("127.0.0.1", server.port, "/")
         .then((request) => request.close())
@@ -55,7 +55,7 @@ void testGetDataRequest() {
 
 void testGetInvalidHost() {
   asyncStart();
-  var client = new HttpClient();
+  var client = HttpClient();
   Future<HttpClientRequest?>.value(
           client.get("__SOMETHING_INVALID__", 8888, "/"))
       .catchError((error) {
@@ -70,12 +70,12 @@ void testGetServerClose() {
   HttpServer.bind("127.0.0.1", 0).then((server) {
     server.listen((request) {
       server.close();
-      new Timer(const Duration(milliseconds: 100), () {
+      Timer(const Duration(milliseconds: 100), () {
         request.response.close();
       });
     });
 
-    var client = new HttpClient();
+    var client = HttpClient();
     client
         .get("127.0.0.1", server.port, "/")
         .then((request) => request.close())
@@ -86,7 +86,7 @@ void testGetServerClose() {
 
 void testGetServerCloseNoKeepAlive() {
   asyncStart();
-  var client = new HttpClient();
+  var client = HttpClient();
   HttpServer.bind("127.0.0.1", 0).then((server) {
     int port = server.port;
     server.first.then((request) => request.response.close());
@@ -109,7 +109,7 @@ void testGetServerForceClose() {
       server.close(force: true);
     });
 
-    var client = new HttpClient();
+    var client = HttpClient();
     client
         .get("127.0.0.1", server.port, "/")
         .then((request) => request.close())
@@ -122,7 +122,7 @@ void testGetServerForceClose() {
 
 void testGetDataServerForceClose() {
   asyncStart();
-  var completer = new Completer();
+  var completer = Completer();
   HttpServer.bind("127.0.0.1", 0).then((server) {
     server.listen((request) {
       request.response.bufferOutput = false;
@@ -132,7 +132,7 @@ void testGetDataServerForceClose() {
       completer.future.then((_) => server.close(force: true));
     });
 
-    var client = new HttpClient();
+    var client = HttpClient();
     client
         .get("127.0.0.1", server.port, "/")
         .then((request) => request.close())
@@ -153,7 +153,7 @@ void testGetDataServerForceClose() {
 
 typedef Future<HttpClientRequest> Callback1(String a1, int a2, String a3);
 void testOpenEmptyRequest() {
-  var client = new HttpClient();
+  var client = HttpClient();
   var methods = [
     [client.get, 'GET'],
     [client.post, 'POST'],
@@ -182,7 +182,7 @@ void testOpenEmptyRequest() {
 
 typedef Future<HttpClientRequest> Callback2(Uri a1);
 void testOpenUrlEmptyRequest() {
-  var client = new HttpClient();
+  var client = HttpClient();
   var methods = [
     [client.getUrl, 'GET'],
     [client.postUrl, 'POST'],
@@ -219,15 +219,15 @@ void testNoBuffer() {
       response.writeln('init');
     });
 
-    var client = new HttpClient();
+    var client = HttpClient();
     client
         .get("127.0.0.1", server.port, "/")
         .then((request) => request.close())
         .then((clientResponse) {
-      var iterator = new StreamIterator(clientResponse
+      var iterator = StreamIterator(clientResponse
           .cast<List<int>>()
           .transform(utf8.decoder)
-          .transform(new LineSplitter()));
+          .transform(LineSplitter()));
       iterator.moveNext().then((hasValue) {
         Expect.isTrue(hasValue);
         Expect.equals('init', iterator.current);
@@ -274,7 +274,7 @@ void testMaxConnectionsPerHost(int connectionCap, int connections) {
       }
     });
 
-    var client = new HttpClient();
+    var client = HttpClient();
     client.maxConnectionsPerHost = connectionCap;
     for (int i = 0; i < connections; i++) {
       asyncStart();
@@ -381,7 +381,7 @@ Future<void> testHttpAbortBeforeWrite() async {
 Future<void> testHttpAbortBeforeClose() async {
   // Test that abort() is called after write(). Some messages added prior to
   // abort() are sent.
-  final completer = new Completer<void>();
+  final completer = Completer<void>();
   asyncStart();
   final server = await ServerSocket.bind("127.0.0.1", 0);
   server.listen((s) {

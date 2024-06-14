@@ -31,7 +31,7 @@ Future<HttpServer> startServer() {
     server.listen((request) {
       bool chunked = request.uri.queryParameters["chunked"] == "true";
       int length = int.parse(request.uri.queryParameters["length"]!);
-      var buffer = new List<int>.filled(length, 0);
+      var buffer = List<int>.filled(length, 0);
       if (!chunked) request.response.contentLength = length;
       request.response.add(buffer);
       request.response.close();
@@ -42,7 +42,7 @@ Future<HttpServer> startServer() {
 
 testKeepAliveNonChunked() {
   startServer().then((server) {
-    var client = new HttpClient();
+    var client = HttpClient();
 
     getData(client, server.port, false, 100)
         .then((_) => getData(client, server.port, false, 100))
@@ -58,7 +58,7 @@ testKeepAliveNonChunked() {
 
 testKeepAliveChunked() {
   startServer().then((server) {
-    var client = new HttpClient();
+    var client = HttpClient();
 
     getData(client, server.port, true, 100)
         .then((_) => getData(client, server.port, true, 100))
@@ -74,7 +74,7 @@ testKeepAliveChunked() {
 
 testKeepAliveMixed() {
   startServer().then((server) {
-    var client = new HttpClient();
+    var client = HttpClient();
 
     getData(client, server.port, true, 100)
         .then((_) => getData(client, server.port, false, 100))

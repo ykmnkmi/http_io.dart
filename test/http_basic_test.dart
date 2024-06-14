@@ -21,19 +21,18 @@ class TestServerMain {
   }
 
   void start([bool chunkedEncoding = false]) {
-    ReceivePort receivePort = new ReceivePort();
+    ReceivePort receivePort = ReceivePort();
     var remote = Isolate.spawn(startTestServer, receivePort.sendPort);
     receivePort.first.then((port) {
       _serverPort = port;
 
       if (chunkedEncoding) {
         // Send chunked encoding message to the server.
-        port.send(
-            [new TestServerCommand.chunkedEncoding(), _statusPort.sendPort]);
+        port.send([TestServerCommand.chunkedEncoding(), _statusPort.sendPort]);
       }
 
       // Send server start message to the server.
-      var command = new TestServerCommand.start();
+      var command = TestServerCommand.start();
       port.send([command, _statusPort.sendPort]);
     });
 
@@ -47,12 +46,12 @@ class TestServerMain {
 
   void close() {
     // Send server stop message to the server.
-    _serverPort.send([new TestServerCommand.stop(), _statusPort.sendPort]);
+    _serverPort.send([TestServerCommand.stop(), _statusPort.sendPort]);
     _statusPort.close();
   }
 
   final _statusPort =
-      new ReceivePort(); // Port for receiving messages from the server.
+      ReceivePort(); // Port for receiving messages from the server.
   late SendPort _serverPort; // Port for sending messages to the server.
   var _startedCallback;
 }
@@ -94,7 +93,7 @@ class TestServerStatus {
 
 void startTestServer(Object replyToObj) {
   final replyTo = replyToObj as SendPort;
-  var server = new TestServer();
+  var server = TestServer();
   server.init();
   replyTo.send(server.dispatchSendPort);
 }
@@ -165,15 +164,15 @@ class TestServer {
         HttpServer.bind("127.0.0.1", 0).then((server) {
           _server = server;
           _server.listen(_requestReceivedHandler);
-          replyTo.send(new TestServerStatus.started(_server.port));
+          replyTo.send(TestServerStatus.started(_server.port));
         });
       } catch (e) {
-        replyTo.send(new TestServerStatus.error());
+        replyTo.send(TestServerStatus.error());
       }
     } else if (command.isStop) {
       _server.close();
       _dispatchPort.close();
-      replyTo.send(new TestServerStatus.stopped());
+      replyTo.send(TestServerStatus.stopped());
     } else if (command.isChunkedEncoding) {
       _chunkedEncoding = true;
     }
@@ -189,13 +188,13 @@ class TestServer {
   }
 
   late HttpServer _server; // HTTP server instance.
-  final ReceivePort _dispatchPort = new ReceivePort();
+  final ReceivePort _dispatchPort = ReceivePort();
   final _requestHandlers = {};
   bool _chunkedEncoding = false;
 }
 
 void testStartStop() {
-  TestServerMain testServerMain = new TestServerMain();
+  TestServerMain testServerMain = TestServerMain();
   testServerMain.setServerStartedHandler((int port) {
     testServerMain.close();
   });
@@ -203,16 +202,16 @@ void testStartStop() {
 }
 
 void testGET() {
-  TestServerMain testServerMain = new TestServerMain();
+  TestServerMain testServerMain = TestServerMain();
   testServerMain.setServerStartedHandler((int port) {
-    HttpClient httpClient = new HttpClient();
+    HttpClient httpClient = HttpClient();
     httpClient
         .get("127.0.0.1", port, "/0123456789")
         .then((request) => request.close())
         .then((response) {
       Expect.equals(HttpStatus.ok, response.statusCode);
-      StringBuffer body = new StringBuffer();
-      response.listen((data) => body.write(new String.fromCharCodes(data)),
+      StringBuffer body = StringBuffer();
+      response.listen((data) => body.write(String.fromCharCodes(data)),
           onDone: () {
         Expect.equals("01234567890", body.toString());
         httpClient.close();
@@ -227,11 +226,11 @@ void testPOST(bool chunkedEncoding) {
   String data = "ABCDEFGHIJKLMONPQRSTUVWXYZ";
   final int kMessageCount = 10;
 
-  TestServerMain testServerMain = new TestServerMain();
+  TestServerMain testServerMain = TestServerMain();
 
   void runTest(int port) {
     int count = 0;
-    HttpClient httpClient = new HttpClient();
+    HttpClient httpClient = HttpClient();
     void sendRequest() {
       httpClient.post("127.0.0.1", port, "/echo").then((request) {
         if (chunkedEncoding) {
@@ -244,8 +243,8 @@ void testPOST(bool chunkedEncoding) {
         return request.close();
       }).then((response) {
         Expect.equals(HttpStatus.ok, response.statusCode);
-        StringBuffer body = new StringBuffer();
-        response.listen((data) => body.write(new String.fromCharCodes(data)),
+        StringBuffer body = StringBuffer();
+        response.listen((data) => body.write(String.fromCharCodes(data)),
             onDone: () {
           Expect.equals(data, body.toString());
           count++;
@@ -267,16 +266,16 @@ void testPOST(bool chunkedEncoding) {
 }
 
 void test404() {
-  TestServerMain testServerMain = new TestServerMain();
+  TestServerMain testServerMain = TestServerMain();
   testServerMain.setServerStartedHandler((int port) {
-    HttpClient httpClient = new HttpClient();
+    HttpClient httpClient = HttpClient();
     httpClient
         .get("127.0.0.1", port, "/thisisnotfound")
         .then((request) => request.close())
         .then((response) {
       Expect.equals(HttpStatus.notFound, response.statusCode);
-      var body = new StringBuffer();
-      response.listen((data) => body.write(new String.fromCharCodes(data)),
+      var body = StringBuffer();
+      response.listen((data) => body.write(String.fromCharCodes(data)),
           onDone: () {
         Expect.equals("Page not found", body.toString());
         httpClient.close();
@@ -288,9 +287,9 @@ void test404() {
 }
 
 void testReasonPhrase() {
-  TestServerMain testServerMain = new TestServerMain();
+  TestServerMain testServerMain = TestServerMain();
   testServerMain.setServerStartedHandler((int port) {
-    HttpClient httpClient = new HttpClient();
+    HttpClient httpClient = HttpClient();
     httpClient.get("127.0.0.1", port, "/reasonformoving").then((request) {
       request.followRedirects = false;
       return request.close();

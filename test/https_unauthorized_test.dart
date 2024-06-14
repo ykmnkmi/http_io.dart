@@ -16,12 +16,12 @@ const CERTIFICATE = "localhost_cert";
 
 String localFile(path) => Platform.script.resolve(path).toFilePath();
 
-SecurityContext untrustedServerContext = new SecurityContext()
+SecurityContext untrustedServerContext = SecurityContext()
   ..useCertificateChain(localFile('certificates/untrusted_server_chain.pem'))
   ..usePrivateKey(localFile('certificates/untrusted_server_key.pem'),
       password: 'dartdart');
 
-SecurityContext clientContext = new SecurityContext()
+SecurityContext clientContext = SecurityContext()
   ..setTrustedCertificates(localFile('certificates/trusted_certs.pem'));
 
 Future<HttpServer> runServer() {

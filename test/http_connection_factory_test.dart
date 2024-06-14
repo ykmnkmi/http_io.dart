@@ -143,7 +143,7 @@ main() async {
   await testConnectionViaProxy();
   if (Platform.isMacOS || Platform.isLinux || Platform.isAndroid) {
     await withTempDir('unix_socket_test', (Directory dir) async {
-      await testDifferentAddressFamiliesAndProxySettings('${dir.path}');
+      await testDifferentAddressFamiliesAndProxySettings(dir.path);
     });
   }
 }

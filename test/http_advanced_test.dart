@@ -15,20 +15,20 @@ import 'package:http_io/http_io.dart';
 import "expect.dart";
 
 class IsolatedHttpServer {
-  IsolatedHttpServer() : _statusPort = new ReceivePort();
+  IsolatedHttpServer() : _statusPort = ReceivePort();
 
   void setServerStartedHandler(void startedCallback(int port)) {
     _startedCallback = startedCallback;
   }
 
   void start() {
-    ReceivePort receivePort = new ReceivePort();
+    ReceivePort receivePort = ReceivePort();
     var remote = Isolate.spawn(startIsolatedHttpServer, receivePort.sendPort);
     receivePort.first.then((port) {
       _serverPort = port;
 
       // Send server start message to the server.
-      var command = new IsolatedHttpServerCommand.start();
+      var command = IsolatedHttpServerCommand.start();
       port.send([command, _statusPort.sendPort]);
     });
 
@@ -42,17 +42,14 @@ class IsolatedHttpServer {
 
   void shutdown() {
     // Send server stop message to the server.
-    _serverPort
-        .send([new IsolatedHttpServerCommand.stop(), _statusPort.sendPort]);
+    _serverPort.send([IsolatedHttpServerCommand.stop(), _statusPort.sendPort]);
     _statusPort.close();
   }
 
   void chunkedEncoding() {
     // Send chunked encoding message to the server.
-    _serverPort.send([
-      new IsolatedHttpServerCommand.chunkedEncoding(),
-      _statusPort.sendPort
-    ]);
+    _serverPort.send(
+        [IsolatedHttpServerCommand.chunkedEncoding(), _statusPort.sendPort]);
   }
 
   ReceivePort _statusPort; // Port for receiving messages from the server.
@@ -97,7 +94,7 @@ class IsolatedHttpServerStatus {
 
 void startIsolatedHttpServer(Object replyToObj) {
   final replyTo = replyToObj as SendPort;
-  var server = new TestServer();
+  var server = TestServer();
   server.init();
   replyTo.send(server.dispatchSendPort);
 }
@@ -126,7 +123,7 @@ class TestServer {
   // Set the "Expires" header using the expires property.
   void _expires1Handler(HttpRequest request) {
     var response = request.response;
-    DateTime date = new DateTime.utc(1999, DateTime.june, 11, 18, 46, 53, 0);
+    DateTime date = DateTime.utc(1999, DateTime.june, 11, 18, 46, 53, 0);
     response.headers.expires = date;
     Expect.equals(date, response.headers.expires);
     response.close();
@@ -136,7 +133,7 @@ class TestServer {
   void _expires2Handler(HttpRequest request) {
     var response = request.response;
     response.headers.set("Expires", "Fri, 11 Jun 1999 18:46:53 GMT");
-    DateTime date = new DateTime.utc(1999, DateTime.june, 11, 18, 46, 53, 0);
+    DateTime date = DateTime.utc(1999, DateTime.june, 11, 18, 46, 53, 0);
     Expect.equals(date, response.headers.expires);
     response.close();
   }
@@ -148,7 +145,7 @@ class TestServer {
     Expect.equals("html", request.headers.contentType!.subType);
     Expect.equals("utf-8", request.headers.contentType!.parameters["charset"]);
 
-    ContentType contentType = new ContentType("text", "html", charset: "utf-8");
+    ContentType contentType = ContentType("text", "html", charset: "utf-8");
     response.headers.contentType = contentType;
     response.close();
   }
@@ -171,13 +168,13 @@ class TestServer {
     // No cookies passed with this request.
     Expect.equals(0, request.cookies.length);
 
-    Cookie cookie1 = new Cookie("name1", "value1");
-    DateTime date = new DateTime.utc(2014, DateTime.january, 5, 23, 59, 59, 0);
+    Cookie cookie1 = Cookie("name1", "value1");
+    DateTime date = DateTime.utc(2014, DateTime.january, 5, 23, 59, 59, 0);
     cookie1.expires = date;
     cookie1.domain = "www.example.com";
     cookie1.httpOnly = true;
     response.cookies.add(cookie1);
-    Cookie cookie2 = new Cookie("name2", "value2");
+    Cookie cookie2 = Cookie("name2", "value2");
     cookie2.maxAge = 100;
     cookie2.domain = ".example.com";
     cookie2.path = "/shop";
@@ -215,15 +212,15 @@ class TestServer {
         HttpServer.bind("127.0.0.1", 0).then((server) {
           _server = server;
           _server.listen(_requestReceivedHandler);
-          replyTo.send(new IsolatedHttpServerStatus.started(_server.port));
+          replyTo.send(IsolatedHttpServerStatus.started(_server.port));
         });
       } catch (e) {
-        replyTo.send(new IsolatedHttpServerStatus.error());
+        replyTo.send(IsolatedHttpServerStatus.error());
       }
     } else if (command.isStop) {
       _server.close();
       _dispatchPort.close();
-      replyTo.send(new IsolatedHttpServerStatus.stopped());
+      replyTo.send(IsolatedHttpServerStatus.stopped());
     } else if (command.isChunkedEncoding) {
       _chunkedEncoding = true;
     }
@@ -239,16 +236,16 @@ class TestServer {
   }
 
   late HttpServer _server; // HTTP server instance.
-  final _dispatchPort = new ReceivePort();
+  final _dispatchPort = ReceivePort();
   final _requestHandlers = {};
   bool _chunkedEncoding = false;
 }
 
 Future testHost() {
-  Completer completer = new Completer();
-  IsolatedHttpServer server = new IsolatedHttpServer();
+  Completer completer = Completer();
+  IsolatedHttpServer server = IsolatedHttpServer();
   server.setServerStartedHandler((int port) {
-    HttpClient httpClient = new HttpClient();
+    HttpClient httpClient = HttpClient();
     httpClient.get("127.0.0.1", port, "/host").then((request) {
       Expect.equals("127.0.0.1:$port", request.headers["host"]![0]);
       request.headers.host = "www.dartlang.com";
@@ -285,17 +282,17 @@ Future testHost() {
 }
 
 Future testExpires() {
-  Completer completer = new Completer();
-  IsolatedHttpServer server = new IsolatedHttpServer();
+  Completer completer = Completer();
+  IsolatedHttpServer server = IsolatedHttpServer();
   server.setServerStartedHandler((int port) {
     int responses = 0;
-    HttpClient httpClient = new HttpClient();
+    HttpClient httpClient = HttpClient();
 
     void processResponse(HttpClientResponse response) {
       Expect.equals(HttpStatus.ok, response.statusCode);
       Expect.equals(
           "Fri, 11 Jun 1999 18:46:53 GMT", response.headers["expires"]![0]);
-      Expect.equals(new DateTime.utc(1999, DateTime.june, 11, 18, 46, 53, 0),
+      Expect.equals(DateTime.utc(1999, DateTime.june, 11, 18, 46, 53, 0),
           response.headers.expires);
       response.listen((_) {}, onDone: () {
         responses++;
@@ -321,11 +318,11 @@ Future testExpires() {
 }
 
 Future testContentType() {
-  Completer completer = new Completer();
-  IsolatedHttpServer server = new IsolatedHttpServer();
+  Completer completer = Completer();
+  IsolatedHttpServer server = IsolatedHttpServer();
   server.setServerStartedHandler((int port) {
     int responses = 0;
-    HttpClient httpClient = new HttpClient();
+    HttpClient httpClient = HttpClient();
 
     void processResponse(HttpClientResponse response) {
       Expect.equals(HttpStatus.ok, response.statusCode);
@@ -348,7 +345,7 @@ Future testContentType() {
 
     httpClient.get("127.0.0.1", port, "/contenttype1").then((request) {
       request.headers.contentType =
-          new ContentType("text", "html", charset: "utf-8");
+          ContentType("text", "html", charset: "utf-8");
       return request.close();
     }).then(processResponse);
 
@@ -363,11 +360,11 @@ Future testContentType() {
 }
 
 Future testCookies() {
-  Completer completer = new Completer();
-  IsolatedHttpServer server = new IsolatedHttpServer();
+  Completer completer = Completer();
+  IsolatedHttpServer server = IsolatedHttpServer();
   server.setServerStartedHandler((int port) {
     int responses = 0;
-    HttpClient httpClient = new HttpClient();
+    HttpClient httpClient = HttpClient();
 
     httpClient
         .get("127.0.0.1", port, "/cookie1")
@@ -378,7 +375,7 @@ Future testCookies() {
         if (cookie.name == "name1") {
           Expect.equals("value1", cookie.value);
           DateTime date =
-              new DateTime.utc(2014, DateTime.january, 5, 23, 59, 59, 0);
+              DateTime.utc(2014, DateTime.january, 5, 23, 59, 59, 0);
           Expect.equals(date, cookie.expires);
           Expect.equals("www.example.com", cookie.domain);
           Expect.isTrue(cookie.httpOnly);

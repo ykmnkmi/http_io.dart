@@ -14,12 +14,12 @@ import "expect.dart";
 
 String localFile(path) => Platform.script.resolve(path).toFilePath();
 
-final SecurityContext serverContext = new SecurityContext()
+final SecurityContext serverContext = SecurityContext()
   ..useCertificateChain(localFile('certificates/server_chain.pem'))
   ..usePrivateKey(localFile('certificates/server_key.pem'),
       password: 'dartdart');
 
-final SecurityContext clientContext = new SecurityContext()
+final SecurityContext clientContext = SecurityContext()
   ..setTrustedCertificates(localFile('certificates/trusted_certs.pem'));
 
 class Server {
@@ -56,7 +56,7 @@ class Server {
     } else {
       Expect.isNull(request.headers[HttpHeaders.viaHeader]);
     }
-    var body = new StringBuffer();
+    var body = StringBuffer();
     onRequestComplete() {
       String path = request.uri.path.substring(1);
       if (path != "A") {
@@ -68,7 +68,7 @@ class Server {
     }
 
     request.listen((data) {
-      body.write(new String.fromCharCodes(data));
+      body.write(String.fromCharCodes(data));
     }, onDone: onRequestComplete);
   }
 
@@ -81,14 +81,14 @@ class Server {
 
 Future<Server> setupServer(int proxyHops,
     {List<String> directRequestPaths = const <String>[], secure = false}) {
-  Server server = new Server(proxyHops, directRequestPaths, secure);
+  Server server = Server(proxyHops, directRequestPaths, secure);
   return server.start();
 }
 
 class ProxyServer {
   final bool ipV6;
   late HttpServer server;
-  final client = new HttpClient();
+  final client = HttpClient();
   int requestCount = 0;
   String? authScheme;
   String realm = "test";
@@ -98,7 +98,7 @@ class ProxyServer {
   var ha1;
   String serverAlgorithm = "MD5";
   String serverQop = "auth";
-  Set ncs = new Set();
+  Set ncs = Set();
 
   var nonce = "12345678"; // No need for random nonce in test.
 
@@ -134,7 +134,7 @@ class ProxyServer {
     request.fold(null, (x, y) {}).then((_) {
       var response = request.response;
       response.statusCode = HttpStatus.proxyAuthenticationRequired;
-      StringBuffer authHeader = new StringBuffer();
+      StringBuffer authHeader = StringBuffer();
       authHeader.write('Digest');
       authHeader.write(', realm="$realm"');
       authHeader.write(', nonce="$nonce"');
@@ -149,7 +149,7 @@ class ProxyServer {
   }
 
   Future<ProxyServer> start() {
-    var x = new Completer<ProxyServer>();
+    var x = Completer<ProxyServer>();
     var host = ipV6 ? "::1" : "localhost";
     HttpServer.bind(host, 0).then((s) {
       server = s;
@@ -276,7 +276,7 @@ class ProxyServer {
 }
 
 Future<ProxyServer> setupProxyServer({ipV6 = false}) {
-  ProxyServer proxyServer = new ProxyServer(ipV6: ipV6);
+  ProxyServer proxyServer = ProxyServer(ipV6: ipV6);
   return proxyServer.start();
 }
 
@@ -286,7 +286,7 @@ void testProxyIPV6() {
     setupServer(1, directRequestPaths: ["/4"]).then((server) {
       setupServer(1, directRequestPaths: ["/4"], secure: true)
           .then((secureServer) {
-        HttpClient client = new HttpClient(context: clientContext);
+        HttpClient client = HttpClient(context: clientContext);
 
         List<String> proxy = ["PROXY [::1]:${proxyServer.port}"];
         client.findProxy = (Uri uri) {
@@ -335,7 +335,7 @@ void testProxyFromEnvironment() {
   setupProxyServer().then((proxyServer) {
     setupServer(1).then((server) {
       setupServer(1, secure: true).then((secureServer) {
-        HttpClient client = new HttpClient(context: clientContext);
+        HttpClient client = HttpClient(context: clientContext);
 
         client.findProxy = (Uri uri) {
           return HttpClient.findProxyFromEnvironment(uri, environment: {
@@ -384,15 +384,15 @@ int testProxyAuthenticateCount = 0;
 Future testProxyAuthenticate(
     bool useDigestAuthentication, String username, String password) {
   testProxyAuthenticateCount = 0;
-  var completer = new Completer();
+  var completer = Completer();
 
   setupProxyServer().then((proxyServer) {
     setupServer(1).then((server) {
       setupServer(1, secure: true).then((secureServer) {
-        HttpClient client = new HttpClient(context: clientContext);
+        HttpClient client = HttpClient(context: clientContext);
 
-        Completer step1 = new Completer();
-        Completer step2 = new Completer();
+        Completer step1 = Completer();
+        Completer step2 = Completer();
 
         if (useDigestAuthentication) {
           proxyServer.useDigestAuthentication(username, password);
@@ -439,7 +439,7 @@ Future testProxyAuthenticate(
             client.findProxy =
                 (Uri uri) => "PROXY localhost:${proxyServer.port}";
             client.addProxyCredentials("localhost", proxyServer.port, "test",
-                new HttpClientDigestCredentials(username, password));
+                HttpClientDigestCredentials(username, password));
           } else {
             client.findProxy = (Uri uri) {
               return "PROXY ${username}:${password}@localhost:${proxyServer.port}";
@@ -485,8 +485,8 @@ Future testProxyAuthenticate(
 
           client.authenticateProxy = (host, port, scheme, realm) {
             client.addProxyCredentials("localhost", proxyServer.port, "realm",
-                new HttpClientBasicCredentials(username, password));
-            return new Future.value(true);
+                HttpClientBasicCredentials(username, password));
+            return Future.value(true);
           };
 
           for (int i = 0; i < loopCount; i++) {
@@ -532,9 +532,9 @@ Future testProxyAuthenticate(
 int testRealProxyDoneCount = 0;
 void testRealProxy() {
   setupServer(1).then((server) {
-    HttpClient client = new HttpClient(context: clientContext);
+    HttpClient client = HttpClient(context: clientContext);
     client.addProxyCredentials("localhost", 8080, "test",
-        new HttpClientBasicCredentials("dart", "password"));
+        HttpClientBasicCredentials("dart", "password"));
 
     List<String> proxy = [
       "PROXY localhost:8080",
@@ -573,7 +573,7 @@ void testRealProxy() {
 int testRealProxyAuthDoneCount = 0;
 void testRealProxyAuth() {
   setupServer(1).then((server) {
-    HttpClient client = new HttpClient(context: clientContext);
+    HttpClient client = HttpClient(context: clientContext);
 
     List<String> proxy = [
       "PROXY dart:password@localhost:8080",

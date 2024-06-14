@@ -13,8 +13,7 @@ void testParseHttpCookieDate() {
 
   test(int year, int month, int day, int hours, int minutes, int seconds,
       String formatted) {
-    DateTime date =
-        new DateTime.utc(year, month, day, hours, minutes, seconds, 0);
+    DateTime date = DateTime.utc(year, month, day, hours, minutes, seconds, 0);
     Expect.equals(date, _parseCookieDate(formatted));
   }
 

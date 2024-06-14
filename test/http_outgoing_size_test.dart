@@ -16,7 +16,7 @@ import "expect.dart";
 void testChunkedBufferSizeMsg() {
   // Buffer of same size as our internal buffer, minus 4. Makes us hit the
   // boundary.
-  var sendData = new Uint8List(8 * 1024 - 4);
+  var sendData = Uint8List(8 * 1024 - 4);
   for (int i = 0; i < sendData.length; i++) sendData[i] = i % 256;
 
   HttpServer.bind('127.0.0.1', 0).then((server) {
@@ -33,7 +33,7 @@ void testChunkedBufferSizeMsg() {
       request.response.add(sendData);
       request.response.close();
     });
-    var client = new HttpClient();
+    var client = HttpClient();
     client.get('127.0.0.1', server.port, '/').then((request) {
       request.headers.set(HttpHeaders.acceptEncodingHeader, "");
       return request.close();

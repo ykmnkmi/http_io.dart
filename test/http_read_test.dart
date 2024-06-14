@@ -21,7 +21,7 @@ class IsolatedHttpServer {
   }
 
   void start([bool chunkedEncoding = false]) {
-    ReceivePort receivePort = new ReceivePort();
+    ReceivePort receivePort = ReceivePort();
     var remote = Isolate.spawn(startIsolatedHttpServer, receivePort.sendPort);
     receivePort.first.then((port) {
       _serverPort = port;
@@ -29,13 +29,13 @@ class IsolatedHttpServer {
       if (chunkedEncoding) {
         // Send chunked encoding message to the server.
         port.send([
-          new IsolatedHttpServerCommand.chunkedEncoding(),
+          IsolatedHttpServerCommand.chunkedEncoding(),
           _statusPort.sendPort
         ]);
       }
 
       // Send server start message to the server.
-      var command = new IsolatedHttpServerCommand.start();
+      var command = IsolatedHttpServerCommand.start();
       port.send([command, _statusPort.sendPort]);
     });
 
@@ -49,13 +49,12 @@ class IsolatedHttpServer {
 
   void shutdown() {
     // Send server stop message to the server.
-    _serverPort
-        .send([new IsolatedHttpServerCommand.stop(), _statusPort.sendPort]);
+    _serverPort.send([IsolatedHttpServerCommand.stop(), _statusPort.sendPort]);
     _statusPort.close();
   }
 
   final _statusPort =
-      new ReceivePort(); // Port for receiving messages from the server.
+      ReceivePort(); // Port for receiving messages from the server.
   late SendPort _serverPort; // Port for sending messages to the server.
   var _startedCallback;
 }
@@ -97,7 +96,7 @@ class IsolatedHttpServerStatus {
 
 void startIsolatedHttpServer(Object replyToObj) {
   final replyTo = replyToObj as SendPort;
-  var server = new TestServer();
+  var server = TestServer();
   server.init();
   replyTo.send(server.dispatchSendPort);
 }
@@ -136,15 +135,15 @@ class TestServer {
         HttpServer.bind("127.0.0.1", 0).then((server) {
           _server = server;
           _server.listen(_requestReceivedHandler);
-          replyTo.send(new IsolatedHttpServerStatus.started(_server.port));
+          replyTo.send(IsolatedHttpServerStatus.started(_server.port));
         });
       } catch (e) {
-        replyTo.send(new IsolatedHttpServerStatus.error());
+        replyTo.send(IsolatedHttpServerStatus.error());
       }
     } else if (command.isStop) {
       _server.close();
       _dispatchPort.close();
-      replyTo.send(new IsolatedHttpServerStatus.stopped());
+      replyTo.send(IsolatedHttpServerStatus.stopped());
     } else if (command.isChunkedEncoding) {
       _chunkedEncoding = true;
     }
@@ -160,7 +159,7 @@ class TestServer {
   }
 
   late HttpServer _server; // HTTP server instance.
-  final _dispatchPort = new ReceivePort();
+  final _dispatchPort = ReceivePort();
   final _requestHandlers = {};
   bool _chunkedEncoding = false;
 }
@@ -169,11 +168,11 @@ void testRead(bool chunkedEncoding) {
   String data = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   final int kMessageCount = 10;
 
-  IsolatedHttpServer server = new IsolatedHttpServer();
+  IsolatedHttpServer server = IsolatedHttpServer();
 
   void runTest(int port) {
     int count = 0;
-    HttpClient httpClient = new HttpClient();
+    HttpClient httpClient = HttpClient();
     void sendRequest() {
       httpClient.post("127.0.0.1", port, "/echo").then((request) {
         if (chunkedEncoding) {
@@ -188,7 +187,7 @@ void testRead(bool chunkedEncoding) {
         Expect.equals(HttpStatus.ok, response.statusCode);
         List<int> body = <int>[];
         response.listen(body.addAll, onDone: () {
-          Expect.equals(data, new String.fromCharCodes(body));
+          Expect.equals(data, String.fromCharCodes(body));
           count++;
           if (count < kMessageCount) {
             sendRequest();

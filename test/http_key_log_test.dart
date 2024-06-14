@@ -19,7 +19,7 @@ late InternetAddress HOST;
 
 String localFile(path) => Platform.script.resolve(path).toFilePath();
 
-SecurityContext serverContext = new SecurityContext()
+SecurityContext serverContext = SecurityContext()
   ..useCertificateChain(localFile('certificates/server_chain.pem'))
   ..usePrivateKey(localFile('certificates/server_key.pem'),
       password: 'dartdart');
@@ -37,7 +37,7 @@ Future<HttpServer> startEchoServer() {
 
 testSuccess(HttpServer server) async {
   var log = "";
-  SecurityContext clientContext = new SecurityContext()
+  SecurityContext clientContext = SecurityContext()
     ..setTrustedCertificates(localFile('certificates/trusted_certs.pem'));
 
   final client = HttpClient(context: clientContext);
@@ -53,7 +53,7 @@ testSuccess(HttpServer server) async {
 }
 
 testExceptionInKeyLogFunction(HttpServer server) async {
-  SecurityContext clientContext = new SecurityContext()
+  SecurityContext clientContext = SecurityContext()
     ..setTrustedCertificates(localFile('certificates/trusted_certs.pem'));
 
   final client = HttpClient(context: clientContext);

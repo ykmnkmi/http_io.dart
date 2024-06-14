@@ -8,7 +8,7 @@ import 'package:http_io/http_io.dart';
 
 void main(List<String> arguments) {
   int port = int.parse(arguments.first);
-  var client = new HttpClient();
+  var client = HttpClient();
   const MAX = 64;
   int count = 0;
   void run() {

@@ -46,7 +46,7 @@ void testHttp10NoKeepAlive() {
         socket.listen(response.addAll, onDone: () {
           count++;
           socket.destroy();
-          String s = new String.fromCharCodes(response).toLowerCase();
+          String s = String.fromCharCodes(response).toLowerCase();
           Expect.equals(-1, s.indexOf("keep-alive"));
           if (count < 10) {
             makeRequest();
@@ -91,7 +91,7 @@ void testHttp10ServerClose() {
         socket.listen(response.addAll, onDone: () {
           socket.destroy();
           count++;
-          String s = new String.fromCharCodes(response).toLowerCase();
+          String s = String.fromCharCodes(response).toLowerCase();
           Expect.equals("z", s[s.length - 1]);
           Expect.equals(-1, s.indexOf("content-length:"));
           Expect.equals(-1, s.indexOf("keep-alive"));
@@ -139,7 +139,7 @@ void testHttp10KeepAlive() {
       socket.listen((d) {
         response.addAll(d);
         if (response[response.length - 1] == "Z".codeUnitAt(0)) {
-          String s = new String.fromCharCodes(response).toLowerCase();
+          String s = String.fromCharCodes(response).toLowerCase();
           Expect.isTrue(s.indexOf("\r\nconnection: keep-alive\r\n") > 0);
           Expect.isTrue(s.indexOf("\r\ncontent-length: 1\r\n") > 0);
           count++;
@@ -187,7 +187,7 @@ void testHttp10KeepAliveServerCloses() {
         socket.listen(response.addAll, onDone: () {
           socket.destroy();
           count++;
-          String s = new String.fromCharCodes(response).toLowerCase();
+          String s = String.fromCharCodes(response).toLowerCase();
           Expect.equals("z", s[s.length - 1]);
           Expect.equals(-1, s.indexOf("content-length"));
           Expect.equals(-1, s.indexOf("connection"));

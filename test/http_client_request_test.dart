@@ -16,7 +16,7 @@ void testClientRequest(Future handler(request)) {
       request.drain().then((_) => request.response.close()).catchError((_) {});
     });
 
-    var client = new HttpClient();
+    var client = HttpClient();
     client
         .get("127.0.0.1", server.port, "/")
         .then((request) {
@@ -71,9 +71,9 @@ void testBadResponseAdd() {
   asyncStart();
   testClientRequest((request) {
     request.contentLength = 0;
-    request.add(new Uint8List(64 * 1024));
-    request.add(new Uint8List(64 * 1024));
-    request.add(new Uint8List(64 * 1024));
+    request.add(Uint8List(64 * 1024));
+    request.add(Uint8List(64 * 1024));
+    request.add(Uint8List(64 * 1024));
     request.close();
     Future<HttpClientResponse?>.value(request.done).catchError((error) {
       asyncEnd();

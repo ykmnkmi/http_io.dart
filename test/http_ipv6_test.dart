@@ -24,7 +24,7 @@ void testHttpIPv6() {
       request.response.close();
     });
 
-    var client = new HttpClient();
+    var client = HttpClient();
     var url = Uri.parse('http://[::1]:${server.port}/xxx');
     Expect.equals(url.host, '::1');
     client

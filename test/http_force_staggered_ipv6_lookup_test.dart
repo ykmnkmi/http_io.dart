@@ -11,7 +11,7 @@ const sampleData = <int>[1, 2, 3, 4, 5];
 
 void testBadHostName() {
   asyncStart();
-  HttpClient client = new HttpClient();
+  HttpClient client = HttpClient();
   client.get("some.bad.host.name.7654321", 0, "/").then((request) {
     Expect.fail("Should not open a request on bad hostname");
   }).catchError((error) {

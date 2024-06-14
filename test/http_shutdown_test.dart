@@ -19,7 +19,7 @@ void test1(int totalConnections) {
     });
 
     int count = 0;
-    HttpClient client = new HttpClient();
+    HttpClient client = HttpClient();
     for (int i = 0; i < totalConnections; i++) {
       client
           .get("127.0.0.1", server.port, "/")
@@ -46,7 +46,7 @@ void test2(int totalConnections, int outputStreamWrites) {
     });
 
     int count = 0;
-    HttpClient client = new HttpClient();
+    HttpClient client = HttpClient();
     for (int i = 0; i < totalConnections; i++) {
       client
           .get("127.0.0.1", server.port, "/")
@@ -87,7 +87,7 @@ void test3(int totalConnections) {
     });
 
     int count = 0;
-    HttpClient client = new HttpClient();
+    HttpClient client = HttpClient();
     for (int i = 0; i < totalConnections; i++) {
       client
           .get("127.0.0.1", server.port, "/")
@@ -112,7 +112,7 @@ void test4() {
   HttpServer.bind("127.0.0.1", 0).then((server) {
     server.listen((var request) {
       request.listen((_) {}, onDone: () {
-        new Timer.periodic(new Duration(milliseconds: 100), (timer) {
+        Timer.periodic(Duration(milliseconds: 100), (timer) {
           if (server.connectionsInfo().total == 0) {
             server.close();
             timer.cancel();
@@ -122,7 +122,7 @@ void test4() {
       });
     });
 
-    var client = new HttpClient();
+    var client = HttpClient();
     client
         .get("127.0.0.1", server.port, "/")
         .then((request) => request.close())
@@ -146,7 +146,7 @@ void test5(int totalConnections) {
     // Create a number of client requests and keep then active. Then
     // close the client and wait for the server to lose all active
     // connections.
-    var client = new HttpClient();
+    var client = HttpClient();
     client.maxConnectionsPerHost = totalConnections;
     for (int i = 0; i < totalConnections; i++) {
       client
@@ -165,7 +165,7 @@ void test5(int totalConnections) {
               test: (e) => e is HttpException || e is SocketException);
     }
     bool clientClosed = false;
-    new Timer.periodic(new Duration(milliseconds: 100), (timer) {
+    Timer.periodic(Duration(milliseconds: 100), (timer) {
       if (!clientClosed) {
         if (server.connectionsInfo().total == totalConnections) {
           clientClosed = true;

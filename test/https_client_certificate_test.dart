@@ -12,7 +12,7 @@ import "expect.dart";
 const HOST_NAME = "localhost";
 String localFile(path) => Platform.script.resolve(path).toFilePath();
 
-SecurityContext serverContext = new SecurityContext()
+SecurityContext serverContext = SecurityContext()
   ..useCertificateChain(localFile('certificates/server_chain.pem'))
   ..usePrivateKey(localFile('certificates/server_key.pem'),
       password: 'dartdart')
@@ -23,7 +23,7 @@ SecurityContext serverContext = new SecurityContext()
     localFile('certificates/client_authority.pem'),
   );
 
-SecurityContext clientContext = new SecurityContext()
+SecurityContext clientContext = SecurityContext()
   ..setTrustedCertificates(localFile('certificates/trusted_certs.pem'))
   ..useCertificateChain(localFile('certificates/client1.pem'))
   ..usePrivateKey(localFile('certificates/client1_key.pem'),
@@ -41,7 +41,7 @@ void main() {
       request.response.close();
     });
 
-    HttpClient client = new HttpClient(context: clientContext);
+    HttpClient client = HttpClient(context: clientContext);
     client
         .getUrl(Uri.parse("https://$HOST_NAME:${server.port}/"))
         .then((request) => request.close())
@@ -51,7 +51,7 @@ void main() {
       return response
           .fold<List<int>>(<int>[], (message, data) => message..addAll(data));
     }).then((message) {
-      String received = new String.fromCharCodes(message);
+      String received = String.fromCharCodes(message);
       Expect.equals(received, "Hello");
       client.close();
       server.close();

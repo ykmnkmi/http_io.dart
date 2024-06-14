@@ -13,7 +13,7 @@ typedef _HttpHeaders = TestingClass$_HttpHeaders;
 typedef _Cookie = TestingClass$_Cookie;
 
 void testMultiValue() {
-  _HttpHeaders headers = new _HttpHeaders("1.1");
+  _HttpHeaders headers = _HttpHeaders("1.1");
   Expect.isNull(headers[HttpHeaders.pragmaHeader]);
   headers.add(HttpHeaders.pragmaHeader, "pragma1");
   Expect.equals(1, headers[HttpHeaders.pragmaHeader]!.length);
@@ -50,12 +50,12 @@ void testMultiValue() {
 }
 
 void testDate() {
-  DateTime date1 = new DateTime.utc(1999, DateTime.june, 11, 18, 46, 53, 0);
+  DateTime date1 = DateTime.utc(1999, DateTime.june, 11, 18, 46, 53, 0);
   String httpDate1 = "Fri, 11 Jun 1999 18:46:53 GMT";
-  DateTime date2 = new DateTime.utc(2000, DateTime.august, 16, 12, 34, 56, 0);
+  DateTime date2 = DateTime.utc(2000, DateTime.august, 16, 12, 34, 56, 0);
   String httpDate2 = "Wed, 16 Aug 2000 12:34:56 GMT";
 
-  _HttpHeaders headers = new _HttpHeaders("1.1");
+  _HttpHeaders headers = _HttpHeaders("1.1");
   Expect.isNull(headers.date);
   headers.date = date1;
   Expect.equals(date1, headers.date);
@@ -76,12 +76,12 @@ void testDate() {
 }
 
 void testExpires() {
-  DateTime date1 = new DateTime.utc(1999, DateTime.june, 11, 18, 46, 53, 0);
+  DateTime date1 = DateTime.utc(1999, DateTime.june, 11, 18, 46, 53, 0);
   String httpDate1 = "Fri, 11 Jun 1999 18:46:53 GMT";
-  DateTime date2 = new DateTime.utc(2000, DateTime.august, 16, 12, 34, 56, 0);
+  DateTime date2 = DateTime.utc(2000, DateTime.august, 16, 12, 34, 56, 0);
   String httpDate2 = "Wed, 16 Aug 2000 12:34:56 GMT";
 
-  _HttpHeaders headers = new _HttpHeaders("1.1");
+  _HttpHeaders headers = _HttpHeaders("1.1");
   Expect.isNull(headers.expires);
   headers.expires = date1;
   Expect.equals(date1, headers.expires);
@@ -102,12 +102,12 @@ void testExpires() {
 }
 
 void testIfModifiedSince() {
-  DateTime date1 = new DateTime.utc(1999, DateTime.june, 11, 18, 46, 53, 0);
+  DateTime date1 = DateTime.utc(1999, DateTime.june, 11, 18, 46, 53, 0);
   String httpDate1 = "Fri, 11 Jun 1999 18:46:53 GMT";
-  DateTime date2 = new DateTime.utc(2000, DateTime.august, 16, 12, 34, 56, 0);
+  DateTime date2 = DateTime.utc(2000, DateTime.august, 16, 12, 34, 56, 0);
   String httpDate2 = "Wed, 16 Aug 2000 12:34:56 GMT";
 
-  _HttpHeaders headers = new _HttpHeaders("1.1");
+  _HttpHeaders headers = _HttpHeaders("1.1");
   Expect.isNull(headers.ifModifiedSince);
   headers.ifModifiedSince = date1;
   Expect.equals(date1, headers.ifModifiedSince);
@@ -129,7 +129,7 @@ void testIfModifiedSince() {
 
 void testHost() {
   String host = "www.google.com";
-  _HttpHeaders headers = new _HttpHeaders("1.1");
+  _HttpHeaders headers = _HttpHeaders("1.1");
   Expect.isNull(headers.host);
   Expect.isNull(headers.port);
   headers.host = host;
@@ -139,7 +139,7 @@ void testHost() {
   headers.port = HttpClient.defaultHttpPort;
   Expect.equals(host, headers.value(HttpHeaders.hostHeader));
 
-  headers = new _HttpHeaders("1.1");
+  headers = _HttpHeaders("1.1");
   headers.add(HttpHeaders.hostHeader, host);
   Expect.equals(host, headers.host);
   Expect.equals(HttpClient.defaultHttpPort, headers.port);
@@ -148,13 +148,13 @@ void testHost() {
   Expect.equals(host, headers.host);
   Expect.equals(4567, headers.port);
 
-  headers = new _HttpHeaders("1.1");
+  headers = _HttpHeaders("1.1");
   headers.add(HttpHeaders.hostHeader, "$host:xxx");
   Expect.equals("$host:xxx", headers.value(HttpHeaders.hostHeader));
   Expect.equals(host, headers.host);
   Expect.isNull(headers.port);
 
-  headers = new _HttpHeaders("1.1");
+  headers = _HttpHeaders("1.1");
   headers.add(HttpHeaders.hostHeader, ":1234");
   Expect.equals(":1234", headers.value(HttpHeaders.hostHeader));
   Expect.isNull(headers.host);
@@ -163,7 +163,7 @@ void testHost() {
   // ipv4
   host = "123.45.67.89";
   int port = 1234;
-  headers = new _HttpHeaders("1.1");
+  headers = _HttpHeaders("1.1");
   headers.add(HttpHeaders.hostHeader, "$host:$port");
   Expect.equals("$host:$port", headers.value(HttpHeaders.hostHeader));
   Expect.equals(host, headers.host);
@@ -172,7 +172,7 @@ void testHost() {
   // ipv6: host+port
   host = "[2001:db8::1]";
   port = 1234;
-  headers = new _HttpHeaders("1.1");
+  headers = _HttpHeaders("1.1");
   headers.add(HttpHeaders.hostHeader, "$host:$port");
   Expect.equals("$host:$port", headers.value(HttpHeaders.hostHeader));
   Expect.equals(host, headers.host);
@@ -180,15 +180,15 @@ void testHost() {
 
   // ipv6: host only
   host = "[2001:db8::1]";
-  headers = new _HttpHeaders("1.1");
-  headers.add(HttpHeaders.hostHeader, "$host");
-  Expect.equals("$host", headers.value(HttpHeaders.hostHeader));
+  headers = _HttpHeaders("1.1");
+  headers.add(HttpHeaders.hostHeader, host);
+  Expect.equals(host, headers.value(HttpHeaders.hostHeader));
   Expect.equals(host, headers.host);
   Expect.equals(headers.port, HttpClient.defaultHttpPort);
 
   // ipv6: host + invalid port
   host = "[2001:db8::1]";
-  headers = new _HttpHeaders("1.1");
+  headers = _HttpHeaders("1.1");
   headers.add(HttpHeaders.hostHeader, "$host:xxx");
   Expect.equals("$host:xxx", headers.value(HttpHeaders.hostHeader));
   Expect.equals(host, headers.host);
@@ -208,41 +208,41 @@ void testTransferEncoding() {
 
   _HttpHeaders headers;
 
-  headers = new _HttpHeaders("1.1");
+  headers = _HttpHeaders("1.1");
   headers.chunkedTransferEncoding = true;
   expectChunked(headers);
   headers.set('transfer-encoding', ['chunked']);
   expectChunked(headers);
 
-  headers = new _HttpHeaders("1.1");
+  headers = _HttpHeaders("1.1");
   headers.set('transfer-encoding', ['chunked']);
   expectChunked(headers);
   headers.chunkedTransferEncoding = true;
   expectChunked(headers);
 
-  headers = new _HttpHeaders("1.1");
+  headers = _HttpHeaders("1.1");
   headers.chunkedTransferEncoding = true;
   headers.chunkedTransferEncoding = false;
   expectNonChunked(headers);
 
-  headers = new _HttpHeaders("1.1");
+  headers = _HttpHeaders("1.1");
   headers.chunkedTransferEncoding = true;
   headers.remove('transfer-encoding', 'chunked');
   expectNonChunked(headers);
 
-  headers = new _HttpHeaders("1.1");
+  headers = _HttpHeaders("1.1");
   headers.set('transfer-encoding', ['chunked']);
   headers.chunkedTransferEncoding = false;
   expectNonChunked(headers);
 
-  headers = new _HttpHeaders("1.1");
+  headers = _HttpHeaders("1.1");
   headers.set('transfer-encoding', ['chunked']);
   headers.remove('transfer-encoding', 'chunked');
   expectNonChunked(headers);
 }
 
 void testEnumeration() {
-  _HttpHeaders headers = new _HttpHeaders("1.1");
+  _HttpHeaders headers = _HttpHeaders("1.1");
   Expect.isNull(headers[HttpHeaders.pragmaHeader]);
   headers.add("My-Header-1", "value 1");
   headers.add("My-Header-2", "value 2");
@@ -303,10 +303,9 @@ void testHeaderValue() {
   check(headerValue, "æ", {"ø": "å"});
   headerValue =
       HeaderValue.parse("xxx; aaa=bbb; ccc=\"\\\";\\a\"; ddd=\"    \"");
-  check(headerValue, "xxx", {"aaa": "bbb", "ccc": '\";a', "ddd": "    "});
-  headerValue =
-      new HeaderValue("xxx", {"aaa": "bbb", "ccc": '\";a', "ddd": "    "});
-  check(headerValue, "xxx", {"aaa": "bbb", "ccc": '\";a', "ddd": "    "});
+  check(headerValue, "xxx", {"aaa": "bbb", "ccc": '";a', "ddd": "    "});
+  headerValue = HeaderValue("xxx", {"aaa": "bbb", "ccc": '";a', "ddd": "    "});
+  check(headerValue, "xxx", {"aaa": "bbb", "ccc": '";a', "ddd": "    "});
 
   headerValue = HeaderValue.parse("attachment; filename=genome.jpeg;"
       "modification-date=\"Wed, 12 February 1997 16:29:51 -0500\"");
@@ -315,7 +314,7 @@ void testHeaderValue() {
     "modification-date": "Wed, 12 February 1997 16:29:51 -0500"
   };
   check(headerValue, "attachment", parameters);
-  headerValue = new HeaderValue("attachment", parameters);
+  headerValue = HeaderValue("attachment", parameters);
   check(headerValue, "attachment", parameters);
   headerValue = HeaderValue.parse("  attachment  ;filename=genome.jpeg  ;"
       "modification-date = \"Wed, 12 February 1997 16:29:51 -0500\"");
@@ -349,37 +348,37 @@ void testHeaderValue() {
 
 void testContentLength() {
   // See also http_headers_content_length_test.dart.
-  var headers = new _HttpHeaders("1.1");
+  var headers = _HttpHeaders("1.1");
   headers.set("content-length", ["256"]);
   Expect.equals(256, headers.contentLength);
   Expect.listEquals(["256"], headers["content-length"]!);
   Expect.equals("256", headers.value("content-length"));
 
-  headers = new _HttpHeaders("1.1");
+  headers = _HttpHeaders("1.1");
   headers.set("content-length", [256]);
   Expect.equals(256, headers.contentLength);
   Expect.listEquals(["256"], headers["content-length"]!);
   Expect.equals("256", headers.value("content-length"));
 
-  headers = new _HttpHeaders("1.1");
+  headers = _HttpHeaders("1.1");
   var e = Expect.throws<HttpException>(
       () => headers.set("content-length", ["cat"]));
   Expect.isTrue(e.message.contains("Content-Length must contain only digits"));
 
-  headers = new _HttpHeaders("1.1");
+  headers = _HttpHeaders("1.1");
   e = Expect.throws<HttpException>(() => headers.set("content-length", ["-3"]));
   Expect.isTrue(e.message.contains("Content-Length must contain only digits"));
 
-  headers = new _HttpHeaders("1.1");
+  headers = _HttpHeaders("1.1");
   e = Expect.throws<HttpException>(() => headers.set("content-length", [-3]));
   Expect.isTrue(e.message.contains("Content-Length must contain only digits"));
 
-  headers = new _HttpHeaders("1.1");
+  headers = _HttpHeaders("1.1");
   e = Expect.throws<HttpException>(() => headers.set("content-length", [[]]));
   Expect.isTrue(
       e.message.contains("Unexpected type for header named content-length"));
 
-  headers = new _HttpHeaders("1.1");
+  headers = _HttpHeaders("1.1");
   headers.set("content-length", ["1", "2"]);
   Expect.equals(2, headers.contentLength);
   Expect.listEquals(["2"], headers["content-length"]!);
@@ -403,7 +402,7 @@ void testContentType() {
   }
 
   ContentType contentType;
-  contentType = new ContentType("", "");
+  contentType = ContentType("", "");
   Expect.equals("", contentType.primaryType);
   Expect.equals("", contentType.subType);
   Expect.equals("/", contentType.value);
@@ -412,12 +411,12 @@ void testContentType() {
   contentType = ContentType.parse("text/html");
   check(contentType, "text", "html");
   Expect.equals("text/html", contentType.toString());
-  contentType = new ContentType("text", "html", charset: "utf-8");
+  contentType = ContentType("text", "html", charset: "utf-8");
   check(contentType, "text", "html", {"charset": "utf-8"});
   Expect.equals("text/html; charset=utf-8", contentType.toString());
   Expect.throwsUnsupportedError(() => contentType.parameters["xxx"] = "yyy");
 
-  contentType = new ContentType("text", "html",
+  contentType = ContentType("text", "html",
       parameters: {"CHARSET": "UTF-8", "xxx": "YYY"});
   check(contentType, "text", "html", {"charset": "utf-8", "xxx": "YYY"});
   String s = contentType.toString();
@@ -428,7 +427,7 @@ void testContentType() {
   check(contentType, "text", "html", {"charset": "utf-8", "xxx": "YYY"});
   Expect.throwsUnsupportedError(() => contentType.parameters["xxx"] = "yyy");
 
-  contentType = new ContentType("text", "html",
+  contentType = ContentType("text", "html",
       charset: "ISO-8859-1", parameters: {"CHARSET": "UTF-8", "xxx": "yyy"});
   check(contentType, "text", "html", {"charset": "iso-8859-1", "xxx": "yyy"});
   s = contentType.toString();
@@ -482,7 +481,7 @@ void testKnownContentTypes() {
 }
 
 void testContentTypeCache() {
-  _HttpHeaders headers = new _HttpHeaders("1.1");
+  _HttpHeaders headers = _HttpHeaders("1.1");
   headers.set(HttpHeaders.contentTypeHeader, "text/html");
   Expect.equals("text", headers.contentType?.primaryType);
   Expect.equals("html", headers.contentType?.subType);
@@ -506,14 +505,14 @@ void testCookie() {
 
     void checkCookie(cookie, s) {
       Expect.equals(s, cookie.toString());
-      var c = new _Cookie.fromSetCookieValue(s);
+      var c = _Cookie.fromSetCookieValue(s);
       checkCookiesEquals(cookie, c);
     }
 
     Cookie cookie;
-    cookie = new Cookie(name, value);
+    cookie = Cookie(name, value);
     Expect.equals("$name=$value; HttpOnly", cookie.toString());
-    DateTime date = new DateTime.utc(2014, DateTime.january, 5, 23, 59, 59, 0);
+    DateTime date = DateTime.utc(2014, DateTime.january, 5, 23, 59, 59, 0);
     cookie.expires = date;
     checkCookie(
         cookie,
@@ -601,17 +600,17 @@ void testCookie() {
 }
 
 void testInvalidCookie() {
-  Expect.throws(() => new _Cookie.fromSetCookieValue(""));
-  Expect.throws(() => new _Cookie.fromSetCookieValue("="));
-  Expect.throws(() => new _Cookie.fromSetCookieValue("=xxx"));
-  Expect.throws(() => new _Cookie.fromSetCookieValue("xxx"));
+  Expect.throws(() => _Cookie.fromSetCookieValue(""));
+  Expect.throws(() => _Cookie.fromSetCookieValue("="));
+  Expect.throws(() => _Cookie.fromSetCookieValue("=xxx"));
+  Expect.throws(() => _Cookie.fromSetCookieValue("xxx"));
   Expect.throws(
-      () => new _Cookie.fromSetCookieValue("xxx=yyy; expires=12 jan 2013"));
-  Expect.throws(() => new _Cookie.fromSetCookieValue("x x = y y"));
-  Expect.throws(() => new _Cookie("[4", "y"));
-  Expect.throws(() => new _Cookie("4", "y\""));
+      () => _Cookie.fromSetCookieValue("xxx=yyy; expires=12 jan 2013"));
+  Expect.throws(() => _Cookie.fromSetCookieValue("x x = y y"));
+  Expect.throws(() => _Cookie("[4", "y"));
+  Expect.throws(() => _Cookie("4", "y\""));
 
-  _HttpHeaders headers = new _HttpHeaders("1.1");
+  _HttpHeaders headers = _HttpHeaders("1.1");
   headers.set(
       'Cookie', 'DARTSESSID=d3d6fdd78d51aaaf2924c32e991f4349; undefined');
   Expect.equals('DARTSESSID', headers.test$_parseCookies().single.name);
@@ -636,7 +635,7 @@ void testHeaderLists() {
 
 void testInvalidFieldName() {
   void test(String field) {
-    _HttpHeaders headers = new _HttpHeaders("1.1");
+    _HttpHeaders headers = _HttpHeaders("1.1");
     Expect.throwsFormatException(() => headers.add(field, "value"));
     Expect.throwsFormatException(() => headers.set(field, "value"));
     Expect.throwsFormatException(() => headers.remove(field, "value"));
@@ -651,7 +650,7 @@ void testInvalidFieldName() {
 
 void testInvalidFieldValue() {
   void test(value, {bool remove = true}) {
-    _HttpHeaders headers = new _HttpHeaders("1.1");
+    _HttpHeaders headers = _HttpHeaders("1.1");
     Expect.throwsFormatException(() => headers.add("field", value));
     Expect.throwsFormatException(() => headers.set("field", value));
     if (remove) {
@@ -663,11 +662,11 @@ void testInvalidFieldValue() {
   test('\n');
   test('test\x00');
   // Test we handle other types correctly.
-  test(new StringBuffer('\x00'), remove: false);
+  test(StringBuffer('\x00'), remove: false);
 }
 
 void testClear() {
-  _HttpHeaders headers = new _HttpHeaders("1.1");
+  _HttpHeaders headers = _HttpHeaders("1.1");
   headers.add("a", "b");
   headers.contentLength = 7;
   headers.chunkedTransferEncoding = true;
@@ -678,7 +677,7 @@ void testClear() {
 }
 
 void testFolding() {
-  _HttpHeaders headers = new _HttpHeaders("1.1");
+  _HttpHeaders headers = _HttpHeaders("1.1");
   headers.add("a", "b");
   headers.add("a", "c");
   headers.add("a", "d");
@@ -693,7 +692,7 @@ void testFolding() {
 }
 
 void testLowercaseAdd() {
-  _HttpHeaders headers = new _HttpHeaders("1.1");
+  _HttpHeaders headers = _HttpHeaders("1.1");
   headers.add('A', 'a');
   Expect.equals(headers['a']![0], headers['A']![0]);
   Expect.equals(headers['A']![0], 'a');
@@ -714,7 +713,7 @@ void testLowercaseAdd() {
 }
 
 void testLowercaseSet() {
-  _HttpHeaders headers = new _HttpHeaders("1.1");
+  _HttpHeaders headers = _HttpHeaders("1.1");
   headers.add('test', 'lower cases');
   // 'Test' should override 'test' entity
   headers.set('TEST', 'upper cases', preserveHeaderCase: true);
@@ -730,7 +729,7 @@ void testLowercaseSet() {
 }
 
 void testForEach() {
-  _HttpHeaders headers = new _HttpHeaders("1.1");
+  _HttpHeaders headers = _HttpHeaders("1.1");
   headers.add('header1', 'value 1');
   headers.add('header2', 'value 2');
   headers.add('HEADER1', 'value 3', preserveHeaderCase: true);

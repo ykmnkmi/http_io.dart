@@ -14,12 +14,12 @@ import "expect.dart";
 
 String localFile(path) => Platform.script.resolve(path).toFilePath();
 
-final SecurityContext serverContext = new SecurityContext()
+final SecurityContext serverContext = SecurityContext()
   ..useCertificateChain(localFile('certificates/server_chain.pem'))
   ..usePrivateKey(localFile('certificates/server_key.pem'),
       password: 'dartdart');
 
-final SecurityContext clientContext = new SecurityContext()
+final SecurityContext clientContext = SecurityContext()
   ..setTrustedCertificates(localFile('certificates/trusted_certs.pem'));
 
 class Server {
@@ -56,7 +56,7 @@ class Server {
     } else {
       Expect.isNull(request.headers[HttpHeaders.viaHeader]);
     }
-    var body = new StringBuffer();
+    var body = StringBuffer();
     onRequestComplete() {
       String path = request.uri.path.substring(1);
       if (path != "A") {
@@ -68,7 +68,7 @@ class Server {
     }
 
     request.listen((data) {
-      body.write(new String.fromCharCodes(data));
+      body.write(String.fromCharCodes(data));
     }, onDone: onRequestComplete);
   }
 
@@ -81,14 +81,14 @@ class Server {
 
 Future<Server> setupServer(int proxyHops,
     {List<String> directRequestPaths = const <String>[], secure = false}) {
-  Server server = new Server(proxyHops, directRequestPaths, secure);
+  Server server = Server(proxyHops, directRequestPaths, secure);
   return server.start();
 }
 
 class ProxyServer {
   final bool ipV6;
   late HttpServer server;
-  final client = new HttpClient();
+  final client = HttpClient();
   int requestCount = 0;
   String? authScheme;
   String realm = "test";
@@ -98,7 +98,7 @@ class ProxyServer {
   var ha1;
   String serverAlgorithm = "MD5";
   String serverQop = "auth";
-  Set ncs = new Set();
+  Set ncs = Set();
 
   var nonce = "12345678"; // No need for random nonce in test.
 
@@ -124,7 +124,7 @@ class ProxyServer {
     request.fold(null, (x, y) {}).then((_) {
       var response = request.response;
       response.statusCode = HttpStatus.proxyAuthenticationRequired;
-      StringBuffer authHeader = new StringBuffer();
+      StringBuffer authHeader = StringBuffer();
       authHeader.write('Digest');
       authHeader.write(', realm="$realm"');
       authHeader.write(', nonce="$nonce"');
@@ -139,7 +139,7 @@ class ProxyServer {
   }
 
   Future<ProxyServer> start() {
-    var x = new Completer<ProxyServer>();
+    var x = Completer<ProxyServer>();
     var host = ipV6 ? "::1" : "localhost";
     HttpServer.bind(host, 0).then((s) {
       server = s;
@@ -265,12 +265,12 @@ class ProxyServer {
 }
 
 Future<ProxyServer> setupProxyServer({ipV6 = false}) {
-  ProxyServer proxyServer = new ProxyServer(ipV6: ipV6);
+  ProxyServer proxyServer = ProxyServer(ipV6: ipV6);
   return proxyServer.start();
 }
 
 testInvalidProxy() {
-  HttpClient client = new HttpClient(context: clientContext);
+  HttpClient client = HttpClient(context: clientContext);
 
   client.findProxy = (Uri uri) => "";
   Future<HttpClientRequest?>.value(
@@ -296,7 +296,7 @@ testInvalidProxy() {
 int testDirectDoneCount = 0;
 void testDirectProxy() {
   setupServer(0).then((server) {
-    HttpClient client = new HttpClient(context: clientContext);
+    HttpClient client = HttpClient(context: clientContext);
     List<String> proxy = [
       "DIRECT",
       " DIRECT ",
@@ -340,7 +340,7 @@ void testProxy() {
     setupServer(1, directRequestPaths: ["/4"]).then((server) {
       setupServer(1, directRequestPaths: ["/4"], secure: true)
           .then((secureServer) {
-        HttpClient client = new HttpClient(context: clientContext);
+        HttpClient client = HttpClient(context: clientContext);
 
         List<String> proxy;
         if (Platform.operatingSystem == "windows") {
@@ -414,7 +414,7 @@ void testProxyChain() {
           (_) => "PROXY localhost:${proxyServer2.port}";
 
       setupServer(2, directRequestPaths: ["/4"]).then((server) {
-        HttpClient client = new HttpClient(context: clientContext);
+        HttpClient client = HttpClient(context: clientContext);
 
         List<String> proxy;
         if (Platform.operatingSystem == "windows") {

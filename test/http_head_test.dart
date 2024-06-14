@@ -15,15 +15,15 @@ void testHEAD(int totalConnections) {
         response.close();
       } else if (request.uri.path == "/test200") {
         response.contentLength = 200;
-        List<int> data = new List<int>.filled(200, 0);
+        List<int> data = List<int>.filled(200, 0);
         response.add(data);
         response.close();
       } else if (request.uri.path == "/testChunked100") {
-        List<int> data = new List<int>.filled(100, 0);
+        List<int> data = List<int>.filled(100, 0);
         response.add(data);
         response.close();
       } else if (request.uri.path == "/testChunked200") {
-        List<int> data = new List<int>.filled(200, 0);
+        List<int> data = List<int>.filled(200, 0);
         response.add(data);
         response.close();
       } else {
@@ -31,7 +31,7 @@ void testHEAD(int totalConnections) {
       }
     });
 
-    HttpClient client = new HttpClient();
+    HttpClient client = HttpClient();
 
     int count = 0;
 

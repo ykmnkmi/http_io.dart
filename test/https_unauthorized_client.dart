@@ -21,14 +21,14 @@ class ExpectException implements Exception {
 
 void expect(condition, message) {
   if (!condition) {
-    throw new ExpectException(message);
+    throw ExpectException(message);
   }
 }
 
 const HOST_NAME = "localhost";
 
 Future runClients(int port) {
-  HttpClient client = new HttpClient();
+  HttpClient client = HttpClient();
 
   var testFutures = <Future>[];
   for (int i = 0; i < 20; ++i) {

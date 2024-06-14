@@ -8,7 +8,7 @@ import "async_helper.dart";
 import "expect.dart";
 
 void testInvalidUrl() {
-  HttpClient client = new HttpClient();
+  HttpClient client = HttpClient();
   Expect.throws(() => client.getUrl(Uri.parse('ftp://www.google.com')),
       (e) => e.toString().contains("Unsupported scheme"));
   Expect.throws(() => client.getUrl(Uri.parse('httpx://www.google.com')),
@@ -28,7 +28,7 @@ void testInvalidUrl() {
 
 void testBadHostName() {
   asyncStart();
-  HttpClient client = new HttpClient();
+  HttpClient client = HttpClient();
   client.get("some.bad.host.name.7654321", 0, "/").then((request) {
     Expect.fail("Should not open a request on bad hostname");
   }).catchError((error) {

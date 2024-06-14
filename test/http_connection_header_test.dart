@@ -50,7 +50,7 @@ void test(int totalConnections, bool clientPersistentConnection) {
     });
 
     int count = 0;
-    HttpClient client = new HttpClient();
+    HttpClient client = HttpClient();
     for (int i = 0; i < totalConnections; i++) {
       client
           .get("127.0.0.1", server.port, "/")

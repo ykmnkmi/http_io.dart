@@ -10,7 +10,7 @@ main() {
   bool requestOnClosed = false;
 
   HttpServer.bind("127.0.0.1", 0).then((server) {
-    var client = new HttpClient();
+    var client = HttpClient();
 
     checkDone() {
       if (serverOnClosed && clientOnClosed && requestOnClosed) {

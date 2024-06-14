@@ -35,7 +35,7 @@ void runServerProcess() {
         ..close();
     });
 
-    var sw = new Stopwatch()..start();
+    var sw = Stopwatch()..start();
     var script = Platform.script
         .resolve('http_client_stays_alive_test.dart')
         .toFilePath();
@@ -68,7 +68,7 @@ void runClientProcess(String url) {
 
   // NOTE: We make an HTTP client request and then *forget to close* the HTTP
   // client instance. The idle timer should fire after SECONDS.
-  var client = new HttpClient();
+  var client = HttpClient();
   client.idleTimeout = const Duration(seconds: SECONDS);
 
   client

@@ -46,7 +46,7 @@ void testDefaultResponseHeaders() {
         request.response.close();
       });
 
-      HttpClient client = new HttpClient();
+      HttpClient client = HttpClient();
       client
           .get("127.0.0.1", server.port, "/")
           .then((request) => request.close())
@@ -72,7 +72,7 @@ void testDefaultResponseHeadersContentType() {
         request.response.close();
       });
 
-      HttpClient client = new HttpClient();
+      HttpClient client = HttpClient();
       client
           .get("127.0.0.1", server.port, "/")
           .then((request) => request.close())
@@ -98,7 +98,7 @@ void testListenOn() {
   void test(void onDone()) {
     Expect.equals(socket.port, server.port);
 
-    HttpClient client = new HttpClient();
+    HttpClient client = HttpClient();
     client.get("127.0.0.1", socket.port, "/").then((request) {
       return request.close();
     }).then((response) {
@@ -117,7 +117,7 @@ void testListenOn() {
   asyncStart();
   ServerSocket.bind("127.0.0.1", 0).then((s) {
     socket = s;
-    server = new HttpServer.listenOn(socket);
+    server = HttpServer.listenOn(socket);
     Expect.equals(server.address.address, '127.0.0.1');
     Expect.equals(server.address.host, '127.0.0.1');
     server.listen((HttpRequest request) {
@@ -148,7 +148,7 @@ void testHttpServerZone() {
         request.response.close();
         server.close();
       });
-      new HttpClient()
+      HttpClient()
           .get("127.0.0.1", server.port, '/')
           .then((request) => request.close())
           .then((response) => response.drain())
@@ -189,8 +189,8 @@ void testHttpServerClientClose() {
     runZonedGuarded(() {
       server.listen((request) {
         request.response.bufferOutput = false;
-        request.response.add(new Uint8List(64 * 1024));
-        new Timer(const Duration(milliseconds: 100), () {
+        request.response.add(Uint8List(64 * 1024));
+        Timer(const Duration(milliseconds: 100), () {
           request.response.close().then((_) {
             server.close();
           });
@@ -199,7 +199,7 @@ void testHttpServerClientClose() {
     }, (e, s) {
       Expect.fail("Unexpected error: $e(${e.hashCode})\n$s");
     });
-    var client = new HttpClient();
+    var client = HttpClient();
     client
         .get("127.0.0.1", server.port, "/")
         .then((request) => request.close())

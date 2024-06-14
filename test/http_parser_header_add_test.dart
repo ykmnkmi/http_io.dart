@@ -29,7 +29,7 @@ Future<void> testFormatException() async {
 }
 
 void testNullSubscriptionData() {
-  _HttpParser httpParser = new _HttpParser.requestParser();
+  _HttpParser httpParser = _HttpParser.requestParser();
   httpParser.detachIncoming().listen((data) {}, onDone: () {});
 }
 

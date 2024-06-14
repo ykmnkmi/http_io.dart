@@ -17,7 +17,7 @@ import "expect.dart";
 
 // Platform.script may refer to a AOT or JIT snapshot, which are significantly
 // larger.
-File scriptSource = new File(
+File scriptSource = File(
     Platform.script.resolve("http_server_response_test.dart").toFilePath());
 
 void testServerRequest(void handler(server, request),
@@ -28,7 +28,7 @@ void testServerRequest(void handler(server, request),
       handler(server, request);
     });
 
-    var client = new HttpClient();
+    var client = HttpClient();
     // We only close the client on either
     // - Bad response headers
     // - Response done (with optional errors in between).
@@ -67,7 +67,7 @@ void testResponseDone() {
   });
 
   testServerRequest((server, request) {
-    new File("__nonexistent_file_")
+    File("__nonexistent_file_")
         .openRead()
         .cast<List<int>>()
         .pipe(request.response)
@@ -106,7 +106,7 @@ void testResponseAddStream() {
   }, bytes: bytes * 2);
 
   testServerRequest((server, request) {
-    var controller = new StreamController<List<int>>(sync: true);
+    var controller = StreamController<List<int>>(sync: true);
     request.response.addStream(controller.stream).then((response) {
       response.close();
       response.done.then((_) => server.close());
@@ -116,14 +116,14 @@ void testResponseAddStream() {
 
   testServerRequest((server, request) {
     request.response
-        .addStream(new File("__nonexistent_file_").openRead())
+        .addStream(File("__nonexistent_file_").openRead())
         .catchError((e) {
       server.close();
     });
   });
 
   testServerRequest((server, request) {
-    new File("__nonexistent_file_")
+    File("__nonexistent_file_")
         .openRead()
         .cast<List<int>>()
         .pipe(request.response)
@@ -218,9 +218,9 @@ void testBadResponseAdd() {
 
   testServerRequest((server, request) {
     request.response.contentLength = 0;
-    request.response.add(new Uint8List(64 * 1024));
-    request.response.add(new Uint8List(64 * 1024));
-    request.response.add(new Uint8List(64 * 1024));
+    request.response.add(Uint8List(64 * 1024));
+    request.response.add(Uint8List(64 * 1024));
+    request.response.add(Uint8List(64 * 1024));
     request.response.close();
     request.response.done.catchError((error) {
       server.close();
@@ -255,10 +255,10 @@ void testIgnoreRequestData() {
       request.response.close();
     });
 
-    var client = new HttpClient();
+    var client = HttpClient();
     client.get("127.0.0.1", server.port, "/").then((request) {
       request.contentLength = 1024 * 1024;
-      request.add(new Uint8List(1024 * 1024));
+      request.add(Uint8List(1024 * 1024));
       return request.close();
     }).then((response) {
       response.fold<int>(0, (s, b) => s + b.length).then((bytes) {

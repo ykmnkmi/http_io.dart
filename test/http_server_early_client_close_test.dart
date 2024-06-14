@@ -32,13 +32,13 @@ class EarlyCloseTest {
 
   Future execute() {
     return HttpServer.bind("127.0.0.1", 0).then((server) {
-      Completer c = new Completer();
+      Completer c = Completer();
 
       bool calledOnRequest = false;
       bool calledOnError = false;
       bool calledOnDone = false;
-      ReceivePort port = new ReceivePort();
-      var requestCompleter = new Completer();
+      ReceivePort port = ReceivePort();
+      var requestCompleter = Completer();
       server.listen((request) {
         Expect.isTrue(expectRequest);
         Expect.isFalse(calledOnError);
@@ -80,7 +80,7 @@ class EarlyCloseTest {
 void testEarlyClose1() {
   List<EarlyCloseTest> tests = <EarlyCloseTest>[];
   void add(Object data, [String? exception, bool expectRequest = false]) {
-    tests.add(new EarlyCloseTest(data, exception, expectRequest));
+    tests.add(EarlyCloseTest(data, exception, expectRequest));
   }
   // The empty packet is valid.
 
@@ -111,7 +111,7 @@ testEarlyClose2() {
   HttpServer.bind("127.0.0.1", 0).then((server) {
     server.listen((request) {
       String name = Platform.script.toFilePath();
-      new File(name)
+      File(name)
           .openRead()
           .cast<List<int>>()
           .pipe(request.response)

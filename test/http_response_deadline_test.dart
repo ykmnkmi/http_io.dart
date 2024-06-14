@@ -23,7 +23,7 @@ void testSimpleDeadline(int connections) {
     });
 
     var futures = <Future>[];
-    var client = new HttpClient();
+    var client = HttpClient();
     for (int i = 0; i < connections; i++) {
       futures.add(client
           .get('localhost', server.port, '/')
@@ -43,7 +43,7 @@ void testExceedDeadline(int connections) {
     });
 
     var futures = <Future>[];
-    var client = new HttpClient();
+    var client = HttpClient();
     for (int i = 0; i < connections; i++) {
       futures.add(client
           .get('localhost', server.port, '/')
@@ -66,7 +66,7 @@ void testDeadlineAndDetach(int connections) {
       request.response.contentLength = 5;
       request.response.persistentConnection = false;
       request.response.detachSocket().then((socket) {
-        new Timer(const Duration(milliseconds: 100), () {
+        Timer(const Duration(milliseconds: 100), () {
           socket.write('stuff');
           socket.close();
           socket.listen(null);
@@ -75,16 +75,16 @@ void testDeadlineAndDetach(int connections) {
     });
 
     var futures = <Future>[];
-    var client = new HttpClient();
+    var client = HttpClient();
     for (int i = 0; i < connections; i++) {
       futures.add(client
           .get('localhost', server.port, '/')
           .then((request) => request.close())
           .then((response) {
         return response
-            .fold<BytesBuilder>(new BytesBuilder(), (b, d) => b..add(d))
+            .fold<BytesBuilder>(BytesBuilder(), (b, d) => b..add(d))
             .then((builder) {
-          Expect.equals('stuff', new String.fromCharCodes(builder.takeBytes()));
+          Expect.equals('stuff', String.fromCharCodes(builder.takeBytes()));
         });
       }));
     }

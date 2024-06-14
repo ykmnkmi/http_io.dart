@@ -165,16 +165,16 @@ class MyHttpClient2 implements HttpClient {
 class MyHttpOverrides extends HttpOverrides {
   @override
   HttpClient createHttpClient(SecurityContext? context) {
-    return new MyHttpClient1(context);
+    return MyHttpClient1(context);
   }
 }
 
 HttpClient myCreateHttp1Client(SecurityContext? context) {
-  return new MyHttpClient1(context);
+  return MyHttpClient1(context);
 }
 
 HttpClient myCreateHttp2Client(SecurityContext? context) {
-  return new MyHttpClient2(context);
+  return MyHttpClient2(context);
 }
 
 String myFindProxyFromEnvironment(Uri url, Map<String, String>? environment) {
@@ -183,34 +183,34 @@ String myFindProxyFromEnvironment(Uri url, Map<String, String>? environment) {
 
 withHttpOverridesTest() {
   HttpOverrides.runZoned(() {
-    var httpClient = new HttpClient();
+    var httpClient = HttpClient();
     Expect.isNotNull(httpClient);
     Expect.isTrue(httpClient is MyHttpClient1);
-    Expect.equals((new MyHttpClient1(null)).userAgent, httpClient.userAgent);
+    Expect.equals((MyHttpClient1(null)).userAgent, httpClient.userAgent);
   }, createHttpClient: myCreateHttp1Client);
-  var httpClient = new HttpClient();
+  var httpClient = HttpClient();
   Expect.isTrue(httpClient is HttpClient);
   Expect.isTrue(httpClient is! MyHttpClient1);
 }
 
 nestedWithHttpOverridesTest() {
   HttpOverrides.runZoned(() {
-    var httpClient = new HttpClient();
+    var httpClient = HttpClient();
     Expect.isNotNull(httpClient);
     Expect.isTrue(httpClient is MyHttpClient1);
-    Expect.equals((new MyHttpClient1(null)).userAgent, httpClient.userAgent);
+    Expect.equals((MyHttpClient1(null)).userAgent, httpClient.userAgent);
     HttpOverrides.runZoned(() {
-      var httpClient = new HttpClient();
+      var httpClient = HttpClient();
       Expect.isNotNull(httpClient);
       Expect.isTrue(httpClient is MyHttpClient2);
-      Expect.equals((new MyHttpClient2(null)).userAgent, httpClient.userAgent);
+      Expect.equals((MyHttpClient2(null)).userAgent, httpClient.userAgent);
     }, createHttpClient: myCreateHttp2Client);
-    httpClient = new HttpClient();
+    httpClient = HttpClient();
     Expect.isNotNull(httpClient);
     Expect.isTrue(httpClient is MyHttpClient1);
-    Expect.equals((new MyHttpClient1(null)).userAgent, httpClient.userAgent);
+    Expect.equals((MyHttpClient1(null)).userAgent, httpClient.userAgent);
   }, createHttpClient: myCreateHttp1Client);
-  var httpClient = new HttpClient();
+  var httpClient = HttpClient();
   Expect.isTrue(httpClient is HttpClient);
   Expect.isTrue(httpClient is! MyHttpClient1);
   Expect.isTrue(httpClient is! MyHttpClient2);
@@ -218,24 +218,24 @@ nestedWithHttpOverridesTest() {
 
 nestedDifferentOverridesTest() {
   HttpOverrides.runZoned(() {
-    var httpClient = new HttpClient();
+    var httpClient = HttpClient();
     Expect.isNotNull(httpClient);
     Expect.isTrue(httpClient is MyHttpClient1);
-    Expect.equals((new MyHttpClient1(null)).userAgent, httpClient.userAgent);
+    Expect.equals((MyHttpClient1(null)).userAgent, httpClient.userAgent);
     HttpOverrides.runZoned(() {
-      var httpClient = new HttpClient();
+      var httpClient = HttpClient();
       Expect.isNotNull(httpClient);
       Expect.isTrue(httpClient is MyHttpClient1);
-      Expect.equals((new MyHttpClient1(null)).userAgent, httpClient.userAgent);
-      Expect.equals(myFindProxyFromEnvironment(new Uri(), null),
-          HttpClient.findProxyFromEnvironment(new Uri()));
+      Expect.equals((MyHttpClient1(null)).userAgent, httpClient.userAgent);
+      Expect.equals(myFindProxyFromEnvironment(Uri(), null),
+          HttpClient.findProxyFromEnvironment(Uri()));
     }, findProxyFromEnvironment: myFindProxyFromEnvironment);
-    httpClient = new HttpClient();
+    httpClient = HttpClient();
     Expect.isNotNull(httpClient);
     Expect.isTrue(httpClient is MyHttpClient1);
-    Expect.equals((new MyHttpClient1(null)).userAgent, httpClient.userAgent);
+    Expect.equals((MyHttpClient1(null)).userAgent, httpClient.userAgent);
   }, createHttpClient: myCreateHttp1Client);
-  var httpClient = new HttpClient();
+  var httpClient = HttpClient();
   Expect.isTrue(httpClient is HttpClient);
   Expect.isTrue(httpClient is! MyHttpClient1);
   Expect.isTrue(httpClient is! MyHttpClient2);
@@ -243,37 +243,37 @@ nestedDifferentOverridesTest() {
 
 zonedWithHttpOverridesTest() {
   HttpOverrides.runWithHttpOverrides(() {
-    var httpClient = new HttpClient();
+    var httpClient = HttpClient();
     Expect.isNotNull(httpClient);
     Expect.isTrue(httpClient is MyHttpClient1);
-    Expect.equals((new MyHttpClient1(null)).userAgent, httpClient.userAgent);
-  }, new MyHttpOverrides());
+    Expect.equals((MyHttpClient1(null)).userAgent, httpClient.userAgent);
+  }, MyHttpOverrides());
 }
 
 globalHttpOverridesTest() {
-  HttpOverrides.global = new MyHttpOverrides();
-  var httpClient = new HttpClient();
+  HttpOverrides.global = MyHttpOverrides();
+  var httpClient = HttpClient();
   Expect.isNotNull(httpClient);
   Expect.isTrue(httpClient is MyHttpClient1);
-  Expect.equals((new MyHttpClient1(null)).userAgent, httpClient.userAgent);
+  Expect.equals((MyHttpClient1(null)).userAgent, httpClient.userAgent);
   HttpOverrides.global = null;
-  httpClient = new HttpClient();
+  httpClient = HttpClient();
   Expect.isTrue(httpClient is HttpClient);
   Expect.isTrue(httpClient is! MyHttpClient1);
 }
 
 globalHttpOverridesZoneTest() {
-  HttpOverrides.global = new MyHttpOverrides();
+  HttpOverrides.global = MyHttpOverrides();
   runZoned(() {
     runZoned(() {
-      var httpClient = new HttpClient();
+      var httpClient = HttpClient();
       Expect.isNotNull(httpClient);
       Expect.isTrue(httpClient is MyHttpClient1);
-      Expect.equals((new MyHttpClient1(null)).userAgent, httpClient.userAgent);
+      Expect.equals((MyHttpClient1(null)).userAgent, httpClient.userAgent);
     });
   });
   HttpOverrides.global = null;
-  var httpClient = new HttpClient();
+  var httpClient = HttpClient();
   Expect.isTrue(httpClient is HttpClient);
   Expect.isTrue(httpClient is! MyHttpClient1);
 }

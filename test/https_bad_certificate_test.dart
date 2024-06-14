@@ -13,7 +13,7 @@ final HOST_NAME = 'localhost';
 
 String localFile(path) => Platform.script.resolve(path).toFilePath();
 
-SecurityContext serverContext = new SecurityContext()
+SecurityContext serverContext = SecurityContext()
   ..useCertificateChain(localFile('certificates/server_chain.pem'))
   ..usePrivateKey(localFile('certificates/server_key.pem'),
       password: 'dartdart');
@@ -29,9 +29,9 @@ main() async {
     });
   });
 
-  SecurityContext goodContext = new SecurityContext()
+  SecurityContext goodContext = SecurityContext()
     ..setTrustedCertificates(localFile('certificates/trusted_certs.pem'));
-  SecurityContext badContext = new SecurityContext();
+  SecurityContext badContext = SecurityContext();
   SecurityContext defaultContext = SecurityContext.defaultContext;
 
   await runClient(server.port, goodContext, true, 'pass');
@@ -51,12 +51,12 @@ main() async {
 
 Future runClient(
     int port, SecurityContext context, callbackReturns, result) async {
-  HttpClient client = new HttpClient(context: context);
+  HttpClient client = HttpClient(context: context);
   client.badCertificateCallback = (X509Certificate certificate, host, port) {
     Expect.isTrue(certificate.subject.contains('rootauthority'));
     Expect.isTrue(certificate.issuer.contains('rootauthority'));
     // Throw exception if one is requested.
-    if (callbackReturns == 'exception') throw new CustomException();
+    if (callbackReturns == 'exception') throw CustomException();
     return callbackReturns;
   };
 

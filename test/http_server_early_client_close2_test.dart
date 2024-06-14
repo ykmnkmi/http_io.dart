@@ -15,7 +15,7 @@ main() {
   HttpServer.bind("127.0.0.1", 0).then((server) {
     server.listen((request) {
       String name = Platform.script.toFilePath();
-      new File(name)
+      File(name)
           .openRead()
           .cast<List<int>>()
           .pipe(request.response)

@@ -30,7 +30,7 @@ void testHttp11Close(bool closeRequest) {
     });
 
     Socket.connect("127.0.0.1", server.port).then((socket) {
-      List<int> buffer = new List<int>.filled(1024, 0);
+      List<int> buffer = List<int>.filled(1024, 0);
       socket.write("GET / HTTP/1.1\r\nConnection: close\r\n\r\n");
       socket.listen((data) {}, onDone: () {
         if (!closeRequest) socket.destroy();
@@ -44,16 +44,16 @@ void testHttp11Close(bool closeRequest) {
 void testStreamResponse() {
   HttpServer.bind("127.0.0.1", 0).then((server) {
     server.listen((request) {
-      var timer = new Timer.periodic(const Duration(milliseconds: 0), (_) {
+      var timer = Timer.periodic(const Duration(milliseconds: 0), (_) {
         request.response
-            .write('data:${new DateTime.now().millisecondsSinceEpoch}\n\n');
+            .write('data:${DateTime.now().millisecondsSinceEpoch}\n\n');
       });
       request.response.done.whenComplete(() {
         timer.cancel();
       }).catchError((_) {});
     });
 
-    var client = new HttpClient();
+    var client = HttpClient();
     client
         .getUrl(Uri.parse("http://127.0.0.1:${server.port}"))
         .then((request) => request.close())
