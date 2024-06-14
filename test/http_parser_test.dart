@@ -353,12 +353,12 @@ class HttpParserTest {
       "H", "HT", "HTT", "HTTP", "HX", "HTX", "HTTX", "HTTPX"
     ];
     methods = ['GET'];
-    methods.forEach((method) {
+    for (var method in methods) {
       request = "$method / HTTP/1.1\r\n\r\n";
       _testParseRequestLean(request, method, "/");
       request = "$method /index.html HTTP/1.1\r\n\r\n";
       _testParseRequestLean(request, method, "/index.html");
-    });
+    }
     request = "GET / HTTP/1.0\r\n\r\n";
     _testParseRequestLean(request, "GET", "/",
         expectedVersion: "1.0", connectionClose: true);

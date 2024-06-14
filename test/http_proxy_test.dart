@@ -232,11 +232,11 @@ class ProxyServer {
               .then((HttpClientRequest clientRequest) {
             // Forward all headers.
             request.headers.forEach((String name, List<String> values) {
-              values.forEach((String value) {
+              for (var value in values) {
                 if (name != "content-length" && name != "via") {
                   clientRequest.headers.add(name, value);
                 }
-              });
+              }
             });
             // Special handling of Content-Length and Via.
             clientRequest.contentLength = request.contentLength;

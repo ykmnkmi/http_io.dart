@@ -18,7 +18,9 @@ void testCookies() {
     server.listen((HttpRequest request) {
       // Collect the cookies in a map.
       var cookiesMap = {};
-      request.cookies.forEach((c) => cookiesMap[c.name] = c.value);
+      for (var c in request.cookies) {
+        cookiesMap[c.name] = c.value;
+      }
       int index = int.parse(request.uri.path.substring(1));
       Expect.mapEquals(cookies[index], cookiesMap);
       // Return the same cookies to the client.
@@ -40,9 +42,13 @@ void testCookies() {
       }).then((response) {
         // Expect the same cookies back.
         var cookiesMap = {};
-        response.cookies.forEach((c) => cookiesMap[c.name] = c.value);
+        for (var c in response.cookies) {
+          cookiesMap[c.name] = c.value;
+        }
         Expect.mapEquals(cookies[i], cookiesMap);
-        response.cookies.forEach((c) => Expect.isTrue(c.httpOnly));
+        for (var c in response.cookies) {
+          Expect.isTrue(c.httpOnly);
+        }
         response.listen((d) {}, onDone: () {
           if (++count == cookies.length) {
             client.close();

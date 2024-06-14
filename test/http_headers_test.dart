@@ -620,10 +620,18 @@ void testInvalidCookie() {
 }
 
 void testHeaderLists() {
-  HttpHeaders.generalHeaders.forEach((x) => null);
-  HttpHeaders.entityHeaders.forEach((x) => null);
-  HttpHeaders.responseHeaders.forEach((x) => null);
-  HttpHeaders.requestHeaders.forEach((x) => null);
+  for (var x in HttpHeaders.generalHeaders) {
+    x;
+  }
+  for (var x in HttpHeaders.entityHeaders) {
+    x;
+  }
+  for (var x in HttpHeaders.responseHeaders) {
+    x;
+  }
+  for (var x in HttpHeaders.requestHeaders) {
+    x;
+  }
 }
 
 void testInvalidFieldName() {

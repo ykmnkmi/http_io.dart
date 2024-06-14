@@ -374,7 +374,7 @@ Future testCookies() {
         .then((request) => request.close())
         .then((response) {
       Expect.equals(2, response.cookies.length);
-      response.cookies.forEach((cookie) {
+      for (var cookie in response.cookies) {
         if (cookie.name == "name1") {
           Expect.equals("value1", cookie.value);
           DateTime date =
@@ -390,7 +390,7 @@ Future testCookies() {
         } else {
           Expect.fail("Unexpected cookie");
         }
-      });
+      }
 
       response.listen((_) {}, onDone: () {
         httpClient.get("127.0.0.1", port, "/cookie2").then((request) {
