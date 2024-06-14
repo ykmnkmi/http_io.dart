@@ -27,7 +27,7 @@ Future<void> main() async {
       stdout.writeln('dart ${entity.path}');
       await Isolate.spawnUri(
         Directory.current.uri.resolveUri(entity.uri),
-        [],
+        <String>[],
         null,
       );
     } else {

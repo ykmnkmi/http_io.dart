@@ -14,36 +14,24 @@ defaults:
 
 jobs:
   test:
-    strategy:
-      matrix:
-        os:
-          - ubuntu-latest
-          # - windows-latest
-        sdk:
-          - stable
-          # - dev
-
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
+
       - uses: dart-lang/setup-dart@v1
-        with:
-          sdk: ${{ matrix.sdk }}
 
       - name: Install Dependencies
-        run: dart pub get
         id: install
+        run: dart pub get
 
       - name: Format
+        id: format
         run: dart format --output=none --set-exit-if-changed .
-        if: always() && steps.install.outcome == 'success'
 
       - name: Analyze
         run: dart analyze --fatal-infos --fatal-warnings .
-        if: always() && steps.install.outcome == 'success'
 
       - name: Run Tests
         run: |
           dart tools/run_all_tests.dart
-        if: always() && steps.install.outcome == 'success'
