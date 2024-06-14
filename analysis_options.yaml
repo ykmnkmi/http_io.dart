@@ -6,7 +6,6 @@ analyzer:
     strict-inference: true
     # strict-raw-types: true
   errors:
-    deprecated_member_use: ignore
     inference_failure_on_collection_literal: ignore
     inference_failure_on_function_invocation: ignore
     inference_failure_on_function_return_type: ignore

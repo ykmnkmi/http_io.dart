@@ -68,11 +68,11 @@ void main(List<String> args) async {
   int port = await serverPortCompleter.future;
 
   final errorCompleter = Completer();
-  await runZoned(() async {
+  await runZonedGuarded(() async {
     var socket = await SecureSocket.connect('localhost', port,
         context: clientSecurityContext);
     socket.write(<int>[1, 2, 3]);
-  }, onError: (e) {
+  }, (e, st) {
     // Even if server disconnects during later parts of handshake, since
     // TLS v1.3 client might not notice it until attempt to communicate with
     // the server.
