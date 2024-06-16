@@ -2,18 +2,21 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+// ignore_for_file: avoid_print
+
 import 'dart:async';
 import 'dart:convert';
 
-import "package:http_io/http_io.dart";
-import "package:test/test.dart";
+import 'package:http_io/http_io.dart';
+
+import "expect.dart";
 
 class Server {
-  HttpServer server;
+  late HttpServer server;
   bool passwordChanged = false;
 
   Future<Server> start() {
-    var completer = Completer<Server>();
+    var completer = new Completer<Server>();
     HttpServer.bind("127.0.0.1", 0).then((s) {
       server = s;
       server.listen((HttpRequest request) {
@@ -23,6 +26,7 @@ class Server {
           response.close();
           return;
         }
+        ;
 
         String username;
         String password;
@@ -34,23 +38,25 @@ class Server {
           password = request.uri.path.substring(1, 6);
         }
         if (passwordChanged) password = "${password}1";
-        if (request.headers[HttpHeaders.AUTHORIZATION] != null) {
-          expect(1, equals(request.headers[HttpHeaders.AUTHORIZATION].length));
-          String authorization = request.headers[HttpHeaders.AUTHORIZATION][0];
+        if (request.headers[HttpHeaders.authorizationHeader] != null) {
+          Expect.equals(
+              1, request.headers[HttpHeaders.authorizationHeader]!.length);
+          String authorization =
+              request.headers[HttpHeaders.authorizationHeader]![0];
           List<String> tokens = authorization.split(" ");
-          expect("Basic", equals(tokens[0]));
-          String auth = base64Encode(utf8.encode("$username:$password"));
+          Expect.equals("Basic", tokens[0]);
+          String auth = base64.encode(utf8.encode("$username:$password"));
           if (passwordChanged && auth != tokens[1]) {
-            response.statusCode = HttpStatus.UNAUTHORIZED;
+            response.statusCode = HttpStatus.unauthorized;
             response.headers
-                .set(HttpHeaders.WWW_AUTHENTICATE, "Basic, realm=realm");
+                .set(HttpHeaders.wwwAuthenticateHeader, "Basic, realm=realm");
           } else {
-            expect(auth, equals(tokens[1]));
+            Expect.equals(auth, tokens[1]);
           }
         } else {
-          response.statusCode = HttpStatus.UNAUTHORIZED;
+          response.statusCode = HttpStatus.unauthorized;
           response.headers
-              .set(HttpHeaders.WWW_AUTHENTICATE, "Basic, realm=realm");
+              .set(HttpHeaders.wwwAuthenticateHeader, "Basic, realm=realm");
         }
         response.close();
       });
@@ -67,13 +73,12 @@ class Server {
 }
 
 Future<Server> setupServer() {
-  return Server().start();
+  return new Server().start();
 }
 
-Future<Null> testUrlUserInfo() {
-  Completer<Null> completer = Completer();
+void testUrlUserInfo() {
   setupServer().then((server) {
-    HttpClient client = HttpClient();
+    HttpClient client = new HttpClient();
 
     client
         .getUrl(Uri.parse("http://username:password@127.0.0.1:${server.port}/"))
@@ -82,24 +87,21 @@ Future<Null> testUrlUserInfo() {
       response.listen((_) {}, onDone: () {
         server.shutdown();
         client.close();
-        completer.complete(null);
       });
     });
   });
-  return completer.future;
 }
 
-Future<Null> testBasicNoCredentials() {
-  Completer<Null> completer = Completer();
+void testBasicNoCredentials() {
   setupServer().then((server) {
-    HttpClient client = HttpClient();
+    HttpClient client = new HttpClient();
 
     Future makeRequest(Uri url) {
       return client
           .getUrl(url)
           .then((HttpClientRequest request) => request.close())
           .then((HttpClientResponse response) {
-        expect(HttpStatus.UNAUTHORIZED, equals(response.statusCode));
+        Expect.equals(HttpStatus.unauthorized, response.statusCode);
         return response.fold(null, (x, y) {});
       });
     }
@@ -114,30 +116,27 @@ Future<Null> testBasicNoCredentials() {
     Future.wait(futures).then((_) {
       server.shutdown();
       client.close();
-      completer.complete(null);
     });
   });
-  return completer.future;
 }
 
-Future<Null> testBasicCredentials() {
-  Completer<Null> completer = Completer();
+void testBasicCredentials() {
   setupServer().then((server) {
-    HttpClient client = HttpClient();
+    HttpClient client = new HttpClient();
 
     Future makeRequest(Uri url) {
       return client
           .getUrl(url)
           .then((HttpClientRequest request) => request.close())
           .then((HttpClientResponse response) {
-        expect(HttpStatus.OK, equals(response.statusCode));
+        Expect.equals(HttpStatus.ok, response.statusCode);
         return response.fold(null, (x, y) {});
       });
     }
 
     for (int i = 0; i < 5; i++) {
       client.addCredentials(Uri.parse("http://127.0.0.1:${server.port}/test$i"),
-          "realm", HttpClientBasicCredentials("test$i", "test$i"));
+          "realm", new HttpClientBasicCredentials("test$i", "test$i"));
     }
 
     var futures = <Future>[];
@@ -150,28 +149,25 @@ Future<Null> testBasicCredentials() {
     Future.wait(futures).then((_) {
       server.shutdown();
       client.close();
-      completer.complete(null);
     });
   });
-  return completer.future;
 }
 
-Future<Null> testBasicAuthenticateCallback() {
-  Completer<Null> completer = Completer();
+void testBasicAuthenticateCallback() {
   setupServer().then((server) {
-    HttpClient client = HttpClient();
+    HttpClient client = new HttpClient();
     bool passwordChanged = false;
 
-    client.authenticate = (Uri url, String scheme, String realm) {
-      expect("Basic", equals(scheme));
-      expect("realm", equals(realm));
+    client.authenticate = (Uri url, String scheme, String? realm) {
+      Expect.equals("Basic", scheme);
+      Expect.equals("realm", realm);
       String username = url.path.substring(1, 6);
       String password = url.path.substring(1, 6);
       if (passwordChanged) password = "${password}1";
-      Completer<bool> completer = Completer<bool>();
-      Timer(const Duration(milliseconds: 10), () {
+      final completer = new Completer<bool>();
+      new Timer(const Duration(milliseconds: 10), () {
         client.addCredentials(
-            url, realm, HttpClientBasicCredentials(username, password));
+            url, realm!, new HttpClientBasicCredentials(username, password));
         completer.complete(true);
       });
       return completer.future;
@@ -182,7 +178,7 @@ Future<Null> testBasicAuthenticateCallback() {
           .getUrl(url)
           .then((HttpClientRequest request) => request.close())
           .then((HttpClientResponse response) {
-        expect(HttpStatus.OK, equals(response.statusCode));
+        Expect.equals(HttpStatus.ok, response.statusCode);
         return response.fold(null, (x, y) {});
       });
     }
@@ -205,25 +201,60 @@ Future<Null> testBasicAuthenticateCallback() {
         Future.wait(makeRequests()).then((_) {
           server.shutdown();
           client.close();
-          completer.complete(null);
         });
       });
     });
   });
-  return completer.future;
+}
+
+void testLocalServerBasic() {
+  HttpClient client = new HttpClient();
+
+  client.authenticate = (Uri url, String scheme, String? realm) {
+    client.addCredentials(Uri.parse("http://127.0.0.1/basic"), "test",
+        new HttpClientBasicCredentials("test", "test"));
+    return new Future.value(true);
+  };
+
+  client
+      .getUrl(Uri.parse("http://127.0.0.1/basic/test"))
+      .then((HttpClientRequest request) => request.close())
+      .then((HttpClientResponse response) {
+    Expect.equals(HttpStatus.ok, response.statusCode);
+    response.drain().then((_) {
+      client.close();
+    });
+  });
+}
+
+void testLocalServerDigest() {
+  HttpClient client = new HttpClient();
+
+  client.authenticate = (Uri url, String scheme, String? realm) {
+    print("url: $url, scheme: $scheme, realm: $realm");
+    client.addCredentials(Uri.parse("http://127.0.0.1/digest"), "test",
+        new HttpClientDigestCredentials("test", "test"));
+    return new Future.value(true);
+  };
+
+  client
+      .getUrl(Uri.parse("http://127.0.0.1/digest/test"))
+      .then((HttpClientRequest request) => request.close())
+      .then((HttpClientResponse response) {
+    Expect.equals(HttpStatus.ok, response.statusCode);
+    response.drain().then((_) {
+      client.close();
+    });
+  });
 }
 
 main() {
-  test("UrlUserInfo", () async {
-    await testUrlUserInfo();
-  });
-  test("BasicNoCredentials", () async {
-    await testBasicNoCredentials();
-  });
-  test("BasicCredentials", () async {
-    await testBasicCredentials();
-  });
-  test("BasicAuthenticateCallback", () async {
-    await testBasicAuthenticateCallback();
-  });
+  testUrlUserInfo();
+  testBasicNoCredentials();
+  testBasicCredentials();
+  testBasicAuthenticateCallback();
+  // These teste are not normally run. They can be used for locally
+  // testing with another web server (e.g. Apache).
+  //testLocalServerBasic();
+  //testLocalServerDigest();
 }

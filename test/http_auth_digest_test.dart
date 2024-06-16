@@ -2,44 +2,47 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+// ignore_for_file: avoid_print
+
 import 'dart:async';
 
 import "package:convert/convert.dart";
 import "package:crypto/crypto.dart";
 import "package:http_io/http_io.dart";
-import "package:test/test.dart";
+
+import "expect.dart";
 
 class Server {
-  HttpServer server;
+  late HttpServer server;
   int unauthCount = 0; // Counter of the 401 responses.
   int successCount = 0; // Counter of the successful responses.
   int nonceCount = 0; // Counter of use of current nonce.
-  String ha1;
+  var ha1;
 
-  static Future<Server> start(String algorithm, String qop,
-      {int nonceStaleAfter, bool useNextNonce = false}) {
-    return Server()._start(algorithm, qop, nonceStaleAfter, useNextNonce);
+  static Future<Server> start(String? algorithm, String? qop,
+      {int? nonceStaleAfter, bool useNextNonce = false}) {
+    return new Server()._start(algorithm, qop, nonceStaleAfter, useNextNonce);
   }
 
-  Future<Server> _start(String serverAlgorithm, String serverQop,
-      int nonceStaleAfter, bool useNextNonce) {
-    Set ncs = Set();
+  Future<Server> _start(String? serverAlgorithm, String? serverQop,
+      int? nonceStaleAfter, bool useNextNonce) {
+    Set ncs = new Set();
     // Calculate ha1.
     String realm = "test";
     String username = "dart";
     String password = "password";
-    var hasher = md5.convert("$username:$realm:$password".codeUnits);
+    var hasher = md5.convert("${username}:${realm}:${password}".codeUnits);
     ha1 = hex.encode(hasher.bytes);
 
     var nonce = "12345678"; // No need for random nonce in test.
 
-    var completer = Completer<Server>();
+    var completer = new Completer<Server>();
     HttpServer.bind("127.0.0.1", 0).then((s) {
       server = s;
       server.listen((HttpRequest request) {
         sendUnauthorizedResponse(HttpResponse response, {stale = false}) {
-          response.statusCode = HttpStatus.UNAUTHORIZED;
-          StringBuffer authHeader = StringBuffer();
+          response.statusCode = HttpStatus.unauthorized;
+          StringBuffer authHeader = new StringBuffer();
           authHeader.write('Digest');
           authHeader.write(', realm="$realm"');
           authHeader.write(', nonce="$nonce"');
@@ -49,14 +52,16 @@ class Server {
           }
           authHeader.write(', domain="/digest/"');
           if (serverQop != null) authHeader.write(', qop="$serverQop"');
-          response.headers.set(HttpHeaders.WWW_AUTHENTICATE, authHeader);
+          response.headers.set(HttpHeaders.wwwAuthenticateHeader, authHeader);
           unauthCount++;
         }
 
         var response = request.response;
-        if (request.headers[HttpHeaders.AUTHORIZATION] != null) {
-          expect(1, equals(request.headers[HttpHeaders.AUTHORIZATION].length));
-          String authorization = request.headers[HttpHeaders.AUTHORIZATION][0];
+        if (request.headers[HttpHeaders.authorizationHeader] != null) {
+          Expect.equals(
+              1, request.headers[HttpHeaders.authorizationHeader]!.length);
+          String authorization =
+              request.headers[HttpHeaders.authorizationHeader]![0];
           HeaderValue header =
               HeaderValue.parse(authorization, parameterSeparator: ",");
           if (header.value.toLowerCase() == "basic") {
@@ -70,38 +75,39 @@ class Server {
             var qop = header.parameters["qop"];
             var cnonce = header.parameters["cnonce"];
             var nc = header.parameters["nc"];
-            expect("digest", equals(header.value.toLowerCase()));
-            expect("dart", equals(header.parameters["username"]));
-            expect(realm, equals(header.parameters["realm"]));
-            expect("MD5", equals(header.parameters["algorithm"]));
-            expect(nonce, equals(header.parameters["nonce"]));
-            expect(request.uri.toString(), equals(uri));
+            Expect.equals("digest", header.value.toLowerCase());
+            Expect.equals("dart", header.parameters["username"]);
+            Expect.equals(realm, header.parameters["realm"]);
+            Expect.equals("MD5", header.parameters["algorithm"]);
+            Expect.equals(nonce, header.parameters["nonce"]);
+            Expect.equals(request.uri.toString(), uri);
             if (qop != null) {
               // A server qop of auth-int is downgraded to none by the client.
-              expect("auth", equals(serverQop));
-              expect("auth", equals(header.parameters["qop"]));
-              expect(cnonce, isNotNull);
-              expect(nc, isNotNull);
-              expect(ncs.contains(nc), isFalse);
+              Expect.equals("auth", serverQop);
+              Expect.equals("auth", header.parameters["qop"]);
+              Expect.isNotNull(cnonce);
+              Expect.isNotNull(nc);
+              Expect.isFalse(ncs.contains(nc));
               ncs.add(nc);
             } else {
-              expect(cnonce, isNull);
-              expect(nc, isNull);
+              Expect.isNull(cnonce);
+              Expect.isNull(nc);
             }
-            expect(header.parameters["response"], isNotNull);
+            Expect.isNotNull(header.parameters["response"]);
 
-            var hasher = md5.convert("${request.method}:$uri".codeUnits);
+            var hasher = md5.convert("${request.method}:${uri}".codeUnits);
             var ha2 = hex.encode(hasher.bytes);
 
+            var x;
             Digest digest;
             if (qop == null || qop == "" || qop == "none") {
-              digest = md5.convert("$ha1:$nonce:$ha2".codeUnits);
+              digest = md5.convert("$ha1:${nonce}:$ha2".codeUnits);
             } else {
-              digest =
-                  md5.convert("$ha1:$nonce:$nc:$cnonce:$qop:$ha2".codeUnits);
+              digest = md5.convert(
+                  "$ha1:${nonce}:${nc}:${cnonce}:${qop}:$ha2".codeUnits);
             }
-            expect(hex.encode(digest.bytes),
-                equals(header.parameters["response"]));
+            Expect.equals(
+                hex.encode(digest.bytes), header.parameters["response"]);
 
             successCount++;
             nonceCount++;
@@ -134,25 +140,24 @@ class Server {
   int get port => server.port;
 }
 
-Future<Null> testNoCredentials(String algorithm, String qop) {
-  Completer<Null> completer = Completer();
+void testNoCredentials(String? algorithm, String? qop) {
   Server.start(algorithm, qop).then((server) {
-    HttpClient client = HttpClient();
+    HttpClient client = new HttpClient();
 
     // Add digest credentials which does not match the path requested.
     client.addCredentials(Uri.parse("http://127.0.0.1:${server.port}/xxx"),
-        "test", HttpClientDigestCredentials("dart", "password"));
+        "test", new HttpClientDigestCredentials("dart", "password"));
 
     // Add basic credentials for the path requested.
     client.addCredentials(Uri.parse("http://127.0.0.1:${server.port}/digest"),
-        "test", HttpClientBasicCredentials("dart", "password"));
+        "test", new HttpClientBasicCredentials("dart", "password"));
 
     Future makeRequest(Uri url) {
       return client
           .getUrl(url)
           .then((HttpClientRequest request) => request.close())
           .then((HttpClientResponse response) {
-        expect(HttpStatus.UNAUTHORIZED, equals(response.statusCode));
+        Expect.equals(HttpStatus.unauthorized, response.statusCode);
         return response.fold(null, (x, y) {});
       });
     }
@@ -165,30 +170,27 @@ Future<Null> testNoCredentials(String algorithm, String qop) {
     Future.wait(futures).then((_) {
       server.shutdown();
       client.close();
-      completer.complete(null);
     });
   });
-  return completer.future;
 }
 
-Future<Null> testCredentials(String algorithm, String qop) {
-  Completer<Null> completer = Completer();
+void testCredentials(String? algorithm, String? qop) {
   Server.start(algorithm, qop).then((server) {
-    HttpClient client = HttpClient();
+    HttpClient client = new HttpClient();
 
     Future makeRequest(Uri url) {
       return client
           .getUrl(url)
           .then((HttpClientRequest request) => request.close())
           .then((HttpClientResponse response) {
-        expect(HttpStatus.OK, equals(response.statusCode));
-        expect(1, equals(response.headers["Authentication-Info"].length));
+        Expect.equals(HttpStatus.ok, response.statusCode);
+        Expect.equals(1, response.headers["Authentication-Info"]?.length);
         return response.fold(null, (x, y) {});
       });
     }
 
     client.addCredentials(Uri.parse("http://127.0.0.1:${server.port}/digest"),
-        "test", HttpClientDigestCredentials("dart", "password"));
+        "test", new HttpClientDigestCredentials("dart", "password"));
 
     var futures = <Future>[];
     for (int i = 0; i < 2; i++) {
@@ -200,26 +202,23 @@ Future<Null> testCredentials(String algorithm, String qop) {
     Future.wait(futures).then((_) {
       server.shutdown();
       client.close();
-      completer.complete(null);
     });
   });
-  return completer.future;
 }
 
-Future<Null> testAuthenticateCallback(String algorithm, String qop) {
-  Completer<Null> completer = Completer();
+void testAuthenticateCallback(String? algorithm, String? qop) {
   Server.start(algorithm, qop).then((server) {
-    HttpClient client = HttpClient();
+    HttpClient client = new HttpClient();
 
-    client.authenticate = (Uri url, String scheme, String realm) {
-      expect("Digest", equals(scheme));
-      expect("test", equals(realm));
-      Completer<bool> completer = Completer<bool>();
-      Timer(const Duration(milliseconds: 10), () {
+    client.authenticate = (url, scheme, realm) {
+      Expect.equals("Digest", scheme);
+      Expect.equals("test", realm);
+      final completer = new Completer<bool>();
+      new Timer(const Duration(milliseconds: 10), () {
         client.addCredentials(
             Uri.parse("http://127.0.0.1:${server.port}/digest"),
             "test",
-            HttpClientDigestCredentials("dart", "password"));
+            new HttpClientDigestCredentials("dart", "password"));
         completer.complete(true);
       });
       return completer.future;
@@ -230,8 +229,8 @@ Future<Null> testAuthenticateCallback(String algorithm, String qop) {
           .getUrl(url)
           .then((HttpClientRequest request) => request.close())
           .then((HttpClientResponse response) {
-        expect(HttpStatus.OK, equals(response.statusCode));
-        expect(1, equals(response.headers["Authentication-Info"].length));
+        Expect.equals(HttpStatus.ok, response.statusCode);
+        Expect.equals(1, response.headers["Authentication-Info"]?.length);
         return response.fold(null, (x, y) {});
       });
     }
@@ -244,30 +243,27 @@ Future<Null> testAuthenticateCallback(String algorithm, String qop) {
     Future.wait(futures).then((_) {
       server.shutdown();
       client.close();
-      completer.complete(null);
     });
   });
-  return completer.future;
 }
 
-Future<Null> testStaleNonce() {
-  Completer<Null> completer = Completer();
+void testStaleNonce() {
   Server.start("MD5", "auth", nonceStaleAfter: 2).then((server) {
-    HttpClient client = HttpClient();
+    HttpClient client = new HttpClient();
 
     Future makeRequest(Uri url) {
       return client
           .getUrl(url)
           .then((HttpClientRequest request) => request.close())
           .then((HttpClientResponse response) {
-        expect(HttpStatus.OK, equals(response.statusCode));
-        expect(1, equals(response.headers["Authentication-Info"].length));
+        Expect.equals(HttpStatus.ok, response.statusCode);
+        Expect.equals(1, response.headers["Authentication-Info"]?.length);
         return response.fold(null, (x, y) {});
       });
     }
 
     Uri uri = Uri.parse("http://127.0.0.1:${server.port}/digest");
-    var credentials = HttpClientDigestCredentials("dart", "password");
+    var credentials = new HttpClientDigestCredentials("dart", "password");
     client.addCredentials(uri, "test", credentials);
 
     makeRequest(uri)
@@ -275,35 +271,32 @@ Future<Null> testStaleNonce() {
         .then((_) => makeRequest(uri))
         .then((_) => makeRequest(uri))
         .then((_) {
-      expect(2, equals(server.unauthCount));
-      expect(4, equals(server.successCount));
+      Expect.equals(2, server.unauthCount);
+      Expect.equals(4, server.successCount);
       server.shutdown();
       client.close();
-      completer.complete(null);
     });
   });
-  return completer.future;
 }
 
-Future<Null> testNextNonce() {
-  Completer<Null> completer = Completer();
+void testNextNonce() {
   Server.start("MD5", "auth", nonceStaleAfter: 2, useNextNonce: true)
       .then((server) {
-    HttpClient client = HttpClient();
+    HttpClient client = new HttpClient();
 
     Future makeRequest(Uri url) {
       return client
           .getUrl(url)
           .then((HttpClientRequest request) => request.close())
           .then((HttpClientResponse response) {
-        expect(HttpStatus.OK, equals(response.statusCode));
-        expect(1, equals(response.headers["Authentication-Info"].length));
+        Expect.equals(HttpStatus.ok, response.statusCode);
+        Expect.equals(1, response.headers["Authentication-Info"]?.length);
         return response.fold(null, (x, y) {});
       });
     }
 
     Uri uri = Uri.parse("http://127.0.0.1:${server.port}/digest");
-    var credentials = HttpClientDigestCredentials("dart", "password");
+    var credentials = new HttpClientDigestCredentials("dart", "password");
     client.addCredentials(uri, "test", credentials);
 
     makeRequest(uri)
@@ -311,54 +304,81 @@ Future<Null> testNextNonce() {
         .then((_) => makeRequest(uri))
         .then((_) => makeRequest(uri))
         .then((_) {
-      expect(1, equals(server.unauthCount));
-      expect(4, equals(server.successCount));
+      Expect.equals(1, server.unauthCount);
+      Expect.equals(4, server.successCount);
       server.shutdown();
       client.close();
-      completer.complete(null);
     });
   });
-  return completer.future;
+}
+
+// An Apache virtual directory configuration like this can be used for
+// running the local server tests.
+//
+//  <Directory "/usr/local/prj/website/digest/">
+//    AllowOverride None
+//    Order deny,allow
+//    Deny from all
+//    Allow from 127.0.0.0/255.0.0.0 ::1/128
+//    AuthType Digest
+//    AuthName "test"
+//    AuthDigestDomain /digest/
+//    AuthDigestAlgorithm MD5
+//    AuthDigestQop auth
+//    AuthDigestNonceLifetime 10
+//    AuthDigestProvider file
+//    AuthUserFile /usr/local/prj/apache/passwd/digest-passwd
+//    Require valid-user
+//  </Directory>
+//
+
+void testLocalServerDigest() {
+  int count = 0;
+  HttpClient client = new HttpClient();
+
+  Future makeRequest() {
+    return client
+        .getUrl(Uri.parse("http://127.0.0.1/digest/test"))
+        .then((HttpClientRequest request) => request.close())
+        .then((HttpClientResponse response) {
+      count++;
+      if (count % 100 == 0) print(count);
+      Expect.equals(HttpStatus.ok, response.statusCode);
+      return response.fold(null, (x, y) {});
+    });
+  }
+
+  client.addCredentials(Uri.parse("http://127.0.0.1/digest"), "test",
+      new HttpClientDigestCredentials("dart", "password"));
+
+  client.authenticate = (url, scheme, realm) {
+    client.addCredentials(Uri.parse("http://127.0.0.1/digest"), "test",
+        new HttpClientDigestCredentials("dart", "password"));
+    return new Future.value(true);
+  };
+
+  next() {
+    makeRequest().then((_) => next());
+  }
+
+  next();
 }
 
 main() {
-  test("NoCredentials", () async {
-    await testNoCredentials(null, null);
-  });
-  test("NoCredentials MD5", () async {
-    await testNoCredentials("MD5", null);
-  });
-  test("NoCredentials MD5 auth", () async {
-    await testNoCredentials("MD5", "auth");
-  });
-  test("Credentials", () async {
-    await testCredentials(null, null);
-  });
-  test("Credentials MD5", () async {
-    await testCredentials("MD5", null);
-  });
-  test("Credentials MD5 auth", () async {
-    await testCredentials("MD5", "auth");
-  });
-  test("Credentials MD5 auth-int", () async {
-    await testCredentials("MD5", "auth-int");
-  });
-  test("AuthenticateCallback", () async {
-    await testAuthenticateCallback(null, null);
-  });
-  test("AuthenticateCallback MD5", () async {
-    await testAuthenticateCallback("MD5", null);
-  });
-  test("AuthenticateCallback MD5 auth", () async {
-    await testAuthenticateCallback("MD5", "auth");
-  });
-  test("AuthenticateCallback MD5 auth-int", () async {
-    await testAuthenticateCallback("MD5", "auth-int");
-  });
-  test("StaleNonce", () async {
-    await testStaleNonce();
-  });
-  test("NextNonce", () async {
-    await testNextNonce();
-  });
+  testNoCredentials(null, null);
+  testNoCredentials("MD5", null);
+  testNoCredentials("MD5", "auth");
+  testCredentials(null, null);
+  testCredentials("MD5", null);
+  testCredentials("MD5", "auth");
+  testCredentials("MD5", "auth-int");
+  testAuthenticateCallback(null, null);
+  testAuthenticateCallback("MD5", null);
+  testAuthenticateCallback("MD5", "auth");
+  testAuthenticateCallback("MD5", "auth-int");
+  testStaleNonce();
+  testNextNonce();
+  // These teste are not normally run. They can be used for locally
+  // testing with another web server (e.g. Apache).
+  //testLocalServerDigest();
 }

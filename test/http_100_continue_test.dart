@@ -2,14 +2,14 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import 'dart:async';
+import "dart:async";
 import 'dart:convert';
-import "dart:io" hide HttpServer, HttpClient;
 
-import "package:http_io/http_io.dart";
-import "package:test/test.dart";
+import 'package:http_io/http_io.dart';
 
-Future<Null> doTest(responseBytes, bodyLength) async {
+import 'expect.dart';
+
+void test(responseBytes, bodyLength) async {
   fullRequest(bytes) {
     var len = bytes.length;
     return len > 4 &&
@@ -33,14 +33,14 @@ Future<Null> doTest(responseBytes, bodyLength) async {
   var server = await ServerSocket.bind('127.0.0.1', 0);
   server.listen(handleSocket);
 
-  var client = HttpClient();
+  var client = new HttpClient();
   var request =
       await client.getUrl(Uri.parse('http://127.0.0.1:${server.port}/'));
   var response = await request.close();
-  expect(response.statusCode, equals(200));
-  expect(bodyLength,
-      equals((await response.fold([], (p, e) => p..addAll(e))).length));
-  await server.close();
+  Expect.equals(response.statusCode, 200);
+  Expect.equals(bodyLength,
+      (await response.fold<List<int>>(<int>[], (p, e) => p..addAll(e))).length);
+  server.close();
 }
 
 main() {
@@ -68,13 +68,11 @@ Content-Length: 2\r
 \r
 AB''';
 
-  test("Continue OK", () async {
-    await doTest(ascii.encode(r1), 0);
-  });
-  test("Continue hello world OK", () async {
-    await doTest(ascii.encode(r2), 0);
-  });
-  test("Continue OK length AB", () async {
-    await doTest(ascii.encode(r3), 2);
-  });
+  test(ascii.encode(r1), 0);
+  test(ascii.encode(r2), 0);
+  test(ascii.encode(r3), 2);
+
+  test(ascii.encode(r1.replaceAll('\r\n', '\n')), 0);
+  test(ascii.encode(r2.replaceAll('\r\n', '\n')), 0);
+  test(ascii.encode(r3.replaceAll('\r\n', '\n')), 2);
 }

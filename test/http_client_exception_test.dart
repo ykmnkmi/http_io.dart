@@ -3,39 +3,40 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import "package:http_io/http_io.dart";
-import "package:test/test.dart";
 
-void doExpect(HttpClient client, String url, String error) {
-  expect(() => client.getUrl(Uri.parse(url)),
-      throwsA(predicate((e) => e.toString().contains(error))));
-}
+import "async_helper.dart";
+import "expect.dart";
 
 void testInvalidUrl() {
-  HttpClient client = HttpClient();
-  List<List<String>> tests = <List<String>>[
-    <String>["ftp://www.google.com", "Unsupported scheme"],
-    <String>["httpx://www.google.com", "Unsupported scheme"],
-    <String>["http://user@:1", "No host specified"],
-    <String>["http:///", "No host specified"],
-    <String>["http:///index.html", "No host specified"],
-    <String>["///", "No host specified"],
-    <String>["///index.html", "No host specified"],
-  ];
-
-  for (List<String> pair in tests) {
-    doExpect(client, pair[0], pair[1]);
-  }
-
-  expect(() => client.getUrl(Uri.parse("http://::1")), throwsFormatException);
+  HttpClient client = new HttpClient();
+  Expect.throws(() => client.getUrl(Uri.parse('ftp://www.google.com')),
+      (e) => e.toString().contains("Unsupported scheme"));
+  Expect.throws(() => client.getUrl(Uri.parse('httpx://www.google.com')),
+      (e) => e.toString().contains("Unsupported scheme"));
+  Expect.throwsFormatException(() => client.getUrl(Uri.parse('http://::1')));
+  Expect.throws(() => client.getUrl(Uri.parse('http://user@:1')),
+      (e) => e.toString().contains("No host specified"));
+  Expect.throws(() => client.getUrl(Uri.parse('http:///')),
+      (e) => e.toString().contains("No host specified"));
+  Expect.throws(() => client.getUrl(Uri.parse('http:///index.html')),
+      (e) => e.toString().contains("No host specified"));
+  Expect.throws(() => client.getUrl(Uri.parse('///')),
+      (e) => e.toString().contains("No host specified"));
+  Expect.throws(() => client.getUrl(Uri.parse('///index.html')),
+      (e) => e.toString().contains("No host specified"));
 }
 
 void testBadHostName() {
-  HttpClient client = HttpClient();
-  expect(() => client.get("some.bad.host.name.7654321", 0, "/"),
-      throwsA(predicate((e) => e.toString().contains("Failed host lookup"))));
+  asyncStart();
+  HttpClient client = new HttpClient();
+  client.get("some.bad.host.name.7654321", 0, "/").then((request) {
+    Expect.fail("Should not open a request on bad hostname");
+  }).catchError((error) {
+    asyncEnd(); // We expect onError to be called, due to bad host name.
+  }, test: (error) => error is! String);
 }
 
 void main() {
-  test("InvalidUrl", testInvalidUrl);
-  test("BadHostName", testBadHostName);
+  testInvalidUrl();
+  testBadHostName();
 }
