@@ -6,50 +6,64 @@ part of 'http.dart';
 
 class _CryptoUtils {
   static Uint8List getRandomBytes(int count) {
+    Random random = Random.secure();
     Uint8List result = Uint8List(count);
+
     for (int i = 0; i < count; i++) {
-      result[i] = Random.secure().nextInt(0xff);
+      result[i] = random.nextInt(0xff);
     }
+
     return result;
   }
 
   static String bytesToHex(List<int> bytes) {
-    var result = StringBuffer();
-    for (var part in bytes) {
+    StringBuffer result = StringBuffer();
+
+    for (int part in bytes) {
       result.write('${part < 16 ? '0' : ''}${part.toRadixString(16)}');
     }
+
     return result.toString();
   }
 }
 
 // Constants.
-const _mask8 = 0xff;
-const _mask32 = 0xffffffff;
-const _bitsPerByte = 8;
-const _bytesPerWord = 4;
+const int _mask8 = 0xff;
+
+const int _mask32 = 0xffffffff;
+
+const int _bitsPerByte = 8;
+
+const int _bytesPerWord = 4;
 
 // Base class encapsulating common behavior for cryptographic hash
 // functions.
 abstract class _HashBase {
+  _HashBase(this._chunkSizeInWords, int digestSizeInWords, this._bigEndianWords)
+      : _currentChunk = Uint32List(_chunkSizeInWords),
+        _h = Uint32List(digestSizeInWords);
+
   // Hasher state.
   final int _chunkSizeInWords;
-  final bool _bigEndianWords;
-  int _lengthInBytes = 0;
-  List<int> _pendingData;
-  final Uint32List _currentChunk;
-  final Uint32List _h;
-  bool _digestCalled = false;
 
-  _HashBase(this._chunkSizeInWords, int digestSizeInWords, this._bigEndianWords)
-      : _pendingData = [],
-        _currentChunk = Uint32List(_chunkSizeInWords),
-        _h = Uint32List(digestSizeInWords);
+  final bool _bigEndianWords;
+
+  int _lengthInBytes = 0;
+
+  List<int> _pendingData = <int>[];
+
+  final Uint32List _currentChunk;
+
+  final Uint32List _h;
+
+  bool _digestCalled = false;
 
   // Update the hasher with more data.
   void add(List<int> data) {
     if (_digestCalled) {
       throw StateError('Hash update method called after digest was retrieved');
     }
+
     _lengthInBytes += data.length;
     _pendingData.addAll(data);
     _iterate();
@@ -60,6 +74,7 @@ abstract class _HashBase {
     if (_digestCalled) {
       return _resultAsBytes();
     }
+
     _digestCalled = true;
     _finalizeData();
     _iterate();
@@ -77,20 +92,23 @@ abstract class _HashBase {
 
   // Helper methods.
   int _add32(int x, int y) => (x + y) & _mask32;
+
   int _roundUp(int val, int n) => (val + n - 1) & -n;
 
   // Rotate left limiting to unsigned 32-bit values.
   int _rotl32(int val, int shift) {
-    var modShoft = shift & 31;
+    int modShoft = shift & 31;
     return ((val << modShoft) & _mask32) | ((val & _mask32) >> (32 - modShoft));
   }
 
   // Compute the final result as a list of bytes from the hash words.
   List<int> _resultAsBytes() {
-    var result = <int>[];
-    for (var i = 0; i < _h.length; i++) {
+    List<int> result = <int>[];
+
+    for (int i = 0; i < _h.length; i++) {
       result.addAll(_wordToBytes(_h[i]));
     }
+
     return result;
   }
 
@@ -98,13 +116,14 @@ abstract class _HashBase {
   void _bytesToChunk(List<int> data, int dataIndex) {
     assert((data.length - dataIndex) >= (_chunkSizeInWords * _bytesPerWord));
 
-    for (var wordIndex = 0; wordIndex < _chunkSizeInWords; wordIndex++) {
-      var w3 = _bigEndianWords ? data[dataIndex] : data[dataIndex + 3];
-      var w2 = _bigEndianWords ? data[dataIndex + 1] : data[dataIndex + 2];
-      var w1 = _bigEndianWords ? data[dataIndex + 2] : data[dataIndex + 1];
-      var w0 = _bigEndianWords ? data[dataIndex + 3] : data[dataIndex];
+    for (int wordIndex = 0; wordIndex < _chunkSizeInWords; wordIndex++) {
+      int w3 = _bigEndianWords ? data[dataIndex] : data[dataIndex + 3];
+      int w2 = _bigEndianWords ? data[dataIndex + 1] : data[dataIndex + 2];
+      int w1 = _bigEndianWords ? data[dataIndex + 2] : data[dataIndex + 1];
+      int w0 = _bigEndianWords ? data[dataIndex + 3] : data[dataIndex];
       dataIndex += 4;
-      var word = (w3 & 0xff) << 24;
+
+      int word = (w3 & 0xff) << 24;
       word |= (w2 & _mask8) << 16;
       word |= (w1 & _mask8) << 8;
       word |= w0 & _mask8;
@@ -114,7 +133,7 @@ abstract class _HashBase {
 
   // Convert a 32-bit word to four bytes.
   List<int> _wordToBytes(int word) {
-    List<int> bytes = List.filled(_bytesPerWord, 0);
+    List<int> bytes = List<int>.filled(_bytesPerWord, 0);
     bytes[0] = (word >> (_bigEndianWords ? 24 : 0)) & _mask8;
     bytes[1] = (word >> (_bigEndianWords ? 16 : 8)) & _mask8;
     bytes[2] = (word >> (_bigEndianWords ? 8 : 16)) & _mask8;
@@ -125,14 +144,17 @@ abstract class _HashBase {
   // Iterate through data updating the hash computation for each
   // chunk.
   void _iterate() {
-    var len = _pendingData.length;
-    var chunkSizeInBytes = _chunkSizeInWords * _bytesPerWord;
+    int len = _pendingData.length;
+    int chunkSizeInBytes = _chunkSizeInWords * _bytesPerWord;
+
     if (len >= chunkSizeInBytes) {
-      var index = 0;
+      int index = 0;
+
       for (; (len - index) >= chunkSizeInBytes; index += chunkSizeInBytes) {
         _bytesToChunk(_pendingData, index);
         _updateHash(_currentChunk);
       }
+
       _pendingData = _pendingData.sublist(index, len);
     }
   }
@@ -141,15 +163,19 @@ abstract class _HashBase {
   // 0 bits and add the length of the message.
   void _finalizeData() {
     _pendingData.add(0x80);
-    var contentsLength = _lengthInBytes + 9;
-    var chunkSizeInBytes = _chunkSizeInWords * _bytesPerWord;
-    var finalizedLength = _roundUp(contentsLength, chunkSizeInBytes);
-    var zeroPadding = finalizedLength - contentsLength;
-    for (var i = 0; i < zeroPadding; i++) {
+
+    int contentsLength = _lengthInBytes + 9;
+    int chunkSizeInBytes = _chunkSizeInWords * _bytesPerWord;
+    int finalizedLength = _roundUp(contentsLength, chunkSizeInBytes);
+    int zeroPadding = finalizedLength - contentsLength;
+
+    for (int i = 0; i < zeroPadding; i++) {
       _pendingData.add(0);
     }
-    var lengthInBits = _lengthInBytes * _bitsPerByte;
+
+    int lengthInBits = _lengthInBytes * _bitsPerByte;
     assert(lengthInBits < pow(2, 32));
+
     if (_bigEndianWords) {
       _pendingData.addAll(_wordToBytes(0));
       _pendingData.addAll(_wordToBytes(lengthInBits & _mask32));
@@ -169,7 +195,7 @@ class _MD5 extends _HashBase {
     _h[3] = 0x10325476;
   }
 
-  static const _k = [
+  static const List<int> _k = <int>[
     0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee, 0xf57c0faf, 0x4787c62a, //
     0xa8304613, 0xfd469501, 0x698098d8, 0x8b44f7af, 0xffff5bb1, 0x895cd7be, //
     0x6b901122, 0xfd987193, 0xa679438e, 0x49b40821, 0xf61e2562, 0xc040b340, //
@@ -183,7 +209,7 @@ class _MD5 extends _HashBase {
     0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391
   ];
 
-  static const _r = [
+  static const List<int> _r = <int>[
     7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 5, 9, 14, //
     20, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 4, 11, 16, 23, 4, 11, //
     16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 6, 10, 15, 21, 6, 10, 15, 21, 6, //
@@ -196,15 +222,15 @@ class _MD5 extends _HashBase {
   void _updateHash(Uint32List m) {
     assert(m.length == 16);
 
-    var a = _h[0];
-    var b = _h[1];
-    var c = _h[2];
-    var d = _h[3];
+    int a = _h[0];
+    int b = _h[1];
+    int c = _h[2];
+    int d = _h[3];
 
     int t0;
     int t1;
 
-    for (var i = 0; i < 64; i++) {
+    for (int i = 0; i < 64; i++) {
       if (i < 16) {
         t0 = (b & c) | ((~b & _mask32) & d);
         t1 = i;
@@ -219,7 +245,7 @@ class _MD5 extends _HashBase {
         t1 = (7 * i) % 16;
       }
 
-      var temp = d;
+      int temp = d;
       d = c;
       c = b;
       b = _add32(
@@ -236,8 +262,6 @@ class _MD5 extends _HashBase {
 
 // The SHA1 hasher is used to compute an SHA1 message digest.
 class _SHA1 extends _HashBase {
-  final List<int> _w;
-
   // Construct a SHA1 hasher object.
   _SHA1()
       : _w = List<int>.filled(80, 0),
@@ -249,26 +273,30 @@ class _SHA1 extends _HashBase {
     _h[4] = 0xC3D2E1F0;
   }
 
+  final List<int> _w;
+
   // Compute one iteration of the SHA1 algorithm with a chunk of
   // 16 32-bit pieces.
   @override
   void _updateHash(Uint32List m) {
     assert(m.length == 16);
 
-    var a = _h[0];
-    var b = _h[1];
-    var c = _h[2];
-    var d = _h[3];
-    var e = _h[4];
+    int a = _h[0];
+    int b = _h[1];
+    int c = _h[2];
+    int d = _h[3];
+    int e = _h[4];
 
-    for (var i = 0; i < 80; i++) {
+    for (int i = 0; i < 80; i++) {
       if (i < 16) {
         _w[i] = m[i];
       } else {
-        var n = _w[i - 3] ^ _w[i - 8] ^ _w[i - 14] ^ _w[i - 16];
+        int n = _w[i - 3] ^ _w[i - 8] ^ _w[i - 14] ^ _w[i - 16];
         _w[i] = _rotl32(n, 1);
       }
-      var t = _add32(_add32(_rotl32(a, 5), e), _w[i]);
+
+      int t = _add32(_add32(_rotl32(a, 5), e), _w[i]);
+
       if (i < 20) {
         t = _add32(_add32(t, (b & c) | (~b & d)), 0x5A827999);
       } else if (i < 40) {

@@ -34,7 +34,16 @@ class HttpDate {
   /// [RFC-1123](http://tools.ietf.org/html/rfc1123 "RFC-1123"),
   /// e.g. `Thu, 1 Jan 1970 00:00:00 GMT`.
   static String format(DateTime date) {
-    const List<String> wkday = <String>['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const List<String> wkday = <String>[
+      'Mon',
+      'Tue',
+      'Wed',
+      'Thu',
+      'Fri',
+      'Sat',
+      'Sun'
+    ];
+
     const List<String> month = <String>[
       'Jan',
       'Feb',
@@ -51,6 +60,7 @@ class HttpDate {
     ];
 
     DateTime d = date.toUtc();
+
     StringBuffer sb = StringBuffer()
       ..write(wkday[d.weekday - 1])
       ..write(', ')
@@ -84,7 +94,17 @@ class HttpDate {
   /// "RFC-2616 section 3.1.1").
   static DateTime parse(String date) {
     int sp = 32;
-    const List<String> wkdays = <String>['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+    const List<String> wkdays = <String>[
+      'Mon',
+      'Tue',
+      'Wed',
+      'Thu',
+      'Fri',
+      'Sat',
+      'Sun'
+    ];
+
     const List<String> weekdays = <String>[
       'Monday',
       'Tuesday',
@@ -94,6 +114,7 @@ class HttpDate {
       'Saturday',
       'Sunday'
     ];
+
     const List<String> months = <String>[
       'Jan',
       'Feb',
@@ -120,25 +141,33 @@ class HttpDate {
       if (date.length - index < s.length) {
         throw HttpException('Invalid HTTP date $date');
       }
+
       String tmp = date.substring(index, index + s.length);
+
       if (tmp != s) {
         throw HttpException('Invalid HTTP date $date');
       }
+
       index += s.length;
     }
 
     int expectWeekday() {
       int weekday;
+
       // The formatting of the weekday signals the format of the date string.
       int pos = date.indexOf(',', index);
+
       if (pos == -1) {
         int pos = date.indexOf(' ', index);
+
         if (pos == -1) {
           throw HttpException('Invalid HTTP date $date');
         }
+
         tmp = date.substring(index, pos);
         index = pos + 1;
         weekday = wkdays.indexOf(tmp);
+
         if (weekday != -1) {
           return formatAsctime;
         }
@@ -146,43 +175,54 @@ class HttpDate {
         tmp = date.substring(index, pos);
         index = pos + 1;
         weekday = wkdays.indexOf(tmp);
+
         if (weekday != -1) {
           return formatRfc1123;
         }
+
         weekday = weekdays.indexOf(tmp);
+
         if (weekday != -1) {
           return formatRfc850;
         }
       }
+
       throw HttpException('Invalid HTTP date $date');
     }
 
     int expectMonth(String separator) {
       int pos = date.indexOf(separator, index);
+
       if (pos - index != 3) {
         throw HttpException('Invalid HTTP date $date');
       }
+
       tmp = date.substring(index, pos);
       index = pos + 1;
+
       int month = months.indexOf(tmp);
+
       if (month != -1) {
         return month;
       }
+
       throw HttpException('Invalid HTTP date $date');
     }
 
     int expectNum(String separator) {
       int pos;
+
       if (separator.isNotEmpty) {
         pos = date.indexOf(separator, index);
       } else {
         pos = date.length;
       }
+
       String tmp = date.substring(index, pos);
       index = pos + separator.length;
+
       try {
-        int value = int.parse(tmp);
-        return value;
+        return int.parse(tmp);
       } on FormatException {
         throw HttpException('Invalid HTTP date $date');
       }
@@ -201,11 +241,14 @@ class HttpDate {
     int hours;
     int minutes;
     int seconds;
+
     if (format == formatAsctime) {
       month = expectMonth(' ');
+
       if (date.codeUnitAt(index) == sp) {
         index++;
       }
+
       day = expectNum(' ');
       hours = expectNum(':');
       minutes = expectNum(':');
@@ -221,6 +264,7 @@ class HttpDate {
       seconds = expectNum(' ');
       expect('GMT');
     }
+
     expectEnd();
     return DateTime.utc(year, month + 1, day, hours, minutes, seconds, 0);
   }
@@ -248,85 +292,66 @@ class HttpDate {
       throw HttpException('Invalid cookie date $date');
     }
 
-    bool isEnd() => position == date.length;
+    bool isEnd() {
+      return position == date.length;
+    }
 
     bool isDelimiter(String s) {
       int char = s.codeUnitAt(0);
-      if (char == 0x09) {
-        return true;
-      }
-      if (char >= 0x20 && char <= 0x2F) {
-        return true;
-      }
-      if (char >= 0x3B && char <= 0x40) {
-        return true;
-      }
-      if (char >= 0x5B && char <= 0x60) {
-        return true;
-      }
-      if (char >= 0x7B && char <= 0x7E) {
-        return true;
-      }
-      return false;
+      return char == 0x09 ||
+          char >= 0x20 && char <= 0x2F ||
+          char >= 0x3B && char <= 0x40 ||
+          char >= 0x5B && char <= 0x60 ||
+          char >= 0x7B && char <= 0x7E;
     }
 
     bool isNonDelimiter(String s) {
       int char = s.codeUnitAt(0);
-      if (char >= 0x00 && char <= 0x08) {
-        return true;
-      }
-      if (char >= 0x0A && char <= 0x1F) {
-        return true;
-      }
-      if (char >= 0x30 && char <= 0x39) {
-        return true; // Digit
-      }
-      if (char == 0x3A) {
-        return true; // ':'
-      }
-      if (char >= 0x41 && char <= 0x5A) {
-        return true; // Alpha
-      }
-      if (char >= 0x61 && char <= 0x7A) {
-        return true; // Alpha
-      }
-      if (char >= 0x7F && char <= 0xFF) {
-        return true; // Alpha
-      }
-      return false;
+      return char >= 0x00 && char <= 0x08 ||
+          char >= 0x0A && char <= 0x1F ||
+          char >= 0x30 && char <= 0x39 || // Digit
+          char == 0x3A || // ':'
+          char >= 0x41 && char <= 0x5A || // Alpha
+          char >= 0x61 && char <= 0x7A || // Alpha
+          char >= 0x7F && char <= 0xFF; // Alpha
     }
 
     bool isDigit(String s) {
       int char = s.codeUnitAt(0);
-      if (char > 0x2F && char < 0x3A) {
-        return true;
-      }
-      return false;
+      return char > 0x2F && char < 0x3A;
     }
 
     int getMonth(String month) {
       if (month.length < 3) {
         return -1;
       }
+
       return monthsLowerCase.indexOf(month.substring(0, 3));
     }
 
     int toInt(String s) {
       int index = 0;
+
       for (; index < s.length && isDigit(s[index]); index++) {}
+
       return int.parse(s.substring(0, index));
     }
 
-    var tokens = <String>[];
+    List<String> tokens = <String>[];
+
     while (!isEnd()) {
       while (!isEnd() && isDelimiter(date[position])) {
         position++;
       }
+
       int start = position;
+
       while (!isEnd() && isNonDelimiter(date[position])) {
         position++;
       }
+
       tokens.add(date.substring(start, position).toLowerCase());
+
       while (!isEnd() && isDelimiter(date[position])) {
         position++;
       }
@@ -337,10 +362,11 @@ class HttpDate {
     String? monthStr;
     String? yearStr;
 
-    for (var token in tokens) {
+    for (String token in tokens) {
       if (token.isEmpty) {
         continue;
       }
+
       if (timeStr == null &&
           token.length >= 5 &&
           isDigit(token[0]) &&
@@ -366,35 +392,43 @@ class HttpDate {
     }
 
     int year = toInt(yearStr);
+
     if (year >= 70 && year <= 99) {
       year += 1900;
     } else if (year >= 0 && year <= 69) {
       year += 2000;
     }
+
     if (year < 1601) {
       error();
     }
 
     int dayOfMonth = toInt(dayOfMonthStr);
+
     if (dayOfMonth < 1 || dayOfMonth > 31) {
       error();
     }
 
     int month = getMonth(monthStr) + 1;
 
-    var timeList = timeStr.split(':');
+    List<String> timeList = timeStr.split(':');
+
     if (timeList.length != 3) {
       error();
     }
+
     int hour = toInt(timeList[0]);
     int minute = toInt(timeList[1]);
     int second = toInt(timeList[2]);
+
     if (hour > 23) {
       error();
     }
+
     if (minute > 59) {
       error();
     }
+
     if (second > 59) {
       error();
     }

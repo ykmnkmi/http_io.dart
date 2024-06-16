@@ -7,29 +7,16 @@ part of 'http.dart';
 final _digitsValidator = RegExp(r'^\d+$');
 
 class _HttpHeaders implements HttpHeaders {
-  final Map<String, List<String>> _headers;
-  // The original header names keyed by the lowercase header names.
-  Map<String, String>? _originalHeaderNames;
-  final String protocolVersion;
-
-  bool _mutable = true; // Are the headers currently mutable?
-  List<String>? _noFoldingHeaders;
-
-  int _contentLength = -1;
-  bool _persistentConnection = true;
-  bool _chunkedTransferEncoding = false;
-  String? _host;
-  int? _port;
-
-  final int _defaultPortForScheme;
-
   _HttpHeaders(this.protocolVersion,
       {int defaultPortForScheme = HttpClient.defaultHttpPort,
       _HttpHeaders? initialHeaders})
       : _headers = HashMap<String, List<String>>(),
         _defaultPortForScheme = defaultPortForScheme {
     if (initialHeaders != null) {
-      initialHeaders._headers.forEach((name, value) => _headers[name] = value);
+      initialHeaders._headers.forEach((name, value) {
+        _headers[name] = value;
+      });
+
       _contentLength = initialHeaders._contentLength;
       _persistentConnection = initialHeaders._persistentConnection;
       _chunkedTransferEncoding = initialHeaders._chunkedTransferEncoding;
@@ -42,8 +29,33 @@ class _HttpHeaders implements HttpHeaders {
     }
   }
 
+  final Map<String, List<String>> _headers;
+
+  // The original header names keyed by the lowercase header names.
+  Map<String, String>? _originalHeaderNames;
+
+  final String protocolVersion;
+
+  bool _mutable = true; // Are the headers currently mutable?
+
+  List<String>? _noFoldingHeaders;
+
+  int _contentLength = -1;
+
+  bool _persistentConnection = true;
+
+  bool _chunkedTransferEncoding = false;
+
+  String? _host;
+
+  int? _port;
+
+  final int _defaultPortForScheme;
+
   @override
-  List<String>? operator [](String name) => _headers[_validateField(name)];
+  List<String>? operator [](String name) {
+    return _headers[_validateField(name)];
+  }
 
   @override
   String? value(String name) {

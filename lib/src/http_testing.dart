@@ -18,7 +18,7 @@ part of 'http.dart';
 /// prefixed with `test$`.  Private static members can then be accessed in tests
 /// as:
 /// ```markdown
-///    `Testing$<classname>.test$_privateName`
+///    `Testing$<classname>.test$privateName`
 /// ```
 /// which redirects to:
 /// ```markdown
@@ -27,7 +27,7 @@ part of 'http.dart';
 ///
 /// Private instance members can be accessed in tests as:
 /// ```markdown
-///    `instance.test$_privateName`
+///    `instance.test$privateName`
 /// ```
 /// which redirects to:
 /// ```markdown
@@ -35,17 +35,26 @@ part of 'http.dart';
 /// ```
 
 typedef TestingClass$Cookie = _Cookie;
+
 typedef TestingClass$HttpHeaders = _HttpHeaders;
+
 typedef TestingClass$HttpParser = _HttpParser;
+
 typedef TestingClass$SHA1 = _SHA1;
 
 extension Testing$HttpDate on HttpDate {
-  static DateTime test$parseCookieDate(String date) =>
-      HttpDate._parseCookieDate(date);
+  static DateTime test$parseCookieDate(String date) {
+    return HttpDate._parseCookieDate(date);
+  }
 }
 
 // ignore: library_private_types_in_public_api
 extension Testing$HttpHeaders on _HttpHeaders {
-  void test$build(BytesBuilder builder) => _build(builder);
-  List<Cookie> test$parseCookies() => _parseCookies();
+  void test$build(BytesBuilder builder) {
+    _build(builder);
+  }
+
+  List<Cookie> test$parseCookies() {
+    return _parseCookies();
+  }
 }
