@@ -8,17 +8,17 @@
 
 import 'dart:async';
 
-import "package:http_io/http_io.dart";
+import 'package:http_io/http_io.dart';
 
-import "async_helper.dart";
-import "expect.dart";
+import 'async_helper.dart';
+import 'expect.dart';
 
 void log(String s) {
   print(s);
 }
 
 Timer stallDetector() {
-  final sw = Stopwatch()..start();
+  var sw = Stopwatch()..start();
   return Timer.periodic(Duration(milliseconds: 5), (_) {
     int elapsedMs = sw.elapsedMilliseconds;
     // Would the evaluation be synchronous, the dart isolate is going to
@@ -33,13 +33,13 @@ Timer stallDetector() {
 
 void main() async {
   asyncStart();
-  final url = 'https://google.com';
-  final timer = stallDetector();
+  var url = 'https://google.com';
+  var timer = stallDetector();
   var sw = Stopwatch()..start();
   var httpClient = HttpClient();
   try {
     var request = await httpClient.getUrl(Uri.parse(url));
-    var response = await request.close();
+    await request.close();
     int elapsedMs = sw.elapsedMilliseconds;
     log('REQUEST COMPLETE IN $elapsedMs ms');
     // Request have to take at least a second due to

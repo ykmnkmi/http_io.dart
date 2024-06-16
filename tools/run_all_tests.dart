@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io' hide exitCode;
 import 'dart:io' as io show exitCode;
+import 'dart:isolate';
 
 final RegExp spaceRE = RegExp(r'\s+');
 
@@ -25,28 +26,26 @@ Future<void> main() async {
     if (vmOptions.isEmpty) {
       stdout.writeln('dart ${entity.path}');
 
-      Process process = await Process.start(
-        Platform.executable,
-        <String>[entity.path],
+      ReceivePort receivePort = ReceivePort();
+      SendPort sendPort = receivePort.sendPort;
+
+      Isolate isolate = await Isolate.spawnUri(
+        Directory.current.uri.resolveUri(entity.uri),
+        <String>[],
+        null,
+        onExit: sendPort,
+        onError: sendPort,
       );
 
-      StreamSubscription<List<int>> out = process.stdout.listen(stdout.add);
-      StreamSubscription<List<int>> err = process.stderr.listen(stderr.add);
+      Object? message = await receivePort.first;
+      isolate.kill(priority: Isolate.immediate);
+      receivePort.close();
 
-      int exitCode = await process.exitCode.timeout(
-        const Duration(seconds: 30),
-        onTimeout: () {
-          process.kill(ProcessSignal.sigterm);
-          return process.exitCode;
-        },
-      );
-
-      out.cancel();
-      err.cancel();
-
-      if (exitCode != 0) {
-        io.exitCode = exitCode;
-        break;
+      if (message is List) {
+        Error.throwWithStackTrace(
+          message[0] as Object,
+          StackTrace.fromString(message[1] as String),
+        );
       }
     } else {
       for (List<String> options in vmOptions) {

@@ -34,36 +34,18 @@ part of 'http.dart';
 ///    `instance._privateName`
 /// ```
 
-typedef TestingClass$_Cookie = _Cookie;
-typedef TestingClass$_HttpHeaders = _HttpHeaders;
-typedef TestingClass$_HttpParser = _HttpParser;
-typedef TestingClass$_SHA1 = _SHA1;
-typedef TestingClass$_WebSocketProtocolTransformer
-    = _WebSocketProtocolTransformer;
-typedef TestingClass$_WebSocketImpl = _WebSocketImpl;
+typedef TestingClass$Cookie = _Cookie;
+typedef TestingClass$HttpHeaders = _HttpHeaders;
+typedef TestingClass$HttpParser = _HttpParser;
+typedef TestingClass$SHA1 = _SHA1;
 
 extension Testing$HttpDate on HttpDate {
-  static DateTime test$_parseCookieDate(String date) =>
+  static DateTime test$parseCookieDate(String date) =>
       HttpDate._parseCookieDate(date);
 }
 
-extension Testing$_HttpHeaders on _HttpHeaders {
-  void test$_build(BytesBuilder builder) => this._build(builder);
-  List<Cookie> test$_parseCookies() => this._parseCookies();
-}
-
-extension Testing$_WebSocketProtocolTransformer
-    on _WebSocketProtocolTransformer {
-  int get test$_state => this._state;
-}
-
-extension Testing$_WebSocketImpl on _WebSocketImpl {
-  static Future<WebSocket> connect(String url, Iterable<String>? protocols,
-          Map<String, dynamic>? headers,
-          {CompressionOptions compression =
-              CompressionOptions.compressionDefault,
-          HttpClient? customClient}) =>
-      _WebSocketImpl.connect(url, protocols, headers,
-          compression: compression, customClient: customClient);
-  Timer? get test$_pingTimer => this._pingTimer;
+// ignore: library_private_types_in_public_api
+extension Testing$HttpHeaders on _HttpHeaders {
+  void test$build(BytesBuilder builder) => _build(builder);
+  List<Cookie> test$parseCookies() => _parseCookies();
 }

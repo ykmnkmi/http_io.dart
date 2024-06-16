@@ -2,11 +2,6 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-// VMOptions=
-// VMOptions=--short_socket_read
-// VMOptions=--short_socket_write
-// VMOptions=--short_socket_read --short_socket_write
-
 // ignore_for_file: avoid_print
 
 import 'dart:async';
@@ -15,46 +10,46 @@ import 'dart:io' show Platform, Process, exit;
 
 import 'package:http_io/http_io.dart';
 
-import "async_helper.dart";
-import "expect.dart";
+import 'async_helper.dart';
+import 'expect.dart';
 
 String getFilename(String path) => Platform.script.resolve(path).toFilePath();
 
 final SecurityContext serverSecurityContext = () {
-  final context = SecurityContext();
+  var context = SecurityContext();
   context.usePrivateKey(getFilename('localhost.key'));
   context.useCertificateChain(getFilename('localhost.crt'));
   return context;
 }();
 
 final SecurityContext clientSecurityContext = () {
-  final context = SecurityContext(withTrustedRoots: true);
+  var context = SecurityContext(withTrustedRoots: true);
   context.setTrustedCertificates(getFilename('localhost.crt'));
   return context;
 }();
 
 void main(List<String> args) async {
-  if (args.length >= 1 && args[0] == 'server') {
-    final server =
+  if (args.isNotEmpty && args[0] == 'server') {
+    var server =
         await SecureServerSocket.bind('localhost', 0, serverSecurityContext);
     print('ok ${server.port}');
     server.listen((socket) {
       print('server: got connection');
       socket.close();
     });
-    await Future.delayed(Duration(seconds: 2));
+    await Future<void>.delayed(Duration(seconds: 2));
     print('server: exiting');
     exit(1);
   }
 
   asyncStart();
 
-  final serverProcess = await Process.start(Platform.executable, [
+  var serverProcess = await Process.start(Platform.executable, [
     ...Platform.executableArguments,
     Platform.script.toFilePath(),
     'server'
   ]);
-  final serverPortCompleter = Completer<int>();
+  var serverPortCompleter = Completer<int>();
 
   serverProcess.stdout
       .transform(utf8.decoder)
@@ -72,12 +67,12 @@ void main(List<String> args) async {
 
   int port = await serverPortCompleter.future;
 
-  final errorCompleter = Completer();
-  await runZoned(() async {
+  var errorCompleter = Completer<Object?>();
+  await runZonedGuarded(() async {
     var socket = await SecureSocket.connect('localhost', port,
         context: clientSecurityContext);
     socket.write(<int>[1, 2, 3]);
-  }, onError: (e) {
+  }, (e, st) {
     // Even if server disconnects during later parts of handshake, since
     // TLS v1.3 client might not notice it until attempt to communicate with
     // the server.
@@ -85,7 +80,7 @@ void main(List<String> args) async {
     errorCompleter.complete(e);
   });
   Expect.isTrue((await errorCompleter.future) is SocketException);
-  await serverProcess.kill();
+  serverProcess.kill();
 
   asyncEnd();
 }

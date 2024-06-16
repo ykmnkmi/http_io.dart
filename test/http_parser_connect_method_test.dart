@@ -2,16 +2,16 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import "dart:async";
+import 'dart:async';
 
-import "package:http_io/http_io.dart";
+import 'package:http_io/http_io.dart';
 
-import "async_helper.dart";
-import "expect.dart";
+import 'async_helper.dart';
+import 'expect.dart';
 
-Future<void> test(String header, value) async {
-  final connect = "CONNECT";
-  final server = await HttpServer.bind("127.0.0.1", 0);
+Future<void> test(String header, Object value) async {
+  var connect = 'CONNECT';
+  var server = await HttpServer.bind('127.0.0.1', 0);
   server.listen((HttpRequest request) {
     Expect.equals(connect, request.method);
     request.response.statusCode = 200;
@@ -19,10 +19,10 @@ Future<void> test(String header, value) async {
     request.response.close();
   });
 
-  final completer = Completer<void>();
+  var completer = Completer<void>();
   HttpClient client = HttpClient();
   client
-      .open(connect, "127.0.0.1", server.port, "/")
+      .open(connect, '127.0.0.1', server.port, '/')
       .then((HttpClientRequest request) {
     return request.close();
   }).then((HttpClientResponse response) {
@@ -32,7 +32,7 @@ Future<void> test(String header, value) async {
         header == HttpHeaders.transferEncodingHeader) {
       Expect.isNull(response.headers[header]);
     } else {
-      final list = response.headers[header];
+      var list = response.headers[header];
       Expect.isNotNull(list);
       Expect.equals(1, list!.length);
       Expect.equals(value, list[0]);
@@ -52,6 +52,6 @@ Future<void> runTests() async {
   await test('testHeader', 'testValue');
 }
 
-main() {
+void main() {
   asyncTest(runTests);
 }

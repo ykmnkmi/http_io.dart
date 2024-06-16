@@ -2,31 +2,29 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import "dart:async";
-import "dart:io" show File, Platform;
-import "dart:isolate";
+import 'dart:io' show File, Platform;
+import 'dart:isolate';
 
-import "package:http_io/http_io.dart";
-import "package:test/test.dart";
+import 'package:http_io/http_io.dart';
 
-import "expect.dart";
+import 'expect.dart';
 
-late InternetAddress HOST;
+late InternetAddress host;
 
-String localFile(path) => Platform.script.resolve(path).toFilePath();
+String localFile(String path) => Platform.script.resolve(path).toFilePath();
 
-SecurityContext serverContext = new SecurityContext()
+SecurityContext serverContext = SecurityContext()
   ..useCertificateChain(localFile('certificates/server_chain.pem'))
   ..usePrivateKey(localFile('certificates/server_key.pem'),
       password: 'dartdart');
 
-SecurityContext clientContext = new SecurityContext()
+SecurityContext clientContext = SecurityContext()
   ..setTrustedCertificates(localFile('certificates/trusted_certs.pem'));
 
 void testListenOn() {
-  void test(void onDone()) {
-    HttpServer.bindSecure(HOST, 0, serverContext, backlog: 5).then((server) {
-      ReceivePort serverPort = new ReceivePort();
+  void test(void Function() onDone) {
+    HttpServer.bindSecure(host, 0, serverContext, backlog: 5).then((server) {
+      ReceivePort serverPort = ReceivePort();
       server.listen((HttpRequest request) {
         request.listen((_) {}, onDone: () {
           request.response.close();
@@ -34,10 +32,10 @@ void testListenOn() {
         });
       });
 
-      HttpClient client = new HttpClient(context: clientContext);
-      ReceivePort clientPort = new ReceivePort();
+      HttpClient client = HttpClient(context: clientContext);
+      ReceivePort clientPort = ReceivePort();
       client
-          .getUrl(Uri.parse("https://${HOST.host}:${server.port}/"))
+          .getUrl(Uri.parse('https://${host.host}:${server.port}/'))
           .then((HttpClientRequest request) {
         return request.close();
       }).then((HttpClientResponse response) {
@@ -48,10 +46,8 @@ void testListenOn() {
           Expect.throws(() => server.port);
           onDone();
         });
-      }).catchError((e, trace) {
-        String msg = "Unexpected error in Https client: $e";
-        if (trace != null) msg += "\nStackTrace: $trace";
-        Expect.fail(msg);
+      }).catchError((Object e, StackTrace trace) {
+        Expect.fail('Unexpected error in Https client: $e\nStackTrace: $trace');
       });
     });
   }
@@ -63,10 +59,10 @@ void testListenOn() {
 }
 
 void testEarlyClientClose() {
-  HttpServer.bindSecure(HOST, 0, serverContext).then((server) {
+  HttpServer.bindSecure(host, 0, serverContext).then((server) {
     server.listen((request) {
       String name = Platform.script.toFilePath();
-      new File(name)
+      File(name)
           .openRead()
           .cast<List<int>>()
           .pipe(request.response)
@@ -74,9 +70,9 @@ void testEarlyClientClose() {
     });
 
     var count = 0;
-    makeRequest() {
-      Socket.connect(HOST, server.port).then((socket) {
-        var data = "Invalid TLS handshake";
+    void makeRequest() {
+      Socket.connect(host, server.port).then((socket) {
+        var data = 'Invalid TLS handshake';
         socket.write(data);
         socket.close();
         socket.done.then((_) {
@@ -95,8 +91,8 @@ void testEarlyClientClose() {
 }
 
 void main() {
-  InternetAddress.lookup("localhost").then((hosts) {
-    HOST = hosts.first;
+  InternetAddress.lookup('localhost').then((hosts) {
+    host = hosts.first;
     testListenOn();
     testEarlyClientClose();
   });

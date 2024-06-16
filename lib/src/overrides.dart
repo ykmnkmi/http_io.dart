@@ -33,7 +33,7 @@ abstract class HttpOverrides {
   static HttpOverrides? _global;
 
   static HttpOverrides? get current {
-    return Zone.current[_httpOverridesToken] ?? _global;
+    return Zone.current[_httpOverridesToken] as HttpOverrides? ?? _global;
   }
 
   /// The [HttpOverrides] to use in the root [Zone].
@@ -93,9 +93,13 @@ class _HttpOverridesScope extends HttpOverrides {
   @override
   HttpClient createHttpClient(SecurityContext? context) {
     var createHttpClient = _createHttpClient;
-    if (createHttpClient != null) return createHttpClient(context);
+    if (createHttpClient != null) {
+      return createHttpClient(context);
+    }
     var previous = _previous;
-    if (previous != null) return previous.createHttpClient(context);
+    if (previous != null) {
+      return previous.createHttpClient(context);
+    }
     return super.createHttpClient(context);
   }
 

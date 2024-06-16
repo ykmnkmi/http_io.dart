@@ -4,11 +4,11 @@
 
 // ignore_for_file: avoid_print
 
-import "dart:io" show Platform, Process;
+import 'dart:io' show Platform, Process;
 
-import "package:http_io/http_io.dart";
+import 'package:http_io/http_io.dart';
 
-import "async_helper.dart";
+import 'async_helper.dart';
 
 // NOTE: This test tries to ensure that an HttpClient will close it's
 // underlying idle connections after [HttpClient.idleTimeout].
@@ -19,8 +19,8 @@ import "async_helper.dart";
 // [HttpClient.idleTimeout] and the main script will assert that this happens
 // within +/- 2 <= seconds.
 
-const SECONDS = 4;
-const SLACK = 60;
+const seconds = 4;
+const slack = 60;
 
 void runServerProcess() {
   asyncStart();
@@ -35,27 +35,24 @@ void runServerProcess() {
         ..close();
     });
 
-    var sw = new Stopwatch()..start();
+    var sw = Stopwatch()..start();
     var script = Platform.script
         .resolve('http_client_stays_alive_test.dart')
         .toFilePath();
-    var arguments = <String>[]
-      ..addAll(Platform.executableArguments)
-      ..add(script)
-      ..add(url);
+    var arguments = <String>[...Platform.executableArguments, script, url];
     Process.run(Platform.executable, arguments).then((res) {
       subscription.cancel();
       if (res.exitCode != 0) {
-        throw "Child exited with ${res.exitCode} instead of 0. "
-            "(stdout: ${res.stdout}, stderr: ${res.stderr})";
+        throw 'Child exited with ${res.exitCode} instead of 0. '
+            '(stdout: ${res.stdout}, stderr: ${res.stderr})';
       }
       var seconds = sw.elapsed.inSeconds;
       // NOTE: There is a slight chance this will cause flakiness, but there is
       // no other good way of testing correctness of timing-dependent code
       // form the outside.
-      if (seconds < SECONDS || (SECONDS + SLACK) < seconds) {
-        throw "Child did exit within $seconds seconds, but expected it to take "
-            "roughly between $SECONDS and ${SECONDS + SLACK} seconds.";
+      if (seconds < seconds || (seconds + slack) < seconds) {
+        throw 'Child did exit within $seconds seconds, but expected it to take '
+            'roughly between $seconds and ${seconds + slack} seconds.';
       }
 
       asyncEnd();
@@ -68,13 +65,13 @@ void runClientProcess(String url) {
 
   // NOTE: We make an HTTP client request and then *forget to close* the HTTP
   // client instance. The idle timer should fire after SECONDS.
-  var client = new HttpClient();
-  client.idleTimeout = const Duration(seconds: SECONDS);
+  var client = HttpClient();
+  client.idleTimeout = const Duration(seconds: seconds);
 
   client
       .getUrl(uri)
       .then((req) => req.close())
-      .then((response) => response.drain())
+      .then((response) => response.drain<void>())
       .then((_) => print('drained client request'));
 }
 

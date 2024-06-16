@@ -2,34 +2,29 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-// VMOptions=
-// VMOptions=--short_socket_read
-// VMOptions=--short_socket_write
-// VMOptions=--short_socket_read --short_socket_write
-
 import 'dart:io' show gzip;
 import 'dart:typed_data';
 
 import 'package:http_io/http_io.dart';
 
-import "expect.dart";
+import 'expect.dart';
 
 Future<void> testServerCompress({bool clientAutoUncompress = true}) async {
   Future<void> test(List<int> data) async {
-    final server = await HttpServer.bind("127.0.0.1", 0);
+    var server = await HttpServer.bind('127.0.0.1', 0);
     server.autoCompress = true;
     server.listen((request) {
       request.response.add(data);
       request.response.close();
     });
-    var client = new HttpClient();
+    var client = HttpClient();
     client.autoUncompress = clientAutoUncompress;
-    final request = await client.get("127.0.0.1", server.port, "/");
-    request.headers.set(HttpHeaders.acceptEncodingHeader, "gzip,deflate");
-    final response = await request.close();
+    var request = await client.get('127.0.0.1', server.port, '/');
+    request.headers.set(HttpHeaders.acceptEncodingHeader, 'gzip,deflate');
+    var response = await request.close();
     Expect.equals(
-        "gzip", response.headers.value(HttpHeaders.contentEncodingHeader));
-    final list =
+        'gzip', response.headers.value(HttpHeaders.contentEncodingHeader));
+    var list =
         await response.fold<List<int>>(<int>[], (list, b) => list..addAll(b));
     if (clientAutoUncompress) {
       Expect.listEquals(data, list);
@@ -40,8 +35,8 @@ Future<void> testServerCompress({bool clientAutoUncompress = true}) async {
     client.close();
   }
 
-  await test("My raw server provided data".codeUnits);
-  var longBuffer = new Uint8List(1024 * 1024);
+  await test('My raw server provided data'.codeUnits);
+  var longBuffer = Uint8List(1024 * 1024);
   for (int i = 0; i < longBuffer.length; i++) {
     longBuffer[i] = i & 0xFF;
   }
@@ -50,19 +45,19 @@ Future<void> testServerCompress({bool clientAutoUncompress = true}) async {
 
 Future<void> testAcceptEncodingHeader() async {
   Future<void> test(String encoding, bool valid) async {
-    final server = await HttpServer.bind("127.0.0.1", 0);
+    var server = await HttpServer.bind('127.0.0.1', 0);
     server.autoCompress = true;
     server.listen((request) {
-      request.response.write("data");
+      request.response.write('data');
       request.response.close();
     });
-    var client = new HttpClient();
-    final request = await client.get("127.0.0.1", server.port, "/");
+    var client = HttpClient();
+    var request = await client.get('127.0.0.1', server.port, '/');
     request.headers.set(HttpHeaders.acceptEncodingHeader, encoding);
-    final response = await request.close();
+    var response = await request.close();
     Expect.equals(valid,
-        ("gzip" == response.headers.value(HttpHeaders.contentEncodingHeader)));
-    await response.listen((_) {}).asFuture();
+        'gzip' == response.headers.value(HttpHeaders.contentEncodingHeader));
+    await response.listen((_) {}).asFuture<void>();
     server.close();
     client.close();
   }
@@ -82,20 +77,20 @@ Future<void> testAcceptEncodingHeader() async {
 }
 
 Future<void> testDisableCompressTest() async {
-  final server = await HttpServer.bind("127.0.0.1", 0);
+  var server = await HttpServer.bind('127.0.0.1', 0);
   Expect.equals(false, server.autoCompress);
   server.listen((request) {
     Expect.equals(
         'gzip', request.headers.value(HttpHeaders.acceptEncodingHeader));
-    request.response.write("data");
+    request.response.write('data');
     request.response.close();
   });
-  final client = new HttpClient();
-  final request = await client.get("127.0.0.1", server.port, "/");
-  final response = await request.close();
+  var client = HttpClient();
+  var request = await client.get('127.0.0.1', server.port, '/');
+  var response = await request.close();
   Expect.equals(
       null, response.headers.value(HttpHeaders.contentEncodingHeader));
-  await response.listen((_) {}).asFuture();
+  await response.listen((_) {}).asFuture<void>();
   server.close();
   client.close();
 }
