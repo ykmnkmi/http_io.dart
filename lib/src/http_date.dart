@@ -34,7 +34,15 @@ class HttpDate {
   /// [RFC-1123](http://tools.ietf.org/html/rfc1123 "RFC-1123"),
   /// e.g. `Thu, 1 Jan 1970 00:00:00 GMT`.
   static String format(DateTime date) {
-    const List<String> wkday = <String>['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const List<String> wkday = <String>[
+      'Mon',
+      'Tue',
+      'Wed',
+      'Thu',
+      'Fri',
+      'Sat',
+      'Sun'
+    ];
     const List<String> month = <String>[
       'Jan',
       'Feb',
@@ -84,7 +92,15 @@ class HttpDate {
   /// "RFC-2616 section 3.1.1").
   static DateTime parse(String date) {
     int sp = 32;
-    const List<String> wkdays = <String>['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const List<String> wkdays = <String>[
+      'Mon',
+      'Tue',
+      'Wed',
+      'Thu',
+      'Fri',
+      'Sat',
+      'Sun'
+    ];
     const List<String> weekdays = <String>[
       'Monday',
       'Tuesday',

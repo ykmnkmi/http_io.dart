@@ -1,7 +1,7 @@
 name: http_io
 repository: https://github.com/dart-lang/http_io
 description: HTTP Client and Server APIs.
-version: 0.0.16
+version: 0.0.17
 
 environment:
   sdk: ">=3.4.4 <4.0.0"
