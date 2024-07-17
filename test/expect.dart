@@ -774,7 +774,7 @@ class Expect {
           _fail('Expect.deepEquals(${_pathString(path)}), '
               'missing map key: <$key>');
         }
-        path.add(key);
+        path.add(key as Object);
         _deepEquals(expected[key], actual[key], path);
         path.removeLast();
       }

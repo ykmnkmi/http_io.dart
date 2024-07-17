@@ -33,7 +33,7 @@ abstract class HttpOverrides {
   static HttpOverrides? _global;
 
   static HttpOverrides? get current {
-    return Zone.current[_httpOverridesToken] ?? _global;
+    return Zone.current[_httpOverridesToken] as HttpOverrides? ?? _global;
   }
 
   /// The [HttpOverrides] to use in the root [Zone].

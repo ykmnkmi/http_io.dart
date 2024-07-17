@@ -75,7 +75,7 @@ class _HttpHeaders implements HttpHeaders {
   void _addAll(String name, Object value) {
     if (value is Iterable) {
       for (var v in value) {
-        _add(name, _validateValue(v));
+        _add(name, _validateValue(v as Object));
       }
     } else {
       _add(name, _validateValue(value));

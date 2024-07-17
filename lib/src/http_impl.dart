@@ -2220,7 +2220,7 @@ class _HttpClientConnection {
       if (incoming.statusCode == 100) {
         incoming.drain<void>().then((_) {
           _subscription!.resume();
-        }).catchError((dynamic error, StackTrace stackTrace) {
+        }).catchError((Object error, StackTrace stackTrace) {
           String message;
           if (error is HttpException) {
             message = error.message;
@@ -2243,7 +2243,7 @@ class _HttpClientConnection {
         _nextResponseCompleter!.complete(incoming);
         _nextResponseCompleter = null;
       }
-    }, onError: (dynamic error, StackTrace stackTrace) {
+    }, onError: (Object error, StackTrace stackTrace) {
       String message;
       if (error is HttpException) {
         message = error.message;
@@ -3462,7 +3462,7 @@ class _HttpServer extends Stream<HttpRequest>
     Future<void> result;
     if (_closeServer) {
       // ignore: avoid_dynamic_calls
-      result = _serverSocket.close();
+      result = _serverSocket.close() as Future<void>;
     } else {
       result = Future.value();
     }
@@ -3498,7 +3498,7 @@ class _HttpServer extends Stream<HttpRequest>
       throw HttpException('HttpServer is not bound to a socket');
     }
     // ignore: avoid_dynamic_calls
-    return _serverSocket.port;
+    return _serverSocket.port as int;
   }
 
   @override
@@ -3507,7 +3507,7 @@ class _HttpServer extends Stream<HttpRequest>
       throw HttpException('HttpServer is not bound to a socket');
     }
     // ignore: avoid_dynamic_calls
-    return _serverSocket.address;
+    return _serverSocket.address as InternetAddress;
   }
 
   @override
