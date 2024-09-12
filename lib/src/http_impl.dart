@@ -201,6 +201,11 @@ class _HttpProfileData {
   }
 
   void finishResponse() {
+    // Guard against the response being completed more than once or being
+    // completed before the response actually finished starting.
+    if (responseInProgress != true) {
+      return;
+    }
     responseInProgress = false;
     responseEndTimestamp = DateTime.now().microsecondsSinceEpoch;
     requestEvent('Content Download');
@@ -628,6 +633,9 @@ class _HttpClientResponse extends _HttpInboundMessageListInt
         super(incoming) {
     // Set uri for potential exceptions.
     incoming.uri = _httpRequest.uri;
+    // Ensure the response profile is completed, even if the response stream is
+    // never actually listened to.
+    _incoming.dataDone.then((_) => _profileData?.finishResponse());
   }
 
   static HttpClientResponseCompressionState _getCompressionState(
@@ -757,12 +765,7 @@ class _HttpClientResponse extends _HttpInboundMessageListInt
       } else {
         (onError as void Function(Object))(e);
       }
-    }, onDone: () {
-      _profileData?.finishResponse();
-      if (onDone != null) {
-        onDone();
-      }
-    }, cancelOnError: cancelOnError);
+    }, onDone: onDone, cancelOnError: cancelOnError);
   }
 
   @override
@@ -1929,6 +1932,7 @@ class _HttpOutgoing implements StreamConsumer<List<int>> {
         onError: controller.addError,
         onDone: controller.close,
         cancelOnError: true);
+    controller.onCancel = sub.cancel;
     controller.onPause = sub.pause;
     controller.onResume = sub.resume;
     // Write headers now that we are listening to the stream.
