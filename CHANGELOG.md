@@ -1,3 +1,7 @@
+## 0.0.21
+
+* Add `WebSocket` class and test.
+
 ## 0.0.20
 
 * [#f8d7d33](https://github.com/dart-lang/sdk/commit/f8d7d3300c44202001126de33f0145e7055d1ed8):

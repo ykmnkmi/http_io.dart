@@ -9,8 +9,8 @@ import 'package:http_io/http_io.dart';
 
 import 'expect.dart';
 
-typedef _HttpHeaders = TestingClass$HttpHeaders;
-typedef _Cookie = TestingClass$Cookie;
+typedef _HttpHeaders = TestingClass$_HttpHeaders;
+typedef _Cookie = TestingClass$_Cookie;
 
 void testMultiValue() {
   _HttpHeaders headers = _HttpHeaders('1.1');
@@ -612,9 +612,9 @@ void testInvalidCookie() {
   _HttpHeaders headers = _HttpHeaders('1.1');
   headers.set(
       'Cookie', 'DARTSESSID=d3d6fdd78d51aaaf2924c32e991f4349; undefined');
-  Expect.equals('DARTSESSID', headers.test$parseCookies().single.name);
+  Expect.equals('DARTSESSID', headers.test$_parseCookies().single.name);
   Expect.equals('d3d6fdd78d51aaaf2924c32e991f4349',
-      headers.test$parseCookies().single.value);
+      headers.test$_parseCookies().single.value);
 }
 
 void testHeaderLists() {
@@ -735,7 +735,7 @@ void testForEach() {
   headers.add('HEADER3', 'value 4', preserveHeaderCase: true);
 
   BytesBuilder builder = BytesBuilder();
-  headers.test$build(builder);
+  headers.test$_build(builder);
 
   Expect.isTrue(utf8.decode(builder.toBytes()).contains('HEADER1'));
 

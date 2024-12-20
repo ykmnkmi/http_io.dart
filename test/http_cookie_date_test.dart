@@ -6,7 +6,7 @@ import 'package:http_io/http_io.dart';
 
 import 'expect.dart';
 
-var _parseCookieDate = Testing$HttpDate.test$parseCookieDate;
+var _parseCookieDate = Testing$HttpDate.test$_parseCookieDate;
 
 void testParseHttpCookieDate() {
   Expect.throws(() => _parseCookieDate(''));

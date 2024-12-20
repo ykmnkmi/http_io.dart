@@ -2,6 +2,8 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+// ignore_for_file: unnecessary_type_check
+
 import 'dart:async';
 
 import 'package:http_io/http_io.dart';
@@ -193,7 +195,6 @@ void withHttpOverridesTest() {
     Expect.equals(MyHttpClient1(null).userAgent, httpClient.userAgent);
   }, createHttpClient: myCreateHttp1Client);
   var httpClient = HttpClient();
-  // ignore: unnecessary_type_check
   Expect.isTrue(httpClient is HttpClient);
   Expect.isTrue(httpClient is! MyHttpClient1);
 }
@@ -216,7 +217,6 @@ void nestedWithHttpOverridesTest() {
     Expect.equals(MyHttpClient1(null).userAgent, httpClient.userAgent);
   }, createHttpClient: myCreateHttp1Client);
   var httpClient = HttpClient();
-  // ignore: unnecessary_type_check
   Expect.isTrue(httpClient is HttpClient);
   Expect.isTrue(httpClient is! MyHttpClient1);
   Expect.isTrue(httpClient is! MyHttpClient2);
@@ -242,7 +242,6 @@ void nestedDifferentOverridesTest() {
     Expect.equals(MyHttpClient1(null).userAgent, httpClient.userAgent);
   }, createHttpClient: myCreateHttp1Client);
   var httpClient = HttpClient();
-  // ignore: unnecessary_type_check
   Expect.isTrue(httpClient is HttpClient);
   Expect.isTrue(httpClient is! MyHttpClient1);
   Expect.isTrue(httpClient is! MyHttpClient2);
@@ -265,7 +264,6 @@ void globalHttpOverridesTest() {
   Expect.equals(MyHttpClient1(null).userAgent, httpClient.userAgent);
   HttpOverrides.global = null;
   httpClient = HttpClient();
-  // ignore: unnecessary_type_check
   Expect.isTrue(httpClient is HttpClient);
   Expect.isTrue(httpClient is! MyHttpClient1);
 }
@@ -282,7 +280,6 @@ void globalHttpOverridesZoneTest() {
   });
   HttpOverrides.global = null;
   var httpClient = HttpClient();
-  // ignore: unnecessary_type_check
   Expect.isTrue(httpClient is HttpClient);
   Expect.isTrue(httpClient is! MyHttpClient1);
 }

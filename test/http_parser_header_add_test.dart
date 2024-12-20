@@ -8,7 +8,7 @@ import 'package:http_io/http_io.dart';
 
 import 'async_helper.dart';
 
-typedef _HttpParser = TestingClass$HttpParser;
+typedef _HttpParser = TestingClass$_HttpParser;
 
 Future<void> testFormatException() async {
   var server = await HttpServer.bind('127.0.0.1', 0);

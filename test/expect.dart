@@ -245,7 +245,7 @@ class Expect {
   /// Checks that the [Iterable] [actual] is not empty.
   static void isNotEmpty(Iterable<Object?> actual, [String reason = '']) {
     if (actual.isNotEmpty) {
-      return; // ignore: prefer_is_not_empty
+      return;
     }
     String msg = _getMessage(reason);
     _fail('Expect.isNotEmpty(actual: <${Error.safeToString(actual)}>$msg): '

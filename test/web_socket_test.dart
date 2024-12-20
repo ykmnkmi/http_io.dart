@@ -1,0 +1,609 @@
+// Copyright (c) 2013, the Dart project authors.  Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+//
+// VMOptions=
+// VMOptions=--short_socket_read
+// VMOptions=--short_socket_write
+// VMOptions=--short_socket_read --short_socket_write
+//
+// OtherResources=certificates/server_chain.pem
+// OtherResources=certificates/server_key.pem
+// OtherResources=certificates/trusted_certs.pem
+
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io' show Platform, SecurityContext;
+import 'dart:typed_data';
+
+import 'package:crypto/crypto.dart';
+import 'package:http_io/http_io.dart';
+
+import 'async_helper.dart';
+import 'expect.dart';
+
+const webSocketGUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
+
+const String hostName = 'localhost';
+
+String localFile(String path) => Platform.script.resolve(path).toFilePath();
+
+SecurityContext serverContext = SecurityContext()
+  ..useCertificateChain(localFile('certificates/server_chain.pem'))
+  ..usePrivateKey(localFile('certificates/server_key.pem'),
+      password: 'dartdart');
+
+SecurityContext clientContext = SecurityContext()
+  ..setTrustedCertificates(localFile('certificates/trusted_certs.pem'));
+
+/// A SecurityConfiguration lets us run the tests over HTTP or HTTPS.
+class SecurityConfiguration {
+  final bool secure;
+
+  SecurityConfiguration({required this.secure});
+
+  Future<HttpServer> createServer({int backlog = 0}) => secure
+      ? HttpServer.bindSecure(hostName, 0, serverContext, backlog: backlog)
+      : HttpServer.bind(hostName, 0, backlog: backlog);
+
+  Future<WebSocket> createClient(int port,
+          {String? user,
+          Map<String, Object>? headers,
+          String? customUserAgent}) =>
+      WebSocket.connect(
+          '${secure ? "wss" : "ws"}://${user == null ? "" : "$user@"}$hostName:$port/',
+          headers: headers,
+          customClient: secure
+              ? (HttpClient(context: clientContext)
+                ..userAgent = customUserAgent)
+              : null);
+
+  void checkCloseStatus(
+      WebSocket webSocket, int? closeStatus, String? closeReason) {
+    Expect.equals(
+        closeStatus ?? WebSocketStatus.noStatusReceived, webSocket.closeCode);
+    Expect.equals(closeReason ?? '', webSocket.closeReason);
+  }
+
+  void testRequestResponseClientCloses(int totalConnections, int? closeStatus,
+      String? closeReason, int numberOfMessages) {
+    assert(numberOfMessages >= 1);
+
+    asyncStart();
+    createServer().then((server) {
+      server.transform(WebSocketTransformer()).listen((webSocket) {
+        asyncStart();
+        webSocket.listen(webSocket.add, onDone: () {
+          checkCloseStatus(webSocket, closeStatus, closeReason);
+          asyncEnd();
+        });
+      }, onDone: asyncEnd);
+
+      int closeCount = 0;
+      String messageText = 'Hello, world!';
+      for (int i = 0; i < totalConnections; i++) {
+        asyncStart();
+        createClient(server.port).then((webSocket) {
+          webSocket.add(messageText);
+          webSocket.listen((message) {
+            numberOfMessages--;
+            Expect.equals(messageText, message);
+
+            if (numberOfMessages > 0) {
+              webSocket.add(message);
+            } else {
+              webSocket.close(closeStatus, closeReason);
+            }
+          }, onDone: () {
+            checkCloseStatus(webSocket, closeStatus, closeReason);
+            closeCount++;
+            if (closeCount == totalConnections) {
+              server.close();
+            }
+            asyncEnd();
+          });
+        });
+      }
+    });
+  }
+
+  void testRequestResponseServerCloses(
+      int totalConnections, int? closeStatus, String? closeReason) {
+    createServer().then((server) {
+      int closeCount = 0;
+      server.transform(WebSocketTransformer()).listen((webSocket) {
+        String messageText = 'Hello, world!';
+        int messageCount = 0;
+        webSocket.listen((message) {
+          messageCount++;
+          if (messageCount < 10) {
+            Expect.equals(messageText, message);
+            webSocket.add(message);
+          } else {
+            webSocket.close(closeStatus, closeReason);
+          }
+        }, onDone: () {
+          checkCloseStatus(webSocket, closeStatus, closeReason);
+          closeCount++;
+          if (closeCount == totalConnections) {
+            server.close();
+          }
+        });
+        webSocket.add(messageText);
+      });
+
+      for (int i = 0; i < totalConnections; i++) {
+        createClient(server.port).then((webSocket) {
+          webSocket.listen(webSocket.add, onDone: () {
+            checkCloseStatus(webSocket, closeStatus, closeReason);
+          });
+        });
+      }
+    });
+  }
+
+  void testMessageLength(int messageLength) {
+    createServer().then((server) {
+      Uint8List originalMessage = Uint8List(messageLength);
+      server.transform(WebSocketTransformer()).listen((webSocket) {
+        webSocket.listen((message) {
+          Expect.listEquals(originalMessage, message as List);
+          webSocket.add(message);
+        });
+      });
+
+      createClient(server.port).then((webSocket) {
+        webSocket.listen((message) {
+          Expect.listEquals(originalMessage, message as List);
+          webSocket.close();
+        }, onDone: server.close);
+        webSocket.add(originalMessage);
+      });
+    });
+  }
+
+  void testCloseNoListen() {
+    createServer().then((server) {
+      server.transform(WebSocketTransformer()).listen((webSocket) {
+        server.close();
+        webSocket.close();
+      });
+
+      createClient(server.port).then((webSocket) {
+        webSocket.close();
+      });
+    });
+  }
+
+  void testCancelThenClose() {
+    createServer().then((server) {
+      server.transform(WebSocketTransformer()).listen((webSocket) {
+        webSocket.listen(null).cancel();
+        webSocket.close();
+        server.close();
+      });
+
+      createClient(server.port).then((webSocket) {
+        webSocket.close();
+      });
+    });
+  }
+
+  void testCloseThenCancel() {
+    createServer().then((server) {
+      server.transform(WebSocketTransformer()).listen((webSocket) {
+        var subscription = webSocket.listen(null);
+        webSocket.close();
+        subscription.cancel();
+        server.close();
+      });
+
+      createClient(server.port).then((webSocket) {
+        webSocket.close();
+      });
+    });
+  }
+
+  void testListenAfterClose() {
+    createServer().then((server) {
+      server.transform(WebSocketTransformer()).listen((webSocket) {
+        server.close();
+        webSocket.close();
+        Expect.throws(() => webSocket.drain<void>());
+      });
+
+      createClient(server.port).then((webSocket) {
+        webSocket.close();
+        Expect.throws(() => webSocket.drain<void>());
+      });
+    });
+  }
+
+  void testDoubleCloseClient() {
+    createServer().then((server) {
+      server.transform(WebSocketTransformer()).listen((webSocket) {
+        server.close();
+        webSocket.listen((_) {}, onDone: webSocket.close);
+      });
+
+      createClient(server.port).then((webSocket) {
+        webSocket.listen((_) {}, onDone: webSocket.close);
+        webSocket.close();
+      });
+    });
+  }
+
+  void testDoubleCloseServer() {
+    createServer().then((server) {
+      server.transform(WebSocketTransformer()).listen((webSocket) {
+        server.close();
+        webSocket.listen((_) {}, onDone: webSocket.close);
+        webSocket.close();
+      });
+
+      createClient(server.port).then((webSocket) {
+        webSocket.listen((_) {}, onDone: webSocket.close);
+      });
+    });
+  }
+
+  void testImmediateCloseServer() {
+    createServer().then((server) {
+      server.listen((request) {
+        WebSocketTransformer.upgrade(request).then((webSocket) {
+          webSocket.listen((_) {
+            Expect.fail('Unexpected message');
+          }, onDone: server.close);
+          webSocket.close();
+        });
+      });
+
+      createClient(server.port).then((webSocket) {
+        webSocket.listen((_) {
+          Expect.fail('Unexpected message');
+        }, onDone: webSocket.close);
+      });
+    });
+  }
+
+  void testImmediateCloseClient() {
+    createServer().then((server) {
+      server.listen((request) {
+        WebSocketTransformer.upgrade(request).then((webSocket) {
+          webSocket.listen((_) {
+            Expect.fail('Unexpected message');
+          }, onDone: () {
+            server.close();
+            webSocket.close();
+          });
+        });
+      });
+
+      createClient(server.port).then((webSocket) {
+        webSocket.listen((_) {
+          Expect.fail('Unexpected message');
+        }, onDone: webSocket.close);
+        webSocket.close();
+      });
+    });
+  }
+
+  void testNoUpgrade() {
+    createServer().then((server) {
+      // Create a server which always responds with notFound.
+      server.listen((request) {
+        request.response.statusCode = HttpStatus.notFound;
+        request.response.close();
+      });
+
+      Future<WebSocket?>.value(createClient(server.port))
+          .catchError((Object error) {
+        Expect.equals(
+            HttpStatus.notFound, (error as WebSocketException).httpStatusCode);
+        return null;
+      }).whenComplete(server.close);
+    });
+  }
+
+  void testUsePOST() {
+    asyncStart();
+    createServer().then((server) {
+      server.transform(WebSocketTransformer()).listen((webSocket) {
+        Expect.fail('No connection expected');
+      }, onError: (e) {
+        asyncEnd();
+      });
+
+      var client = HttpClient(context: secure ? clientContext : null);
+      client
+          .postUrl(Uri.parse(
+              "${secure ? 'https:' : 'http:'}//$hostName:${server.port}/"))
+          .then((request) => request.close())
+          .then((response) {
+        Expect.equals(HttpStatus.badRequest, response.statusCode);
+        client.close();
+        server.close();
+      });
+    });
+  }
+
+  void testConnections(
+      int totalConnections, int closeStatus, String closeReason) {
+    createServer().then((server) {
+      int closeCount = 0;
+      server.transform(WebSocketTransformer()).listen((webSocket) {
+        String messageText = 'Hello, world!';
+        int messageCount = 0;
+        webSocket.listen((message) {
+          messageCount++;
+          if (messageCount < 10) {
+            Expect.equals(messageText, message);
+            webSocket.add(message);
+          } else {
+            webSocket.close(closeStatus, closeReason);
+          }
+        }, onDone: () {
+          checkCloseStatus(webSocket, closeStatus, closeReason);
+          closeCount++;
+          if (closeCount == totalConnections) {
+            server.close();
+          }
+        });
+        webSocket.add(messageText);
+      });
+
+      void webSocketConnection() {
+        bool onopenCalled = false;
+        int onmessageCalled = 0;
+        bool oncloseCalled = false;
+
+        createClient(server.port).then((webSocket) {
+          Expect.isFalse(onopenCalled);
+          Expect.equals(0, onmessageCalled);
+          Expect.isFalse(oncloseCalled);
+          onopenCalled = true;
+          Expect.equals(WebSocket.open, webSocket.readyState);
+          webSocket.listen((message) {
+            onmessageCalled++;
+            Expect.isTrue(onopenCalled);
+            Expect.isFalse(oncloseCalled);
+            Expect.equals(WebSocket.open, webSocket.readyState);
+            webSocket.add(message);
+          }, onDone: () {
+            Expect.isTrue(onopenCalled);
+            Expect.equals(10, onmessageCalled);
+            Expect.isFalse(oncloseCalled);
+            oncloseCalled = true;
+            Expect.equals(3002, webSocket.closeCode);
+            Expect.equals('Got tired', webSocket.closeReason);
+            Expect.equals(WebSocket.closed, webSocket.readyState);
+          });
+        });
+      }
+
+      for (int i = 0; i < totalConnections; i++) {
+        webSocketConnection();
+      }
+    });
+  }
+
+  void testIndividualUpgrade(int connections) {
+    asyncStart();
+    createServer().then((server) {
+      server.listen((request) {
+        if (WebSocketTransformer.isUpgradeRequest(request)) {
+          WebSocketTransformer.upgrade(request).then((webSocket) {
+            webSocket.listen((_) {
+              webSocket.close();
+            });
+            webSocket.add('Hello');
+          });
+        } else {
+          Expect.isFalse(WebSocketTransformer.isUpgradeRequest(request));
+          request.response.statusCode = HttpStatus.ok;
+          request.response.close();
+        }
+      });
+
+      var futures = <Future<void>>[];
+
+      var httpProtocol = secure ? 'https' : 'http';
+      var baseHttpUrl = '$httpProtocol://$hostName:${server.port}/';
+      var client = HttpClient(context: secure ? clientContext : null);
+
+      for (int i = 0; i < connections; i++) {
+        var completer = Completer<void>();
+        futures.add(completer.future);
+        createClient(server.port).then((websocket) {
+          websocket.listen((_) {
+            websocket.close();
+          }, onDone: completer.complete);
+        });
+
+        futures.add(client
+            .openUrl('GET', Uri.parse(baseHttpUrl))
+            .then((request) => request.close())
+            .then((response) {
+          response.listen((_) {});
+          Expect.equals(HttpStatus.ok, response.statusCode);
+        }));
+      }
+
+      Future.wait(futures).then((_) {
+        server.close();
+        client.close();
+        asyncEnd();
+      });
+    });
+  }
+
+  void testFromUpgradedSocket() {
+    asyncStart();
+    createServer().then((server) {
+      server.listen((request) {
+        Expect.equals(
+            'Upgrade', request.headers.value(HttpHeaders.connectionHeader));
+        Expect.equals(
+            'websocket', request.headers.value(HttpHeaders.upgradeHeader));
+
+        var key = request.headers.value('Sec-WebSocket-Key');
+        var digest = sha1.convert('$key$webSocketGUID'.codeUnits);
+        var accept = base64.encode(digest.bytes);
+        request.response
+          ..statusCode = HttpStatus.switchingProtocols
+          ..headers.add(HttpHeaders.connectionHeader, 'Upgrade')
+          ..headers.add(HttpHeaders.upgradeHeader, 'websocket')
+          ..headers.add('Sec-WebSocket-Accept', accept);
+        request.response.contentLength = 0;
+        request.response.detachSocket().then((socket) {
+          return WebSocket.fromUpgradedSocket(socket, serverSide: true);
+        }).then((websocket) {
+          websocket.add('Hello');
+          websocket.close();
+          asyncEnd();
+        });
+      });
+
+      createClient(server.port).then((websocket) {
+        return websocket.listen((message) {
+          Expect.equals('Hello', message);
+          websocket.close();
+        }).asFuture<void>();
+      }).then((_) => server.close());
+    });
+  }
+
+  void testAdditionalHeaders() {
+    asyncStart();
+    createServer().then((server) {
+      server.listen((request) {
+        Expect.isTrue(WebSocketTransformer.isUpgradeRequest(request));
+        Expect.equals('my-value', request.headers['My-Header']![0]);
+        var header = request.headers['My-Header-Multiple']!;
+        Expect.equals(1, header.length);
+        Expect.equals('my-value-1, my-value-2', header[0]);
+        WebSocketTransformer.upgrade(request).then((webSocket) {
+          webSocket.listen((_) {
+            webSocket.close();
+          });
+          webSocket.add('Hello');
+        });
+      });
+
+      var headers = {
+        'My-Header': 'my-value',
+        'My-Header-Multiple': ['my-value-1', 'my-value-2']
+      };
+      createClient(server.port, headers: headers).then((websocket) {
+        return websocket.listen((message) {
+          Expect.equals('Hello', message);
+          websocket.close();
+        }).asFuture<void>();
+      }).then((_) {
+        server.close();
+        asyncEnd();
+      });
+    });
+  }
+
+  void testBasicAuthentication() {
+    var userInfo = 'user:password';
+
+    asyncStart();
+    asyncStart();
+    createServer().then((server) {
+      server.listen((request) {
+        Expect.isTrue(WebSocketTransformer.isUpgradeRequest(request));
+        String auth = base64.encode(utf8.encode(userInfo));
+        Expect.equals('Basic $auth', request.headers['Authorization']![0]);
+        Expect.equals(1, request.headers['Authorization']!.length);
+        WebSocketTransformer.upgrade(request).then((webSocket) {
+          webSocket.listen((_) {
+            throw 'Unexpected';
+          }, onDone: asyncEnd);
+          webSocket.add('Hello');
+        });
+      });
+
+      createClient(server.port, user: userInfo).then((websocket) {
+        return websocket.listen((message) {
+          Expect.equals('Hello', message);
+          websocket.close();
+        }).asFuture<void>();
+      }).then((_) {
+        return server.close();
+      }).whenComplete(asyncEnd);
+    });
+  }
+
+  void testShouldSetUserAgent() {
+    asyncStart();
+    createServer().then((server) {
+      server.transform(WebSocketTransformer()).listen((webSocket) {
+        Expect.equals('Custom User Agent', WebSocket.userAgent);
+        server.close();
+        webSocket.close();
+        asyncEnd();
+      });
+
+      WebSocket.userAgent = 'Custom User Agent';
+      createClient(server.port).then((webSocket) {
+        webSocket.close();
+      });
+    });
+  }
+
+  void testStaticClientUserAgentStaysTheSame() {
+    asyncStart();
+    createServer().then((server) {
+      server.transform(WebSocketTransformer()).listen((webSocket) {
+        Expect.equals('Custom User Agent', WebSocket.userAgent);
+        server.close();
+        webSocket.close();
+        asyncEnd();
+      });
+      // Next line should take no effect on custom user agent value provided
+      WebSocket.userAgent = 'Custom User Agent';
+      createClient(server.port, customUserAgent: 'New User Agent')
+          .then((webSocket) {
+        webSocket.close();
+      });
+    });
+  }
+
+  void runTests() {
+    testRequestResponseClientCloses(2, null, null, 1);
+    testRequestResponseClientCloses(2, 3001, null, 2);
+    testRequestResponseClientCloses(2, 3002, 'Got tired', 3);
+    testRequestResponseServerCloses(2, null, null);
+    testRequestResponseServerCloses(2, 3001, null);
+    testRequestResponseServerCloses(2, 3002, 'Got tired');
+    testMessageLength(125);
+    testMessageLength(126);
+    testMessageLength(127);
+    testMessageLength(65535);
+    testMessageLength(65536);
+    testCloseNoListen();
+    testCancelThenClose();
+    testCloseThenCancel();
+    testListenAfterClose();
+    testDoubleCloseClient();
+    testDoubleCloseServer();
+    testImmediateCloseServer();
+    testImmediateCloseClient();
+    testNoUpgrade();
+    testUsePOST();
+    testConnections(10, 3002, 'Got tired');
+    testIndividualUpgrade(5);
+    testFromUpgradedSocket();
+    testAdditionalHeaders();
+    testBasicAuthentication();
+    testShouldSetUserAgent();
+    testStaticClientUserAgentStaysTheSame();
+  }
+}
+
+void main() {
+  SecurityConfiguration(secure: false).runTests();
+  SecurityConfiguration(secure: true).runTests();
+}

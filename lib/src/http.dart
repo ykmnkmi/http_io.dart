@@ -25,8 +25,9 @@ import 'dart:io'
         InternetAddressType,
         Platform,
         RawSocketOption,
-        SecureSocket,
+        RawZLibFilter,
         SecureServerSocket,
+        SecureSocket,
         SecurityContext,
         ServerSocket,
         Socket,
@@ -48,6 +49,8 @@ part 'http_parser.dart';
 part 'http_session.dart';
 part 'http_testing.dart';
 part 'overrides.dart';
+part 'websocket.dart';
+part 'websocket_impl.dart';
 
 /// A server that delivers content, such as web pages, using the HTTP protocol.
 ///
