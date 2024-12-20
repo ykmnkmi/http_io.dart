@@ -50,7 +50,7 @@ Future<void> testConnectionViaProxy() async {
       Expect.equals('localhost', proxyHost);
       Expect.equals(proxyServer.port, proxyPort);
       Expect.equals(serverUri, uri);
-      return Socket.startConnect(proxyHost, proxyPort as int);
+      return Socket.startConnect(proxyHost!, proxyPort as int);
     }
     ..findProxy = (uri) => 'PROXY localhost:${proxyServer.port}';
   var response = await client.getUrl(serverUri).then((request) {

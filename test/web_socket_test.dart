@@ -13,7 +13,7 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io' show Platform, SecurityContext;
+import 'dart:io' show Platform;
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';

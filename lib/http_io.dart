@@ -1,20 +1,4 @@
-export 'dart:io'
-    show
-        ConnectionTask,
-        HandshakeException,
-        HttpStatus,
-        InternetAddress,
-        InternetAddressType,
-        RawServerSocket,
-        RawSocket,
-        RawSocketEvent,
-        SecureServerSocket,
-        SecureSocket,
-        SecurityContext,
-        ServerSocket,
-        Socket,
-        SocketDirection,
-        SocketException,
-        X509Certificate;
+export 'dart:io' show HttpStatus;
 
-export 'src/http.dart';
+export 'src/http/http.dart';
+export 'src/io/io.dart';

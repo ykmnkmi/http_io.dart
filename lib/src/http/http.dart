@@ -2,8 +2,21 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import 'dart:async';
-import 'dart:async' as dart_async show runZoned;
+import 'dart:async'
+    show
+        Completer,
+        EventSink,
+        Future,
+        Stream,
+        StreamController,
+        StreamConsumer,
+        StreamSink,
+        StreamSubscription,
+        StreamTransformer,
+        StreamTransformerBase,
+        TimeoutException,
+        Timer,
+        scheduleMicrotask;
 import 'dart:collection'
     show
         HashMap,
@@ -12,34 +25,32 @@ import 'dart:collection'
         LinkedList,
         LinkedListEntry,
         UnmodifiableMapView;
-import 'dart:convert';
+import 'dart:convert'
+    show
+        ByteConversionSink,
+        Converter,
+        Encoding,
+        json,
+        latin1,
+        utf8,
+        base64Decode,
+        base64Encode;
 import 'dart:developer' hide log;
 import 'dart:io'
     show
-        ConnectionTask,
-        HandshakeException,
         HttpStatus,
         IOException,
         IOSink,
-        InternetAddress,
-        InternetAddressType,
         Platform,
-        RawSocketOption,
         RawZLibFilter,
-        SecureServerSocket,
-        SecureSocket,
-        SecurityContext,
-        ServerSocket,
-        Socket,
-        SocketException,
-        SocketOption,
-        TlsException,
-        X509Certificate,
         ZLibEncoder,
         gzip;
 import 'dart:isolate' show Isolate;
-import 'dart:math';
-import 'dart:typed_data';
+import 'dart:math' show min, pow, Random;
+import 'dart:typed_data'
+    show BytesBuilder, Int32x4, Int32x4List, Uint32List, Uint8List;
+
+import 'package:http_io/src/io/io.dart';
 
 part 'crypto.dart';
 part 'http_date.dart';
@@ -48,7 +59,6 @@ part 'http_impl.dart';
 part 'http_parser.dart';
 part 'http_session.dart';
 part 'http_testing.dart';
-part 'overrides.dart';
 part 'websocket.dart';
 part 'websocket_impl.dart';
 
@@ -1323,11 +1333,7 @@ abstract interface class HttpClient {
   String? userAgent;
 
   factory HttpClient({SecurityContext? context}) {
-    HttpOverrides? overrides = HttpOverrides.current;
-    if (overrides == null) {
-      return _HttpClient(context);
-    }
-    return overrides.createHttpClient(context);
+    return _HttpClient(context);
   }
 
   /// Opens a HTTP connection.
@@ -1601,11 +1607,7 @@ abstract interface class HttpClient {
   /// to set credentials for proxies which require authentication.
   static String findProxyFromEnvironment(Uri url,
       {Map<String, String>? environment}) {
-    HttpOverrides? overrides = HttpOverrides.current;
-    if (overrides == null) {
-      return _HttpClient._findProxyFromEnvironment(url, environment);
-    }
-    return overrides.findProxyFromEnvironment(url, environment);
+    return _HttpClient._findProxyFromEnvironment(url, environment);
   }
 
   /// Sets the function to be called when a proxy is requesting
