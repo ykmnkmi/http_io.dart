@@ -17,16 +17,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-
+      - uses: actions/checkout@v4
       - uses: dart-lang/setup-dart@v1
 
       - name: Install Dependencies
-        id: install
         run: dart pub get
 
       - name: Format
-        id: format
         run: dart format --output=none --set-exit-if-changed .
 
       - name: Analyze
