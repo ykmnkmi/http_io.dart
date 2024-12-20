@@ -23,7 +23,7 @@
 /// After every asyncStart() called is matched with a corresponding
 /// asyncEnd() or asyncSuccess(_) call, the testing driver will be notified that
 /// the tests is done.
-library async_helper;
+library;
 
 import 'dart:async';
 

@@ -1,5 +1,3 @@
-library http_io;
-
 export 'dart:io'
     show
         ConnectionTask,

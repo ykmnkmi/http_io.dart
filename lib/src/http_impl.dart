@@ -708,7 +708,8 @@ class _HttpClientResponse extends _HttpInboundMessageListInt
     if (url == null) {
       String? location = headers.value(HttpHeaders.locationHeader);
       if (location == null) {
-        throw StateError('Response has no Location header for redirect');
+        throw RedirectException(
+            'Server response has no Location header for redirect', redirects);
       }
       url = Uri.parse(location);
     }
@@ -1106,18 +1107,23 @@ class _IOSinkImpl extends _StreamSinkImpl<List<int>> implements IOSink {
     _encoding = value;
   }
 
+  void _writeString(String string) {
+    Uint8List? utf8Encoding;
+    _profileData?.appendRequestData(
+      utf8Encoding = utf8.encode(string),
+    );
+    super.add(utf8Encoding != null && identical(_encoding, utf8)
+        ? utf8Encoding
+        : _encoding.encode(string));
+  }
+
   @override
   void write(Object? obj) {
     String string = '$obj';
     if (string.isEmpty) {
       return;
     }
-    _profileData?.appendRequestData(
-      Uint8List.fromList(
-        utf8.encode(string),
-      ),
-    );
-    super.add(_encoding.encode(string));
+    _writeString(string);
   }
 
   @override
@@ -1141,8 +1147,7 @@ class _IOSinkImpl extends _StreamSinkImpl<List<int>> implements IOSink {
 
   @override
   void writeln([Object? object = '']) {
-    write(object);
-    write('\n');
+    _writeString('$object\n');
   }
 
   @override
@@ -2266,7 +2271,9 @@ class _HttpClientConnection {
           'Connection closed before response was received',
           uri: _currentUri));
       _nextResponseCompleter = null;
-      close();
+      if (!closed) {
+        _close();
+      }
     });
   }
 
@@ -2432,7 +2439,7 @@ class _HttpClientConnection {
     _socket.destroy();
   }
 
-  void close() {
+  void _close() {
     closed = true;
     _httpClient._connectionClosed(this);
     _streamFuture!
@@ -2513,7 +2520,7 @@ class _HttpClientConnection {
     assert(_idleTimer == null);
     _idleTimer = Timer(_httpClient.idleTimeout, () {
       _idleTimer = null;
-      close();
+      _close();
     });
   }
 }

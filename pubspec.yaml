@@ -1,22 +1,16 @@
 name: http_io
 repository: https://github.com/dart-lang/http_io
 description: HTTP Client and Server APIs.
-version: 0.0.19
+version: 0.0.20
 
 environment:
-  sdk: ">=3.5.0 <4.0.0"
+  sdk: ">=3.6.0 <4.0.0"
 
 dependencies:
-  meta: ^1.15.0
+  meta: ^1.16.0
 
 dev_dependencies:
-  convert: ^3.1.1
-  crypto: ^3.0.5
-  lints: ^4.0.0
-  test: ^1.25.8
-
-  # For writing custom shelf adapter.
-  collection: ^1.19.0
-  http_parser: ^4.1.0
-  shelf: ^1.4.2
-  stream_channel: ^2.1.2
+  convert: ^3.1.2
+  crypto: ^3.0.6
+  lints: ^5.1.0
+  test: ^1.25.14

@@ -18,7 +18,7 @@
 ///
 /// NOTICE: This library is written to be usable by pre-2.12 language versions,
 /// so it can be used to test non-sound-nullsafety implementations.
-library expect;
+library;
 
 /// Whether the program is running without sound null safety.
 // TODO(54798): migrate uses to directly import variations.dart
