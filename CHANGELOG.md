@@ -1,3 +1,7 @@
+## 0.0.22
+
+* Update test utils.
+
 ## 0.0.21
 
 * Add `WebSocket` class and test.

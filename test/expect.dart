@@ -1,4 +1,4 @@
-// Compied from https://github.com/dart-lang/sdk/blob/main/pkg/expect/lib/expect.dart
+// Copied from https://github.com/dart-lang/sdk/blob/stable/pkg/expect/lib/expect.dart
 
 // Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
@@ -105,7 +105,7 @@ class Expect {
         buf.write(string.substring(chunkStart, i));
       }
       if (code == backslash) {
-        buf.write(r'\\');
+        buf.write(r'\');
       } else if (code < 0x100) {
         if (code == 0x09) {
           buf.write(r'\t');
@@ -114,7 +114,7 @@ class Expect {
         } else if (code == 0x0d) {
           buf.write(r'\r');
         } else if (code == 0x5c) {
-          buf.write(r'\\');
+          buf.write(r'\');
         } else {
           buf.write(r'\x');
           buf.write(hexDigits[code >> 4]);
@@ -123,7 +123,8 @@ class Expect {
       } else {
         buf.write(r'\u{');
         buf.write(code.toRadixString(16).toUpperCase());
-        buf.write('}');
+        // ignore: unnecessary_raw_strings
+        buf.write(r'}');
       }
       chunkStart = i + 1;
     }
@@ -244,7 +245,8 @@ class Expect {
 
   /// Checks that the [Iterable] [actual] is not empty.
   static void isNotEmpty(Iterable<Object?> actual, [String reason = '']) {
-    if (actual.isNotEmpty) {
+    // ignore: prefer_is_not_empty
+    if (!actual.isEmpty) {
       return;
     }
     String msg = _getMessage(reason);
