@@ -7,29 +7,35 @@
 // VMOptions=--short_socket_write
 // VMOptions=--short_socket_read --short_socket_write
 
-import 'dart:convert';
+import "dart:convert";
+import "package:http_io/http_io.dart";
+// ignore: IMPORT_INTERNAL_LIBRARY
+import "package:http_io/http_io.dart"
+    show
+        TestingClass$_SHA1,
+        TestingClass$_WebSocketImpl,
+        Testing$_WebSocketImpl;
 
-import 'package:http_io/http_io.dart';
-
-import 'expect.dart';
+import "package:expect/expect.dart";
 
 typedef _SHA1 = TestingClass$_SHA1;
 typedef _WebSocketImpl = TestingClass$_WebSocketImpl;
 
-const String webSocketGUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
+const String webSocketGUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
 void testPing(int totalConnections) {
   HttpServer.bind('localhost', 0).then((server) {
+    int closed = 0;
     server.listen((request) {
       var response = request.response;
       response.statusCode = HttpStatus.switchingProtocols;
-      response.headers.set(HttpHeaders.connectionHeader, 'upgrade');
-      response.headers.set(HttpHeaders.upgradeHeader, 'websocket');
-      String? key = request.headers.value('Sec-WebSocket-Key');
-      _SHA1 sha1 = _SHA1();
-      sha1.add('$key$webSocketGUID'.codeUnits);
+      response.headers.set(HttpHeaders.connectionHeader, "upgrade");
+      response.headers.set(HttpHeaders.upgradeHeader, "websocket");
+      String? key = request.headers.value("Sec-WebSocket-Key");
+      _SHA1 sha1 = new _SHA1();
+      sha1.add("$key$webSocketGUID".codeUnits);
       String accept = base64Encode(sha1.close());
-      response.headers.add('Sec-WebSocket-Accept', accept);
+      response.headers.add("Sec-WebSocket-Accept", accept);
       response.headers.contentLength = 0;
       response.detachSocket().then((socket) {
         socket.destroy();
@@ -41,7 +47,7 @@ void testPing(int totalConnections) {
       WebSocket.connect('ws://localhost:${server.port}').then((webSocket) {
         webSocket.pingInterval = const Duration(milliseconds: 100);
         webSocket.listen((message) {
-          Expect.fail('unexpected message');
+          Expect.fail("unexpected message");
         }, onDone: () {
           closeCount++;
           if (closeCount == totalConnections) {
@@ -56,8 +62,8 @@ void testPing(int totalConnections) {
 void testPingCancelledOnClose() {
   HttpServer.bind('localhost', 0).then((server) {
     server
-        .transform(WebSocketTransformer())
-        .listen((webSocket) => webSocket.drain<void>());
+        .transform(new WebSocketTransformer())
+        .listen((webSocket) => webSocket.drain());
 
     Testing$_WebSocketImpl.connect('ws://localhost:${server.port}', null, null)
         .then((webSocket) {
@@ -65,7 +71,7 @@ void testPingCancelledOnClose() {
 
       webSocket.pingInterval = const Duration(seconds: 100);
       webSocket.listen((message) {
-        Expect.fail('unexpected message');
+        Expect.fail("unexpected message");
       }, onDone: () {
         Expect.isFalse((webSocket as _WebSocketImpl).test$_pingTimer?.isActive);
         server.close();

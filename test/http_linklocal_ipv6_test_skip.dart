@@ -31,12 +31,15 @@ void main() {
     HttpServer.bind(ipv6, 0).then((server) {
       server.listen((request) {
         var timer = Timer.periodic(const Duration(milliseconds: 0), (_) {
-          request.response
-              .write('data:${DateTime.now().millisecondsSinceEpoch}\n\n');
+          request.response.write(
+            'data:${DateTime.now().millisecondsSinceEpoch}\n\n',
+          );
         });
-        request.response.done.whenComplete(() {
-          timer.cancel();
-        }).catchError((_) {});
+        request.response.done
+            .whenComplete(() {
+              timer.cancel();
+            })
+            .catchError((_) {});
       });
 
       var client = HttpClient();
@@ -44,18 +47,22 @@ void main() {
           .getUrl(Uri.parse('http://[$ipv6]:${server.port}'))
           .then((request) => request.close())
           .then((response) {
-        print(
-            'response: status code: ${response.statusCode}, reason: ${response.reasonPhrase}');
-        int bytes = 0;
-        response.listen((data) {
-          bytes += data.length;
-          if (bytes > 100) {
-            client.close(force: true);
-          }
-        }, onError: (error) {
-          server.close();
-        });
-      });
+            print(
+              'response: status code: ${response.statusCode}, reason: ${response.reasonPhrase}',
+            );
+            int bytes = 0;
+            response.listen(
+              (data) {
+                bytes += data.length;
+                if (bytes > 100) {
+                  client.close(force: true);
+                }
+              },
+              onError: (error) {
+                server.close();
+              },
+            );
+          });
       asyncEnd();
     });
   } catch (e) {

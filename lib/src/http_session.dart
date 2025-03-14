@@ -4,7 +4,7 @@
 
 part of 'http.dart';
 
-const String _dartSessionId = 'DARTSESSID';
+const String _DART_SESSION_ID = "DARTSESSID";
 
 // A _HttpSession is a node in a double-linked list, with _next and _prev being
 // the previous and next pointers.
@@ -18,14 +18,12 @@ class _HttpSession implements HttpSession {
   // Pointers in timeout queue.
   _HttpSession? _prev;
   _HttpSession? _next;
-  @override
   final String id;
 
-  final Map<Object?, Object?> _data = HashMap<Object?, Object?>();
+  final Map _data = HashMap();
 
   _HttpSession(this._sessionManager, this.id) : _lastSeen = DateTime.now();
 
-  @override
   void destroy() {
     assert(!_destroyed);
     _destroyed = true;
@@ -42,84 +40,58 @@ class _HttpSession implements HttpSession {
 
   DateTime get lastSeen => _lastSeen;
 
-  @override
   bool get isNew => _isNew;
 
-  @override
-  set onTimeout(void Function()? callback) {
+  void set onTimeout(void Function()? callback) {
     _timeoutCallback = callback;
   }
 
   // Map implementation:
-  @override
   bool containsValue(value) => _data.containsValue(value);
-  @override
   bool containsKey(key) => _data.containsKey(key);
-  @override
-  dynamic operator [](key) => _data[key];
-  @override
+  operator [](key) => _data[key];
   void operator []=(key, value) {
     _data[key] = value;
   }
 
-  @override
-  dynamic putIfAbsent(key, ifAbsent) => _data.putIfAbsent(key, ifAbsent);
-  @override
-  void addAll(Map<Object?, Object?> other) => _data.addAll(other);
-  @override
-  dynamic remove(key) => _data.remove(key);
-  @override
+  putIfAbsent(key, ifAbsent) => _data.putIfAbsent(key, ifAbsent);
+  addAll(Map other) => _data.addAll(other);
+  remove(key) => _data.remove(key);
   void clear() {
     _data.clear();
   }
 
-  @override
-  void forEach(void Function(dynamic key, dynamic value) f) {
+  void forEach(void f(key, value)) {
     _data.forEach(f);
   }
 
-  @override
-  Iterable<MapEntry<Object?, Object?>> get entries => _data.entries;
+  Iterable<MapEntry> get entries => _data.entries;
 
-  @override
-  void addEntries(Iterable<MapEntry<Object?, Object?>> entries) {
+  void addEntries(Iterable<MapEntry> entries) {
     _data.addEntries(entries);
   }
 
-  @override
-  Map<K, V> map<K, V>(
-          MapEntry<K, V> Function(dynamic key, dynamic value) transform) =>
+  Map<K, V> map<K, V>(MapEntry<K, V> transform(key, value)) =>
       _data.map(transform);
 
-  @override
-  void removeWhere(bool Function(dynamic key, dynamic value) test) {
+  void removeWhere(bool test(key, value)) {
     _data.removeWhere(test);
   }
 
-  @override
   Map<K, V> cast<K, V>() => _data.cast<K, V>();
-  @override
-  dynamic update(key, dynamic Function(dynamic value) update,
-          {dynamic Function()? ifAbsent}) =>
+  update(key, update(value), {Function()? ifAbsent}) =>
       _data.update(key, update, ifAbsent: ifAbsent);
 
-  @override
-  void updateAll(dynamic Function(dynamic key, dynamic value) update) {
+  void updateAll(update(key, value)) {
     _data.updateAll(update);
   }
 
-  @override
-  Iterable<Object?> get keys => _data.keys;
-  @override
-  Iterable<Object?> get values => _data.values;
-  @override
+  Iterable get keys => _data.keys;
+  Iterable get values => _data.values;
   int get length => _data.length;
-  @override
   bool get isEmpty => _data.isEmpty;
-  @override
   bool get isNotEmpty => _data.isNotEmpty;
 
-  @override
   String toString() => 'HttpSession id:$id $_data';
 }
 
@@ -138,8 +110,8 @@ class _HttpSessionManager {
   _HttpSessionManager() : _sessions = {};
 
   String createSessionId() {
-    const int keyLength = 16; // 128 bits.
-    var data = _CryptoUtils.getRandomBytes(keyLength);
+    const int _KEY_LENGTH = 16; // 128 bits.
+    var data = _CryptoUtils.getRandomBytes(_KEY_LENGTH);
     return _CryptoUtils.bytesToHex(data);
   }
 
@@ -157,7 +129,7 @@ class _HttpSessionManager {
     return session;
   }
 
-  set sessionTimeout(int timeout) {
+  void set sessionTimeout(int timeout) {
     _sessionTimeout = timeout;
     _stopTimer();
     _startTimer();
@@ -216,8 +188,10 @@ class _HttpSessionManager {
     var head = _head;
     if (head != null) {
       int seconds = DateTime.now().difference(head.lastSeen).inSeconds;
-      _timer =
-          Timer(Duration(seconds: _sessionTimeout - seconds), _timerTimeout);
+      _timer = Timer(
+        Duration(seconds: _sessionTimeout - seconds),
+        _timerTimeout,
+      );
     }
   }
 

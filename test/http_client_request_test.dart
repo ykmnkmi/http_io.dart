@@ -2,31 +2,26 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import 'dart:async';
-import 'dart:typed_data';
+import "dart:async";
+import "package:http_io/http_io.dart";
+import "dart:typed_data";
 
-import 'package:http_io/http_io.dart';
+import "package:expect/async_helper.dart";
+import "package:expect/expect.dart";
 
-import 'async_helper.dart';
-import 'expect.dart';
-
-void testClientRequest(
-    Future<HttpClientResponse> Function(HttpClientRequest request) handler) {
-  HttpServer.bind('127.0.0.1', 0).then((server) {
+void testClientRequest(Future handler(request)) {
+  HttpServer.bind("127.0.0.1", 0).then((server) {
     server.listen((request) {
-      request
-          .drain<void>()
-          .then((_) => request.response.close())
-          .catchError((_) {});
+      request.drain().then((_) => request.response.close()).catchError((_) {});
     });
 
-    var client = HttpClient();
+    var client = new HttpClient();
     client
-        .get('127.0.0.1', server.port, '/')
+        .get("127.0.0.1", server.port, "/")
         .then((request) {
           return handler(request);
         })
-        .then((response) => response.drain<void>())
+        .then((response) => response.drain())
         .catchError((_) {})
         .whenComplete(() {
           client.close();
@@ -54,7 +49,6 @@ void testBadResponseAdd() {
     request.close();
     Future<HttpClientResponse?>.value(request.done).catchError((error) {
       asyncEnd();
-      return null;
     }, test: (e) => e is HttpException);
     return request.done;
   });
@@ -67,7 +61,6 @@ void testBadResponseAdd() {
     request.close();
     Future<HttpClientResponse?>.value(request.done).catchError((error) {
       asyncEnd();
-      return null;
     }, test: (e) => e is HttpException);
     return request.done;
   });
@@ -75,13 +68,12 @@ void testBadResponseAdd() {
   asyncStart();
   testClientRequest((request) {
     request.contentLength = 0;
-    request.add(Uint8List(64 * 1024));
-    request.add(Uint8List(64 * 1024));
-    request.add(Uint8List(64 * 1024));
+    request.add(new Uint8List(64 * 1024));
+    request.add(new Uint8List(64 * 1024));
+    request.add(new Uint8List(64 * 1024));
     request.close();
     Future<HttpClientResponse?>.value(request.done).catchError((error) {
       asyncEnd();
-      return null;
     }, test: (e) => e is HttpException);
     return request.done;
   });
@@ -94,7 +86,6 @@ void testBadResponseClose() {
     request.close();
     Future<HttpClientResponse?>.value(request.done).catchError((error) {
       asyncEnd();
-      return null;
     }, test: (e) => e is HttpException);
     return request.done;
   });
@@ -106,7 +97,6 @@ void testBadResponseClose() {
     request.close();
     Future<HttpClientResponse?>.value(request.done).catchError((error) {
       asyncEnd();
-      return null;
     }, test: (e) => e is HttpException);
     return request.done;
   });

@@ -1,52 +1,54 @@
 // Copyright (c) 2021, the Dart project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
+//
+// SharedOptions=-Ddart.library.io.force_staggered_ipv6_lookup=true
+//
 
-import 'package:http_io/http_io.dart';
+import "package:http_io/http_io.dart";
 
-import 'async_helper.dart';
-import 'expect.dart';
+import "package:expect/async_helper.dart";
+import "package:expect/expect.dart";
 
 const sampleData = <int>[1, 2, 3, 4, 5];
 
 void testBadHostName() {
   asyncStart();
-  HttpClient client = HttpClient();
-  client.get('some.bad.host.name.7654321', 0, '/').then((request) {
-    Expect.fail('Should not open a request on bad hostname');
+  HttpClient client = new HttpClient();
+  client.get("some.bad.host.name.7654321", 0, "/").then((request) {
+    Expect.fail("Should not open a request on bad hostname");
   }).catchError((error) {
     asyncEnd(); // We expect onError to be called, due to bad host name.
   }, test: (error) => error is! String);
 }
 
-Future<void> testConnect(InternetAddress loopback,
-    {int expectedElapsedMs = 0}) async {
+void testConnect(InternetAddress loopback, {int expectedElapsedMs = 0}) async {
   asyncStart();
-  var max = 10;
-  var servers = <ServerSocket>[];
+  final max = 10;
+  final servers = <ServerSocket>[];
   for (var i = 0; i < max; i++) {
-    var server = await ServerSocket.bind(loopback, 0);
+    final server = await ServerSocket.bind(loopback, 0);
     server.listen((Socket socket) {
       socket.add(sampleData);
       socket.destroy();
     });
     servers.add(server);
   }
-  var sw = Stopwatch()..start();
+  final sw = Stopwatch()..start();
   var got = 0;
   for (var i = 0; i < max; i++) {
-    var client = await Socket.connect('localhost', servers[i].port,
+    final client = await Socket.connect('localhost', servers[i].port,
         sourceAddress: loopback);
     client.listen((received) {
       Expect.listEquals(sampleData, received);
-    }, onError: (Object e) {
+    }, onError: (e) {
       Expect.fail('Unexpected failure $e');
     }, onDone: () {
       client.close();
       got++;
       if (got == max) {
         // Test that no stack overflow happens.
-        for (var server in servers) {
+        for (final server in servers) {
           server.close();
         }
         Expect.isTrue(sw.elapsedMilliseconds > expectedElapsedMs);

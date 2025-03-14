@@ -6,7 +6,7 @@ part of 'http.dart';
 
 class _CryptoUtils {
   static Uint8List getRandomBytes(int count) {
-    Uint8List result = Uint8List(count);
+    final Uint8List result = Uint8List(count);
     for (int i = 0; i < count; i++) {
       result[i] = Random.secure().nextInt(0xff);
     }
@@ -23,10 +23,10 @@ class _CryptoUtils {
 }
 
 // Constants.
-const _mask8 = 0xff;
-const _mask32 = 0xffffffff;
-const _bitsPerByte = 8;
-const _bytesPerWord = 4;
+const _MASK_8 = 0xff;
+const _MASK_32 = 0xffffffff;
+const _BITS_PER_BYTE = 8;
+const _BYTES_PER_WORD = 4;
 
 // Base class encapsulating common behavior for cryptographic hash
 // functions.
@@ -41,9 +41,9 @@ abstract class _HashBase {
   bool _digestCalled = false;
 
   _HashBase(this._chunkSizeInWords, int digestSizeInWords, this._bigEndianWords)
-      : _pendingData = [],
-        _currentChunk = Uint32List(_chunkSizeInWords),
-        _h = Uint32List(digestSizeInWords);
+    : _pendingData = [],
+      _currentChunk = Uint32List(_chunkSizeInWords),
+      _h = Uint32List(digestSizeInWords);
 
   // Update the hasher with more data.
   void add(List<int> data) {
@@ -69,20 +69,21 @@ abstract class _HashBase {
 
   // Returns the block size of the hash in bytes.
   int get blockSize {
-    return _chunkSizeInWords * _bytesPerWord;
+    return _chunkSizeInWords * _BYTES_PER_WORD;
   }
 
   // One round of the hash computation.
-  void _updateHash(Uint32List m);
+  _updateHash(Uint32List m);
 
   // Helper methods.
-  int _add32(int x, int y) => (x + y) & _mask32;
+  int _add32(int x, int y) => (x + y) & _MASK_32;
   int _roundUp(int val, int n) => (val + n - 1) & -n;
 
   // Rotate left limiting to unsigned 32-bit values.
   int _rotl32(int val, int shift) {
-    var modShoft = shift & 31;
-    return ((val << modShoft) & _mask32) | ((val & _mask32) >> (32 - modShoft));
+    var mod_shift = shift & 31;
+    return ((val << mod_shift) & _MASK_32) |
+        ((val & _MASK_32) >> (32 - mod_shift));
   }
 
   // Compute the final result as a list of bytes from the hash words.
@@ -96,7 +97,7 @@ abstract class _HashBase {
 
   // Converts a list of bytes to a chunk of 32-bit words.
   void _bytesToChunk(List<int> data, int dataIndex) {
-    assert((data.length - dataIndex) >= (_chunkSizeInWords * _bytesPerWord));
+    assert((data.length - dataIndex) >= (_chunkSizeInWords * _BYTES_PER_WORD));
 
     for (var wordIndex = 0; wordIndex < _chunkSizeInWords; wordIndex++) {
       var w3 = _bigEndianWords ? data[dataIndex] : data[dataIndex + 3];
@@ -105,20 +106,20 @@ abstract class _HashBase {
       var w0 = _bigEndianWords ? data[dataIndex + 3] : data[dataIndex];
       dataIndex += 4;
       var word = (w3 & 0xff) << 24;
-      word |= (w2 & _mask8) << 16;
-      word |= (w1 & _mask8) << 8;
-      word |= w0 & _mask8;
+      word |= (w2 & _MASK_8) << 16;
+      word |= (w1 & _MASK_8) << 8;
+      word |= (w0 & _MASK_8);
       _currentChunk[wordIndex] = word;
     }
   }
 
   // Convert a 32-bit word to four bytes.
   List<int> _wordToBytes(int word) {
-    List<int> bytes = List.filled(_bytesPerWord, 0);
-    bytes[0] = (word >> (_bigEndianWords ? 24 : 0)) & _mask8;
-    bytes[1] = (word >> (_bigEndianWords ? 16 : 8)) & _mask8;
-    bytes[2] = (word >> (_bigEndianWords ? 8 : 16)) & _mask8;
-    bytes[3] = (word >> (_bigEndianWords ? 0 : 24)) & _mask8;
+    List<int> bytes = List.filled(_BYTES_PER_WORD, 0);
+    bytes[0] = (word >> (_bigEndianWords ? 24 : 0)) & _MASK_8;
+    bytes[1] = (word >> (_bigEndianWords ? 16 : 8)) & _MASK_8;
+    bytes[2] = (word >> (_bigEndianWords ? 8 : 16)) & _MASK_8;
+    bytes[3] = (word >> (_bigEndianWords ? 0 : 24)) & _MASK_8;
     return bytes;
   }
 
@@ -126,7 +127,7 @@ abstract class _HashBase {
   // chunk.
   void _iterate() {
     var len = _pendingData.length;
-    var chunkSizeInBytes = _chunkSizeInWords * _bytesPerWord;
+    var chunkSizeInBytes = _chunkSizeInWords * _BYTES_PER_WORD;
     if (len >= chunkSizeInBytes) {
       var index = 0;
       for (; (len - index) >= chunkSizeInBytes; index += chunkSizeInBytes) {
@@ -142,19 +143,19 @@ abstract class _HashBase {
   void _finalizeData() {
     _pendingData.add(0x80);
     var contentsLength = _lengthInBytes + 9;
-    var chunkSizeInBytes = _chunkSizeInWords * _bytesPerWord;
+    var chunkSizeInBytes = _chunkSizeInWords * _BYTES_PER_WORD;
     var finalizedLength = _roundUp(contentsLength, chunkSizeInBytes);
     var zeroPadding = finalizedLength - contentsLength;
     for (var i = 0; i < zeroPadding; i++) {
       _pendingData.add(0);
     }
-    var lengthInBits = _lengthInBytes * _bitsPerByte;
+    var lengthInBits = _lengthInBytes * _BITS_PER_BYTE;
     assert(lengthInBits < pow(2, 32));
     if (_bigEndianWords) {
       _pendingData.addAll(_wordToBytes(0));
-      _pendingData.addAll(_wordToBytes(lengthInBits & _mask32));
+      _pendingData.addAll(_wordToBytes(lengthInBits & _MASK_32));
     } else {
-      _pendingData.addAll(_wordToBytes(lengthInBits & _mask32));
+      _pendingData.addAll(_wordToBytes(lengthInBits & _MASK_32));
       _pendingData.addAll(_wordToBytes(0));
     }
   }
@@ -180,19 +181,18 @@ class _MD5 extends _HashBase {
     0xd4ef3085, 0x04881d05, 0xd9d4d039, 0xe6db99e5, 0x1fa27cf8, 0xc4ac5665, //
     0xf4292244, 0x432aff97, 0xab9423a7, 0xfc93a039, 0x655b59c3, 0x8f0ccc92, //
     0xffeff47d, 0x85845dd1, 0x6fa87e4f, 0xfe2ce6e0, 0xa3014314, 0x4e0811a1, //
-    0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391
+    0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391,
   ];
 
   static const _r = [
     7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 5, 9, 14, //
     20, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 4, 11, 16, 23, 4, 11, //
     16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 6, 10, 15, 21, 6, 10, 15, 21, 6, //
-    10, 15, 21, 6, 10, 15, 21
+    10, 15, 21, 6, 10, 15, 21,
   ];
 
   // Compute one iteration of the MD5 algorithm with a chunk of
   // 16 32-bit pieces.
-  @override
   void _updateHash(Uint32List m) {
     assert(m.length == 16);
 
@@ -206,16 +206,16 @@ class _MD5 extends _HashBase {
 
     for (var i = 0; i < 64; i++) {
       if (i < 16) {
-        t0 = (b & c) | ((~b & _mask32) & d);
+        t0 = (b & c) | ((~b & _MASK_32) & d);
         t1 = i;
       } else if (i < 32) {
-        t0 = (d & b) | ((~d & _mask32) & c);
+        t0 = (d & b) | ((~d & _MASK_32) & c);
         t1 = ((5 * i) + 1) % 16;
       } else if (i < 48) {
         t0 = b ^ c ^ d;
         t1 = ((3 * i) + 5) % 16;
       } else {
-        t0 = c ^ (b | (~d & _mask32));
+        t0 = c ^ (b | (~d & _MASK_32));
         t1 = (7 * i) % 16;
       }
 
@@ -223,7 +223,9 @@ class _MD5 extends _HashBase {
       d = c;
       c = b;
       b = _add32(
-          b, _rotl32(_add32(_add32(a, t0), _add32(_k[i], m[t1])), _r[i]));
+        b,
+        _rotl32(_add32(_add32(a, t0), _add32(_k[i], m[t1])), _r[i]),
+      );
       a = temp;
     }
 
@@ -239,9 +241,7 @@ class _SHA1 extends _HashBase {
   final List<int> _w;
 
   // Construct a SHA1 hasher object.
-  _SHA1()
-      : _w = List<int>.filled(80, 0),
-        super(16, 5, true) {
+  _SHA1() : _w = List<int>.filled(80, 0), super(16, 5, true) {
     _h[0] = 0x67452301;
     _h[1] = 0xEFCDAB89;
     _h[2] = 0x98BADCFE;
@@ -251,7 +251,6 @@ class _SHA1 extends _HashBase {
 
   // Compute one iteration of the SHA1 algorithm with a chunk of
   // 16 32-bit pieces.
-  @override
   void _updateHash(Uint32List m) {
     assert(m.length == 16);
 
@@ -272,7 +271,7 @@ class _SHA1 extends _HashBase {
       if (i < 20) {
         t = _add32(_add32(t, (b & c) | (~b & d)), 0x5A827999);
       } else if (i < 40) {
-        t = _add32(_add32(t, b ^ c ^ d), 0x6ED9EBA1);
+        t = _add32(_add32(t, (b ^ c ^ d)), 0x6ED9EBA1);
       } else if (i < 60) {
         t = _add32(_add32(t, (b & c) | (b & d) | (c & d)), 0x8F1BBCDC);
       } else {
@@ -283,7 +282,7 @@ class _SHA1 extends _HashBase {
       d = c;
       c = _rotl32(b, 30);
       b = a;
-      a = t & _mask32;
+      a = t & _MASK_32;
     }
 
     _h[0] = _add32(a, _h[0]);

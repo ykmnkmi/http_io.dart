@@ -2,36 +2,40 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import 'dart:async';
-import 'dart:io' show Platform;
+// OtherResources=certificates/server_chain.pem
+// OtherResources=certificates/server_key.pem
+// OtherResources=certificates/trusted_certs.pem
 
-import 'package:http_io/http_io.dart';
+// This test verifies that the bad certificate callback works in HttpClient.
 
-import 'expect.dart';
+import "dart:async";
+import "package:http_io/http_io.dart";
 
-final hostName = 'localhost';
+import "package:expect/expect.dart";
 
-String localFile(String path) => Platform.script.resolve(path).toFilePath();
+final HOST_NAME = 'localhost';
 
-SecurityContext serverContext = SecurityContext()
+String localFile(path) => Platform.script.resolve(path).toFilePath();
+
+SecurityContext serverContext = new SecurityContext()
   ..useCertificateChain(localFile('certificates/server_chain.pem'))
   ..usePrivateKey(localFile('certificates/server_key.pem'),
       password: 'dartdart');
 
 class CustomException {}
 
-Future<void> main() async {
-  var host = (await InternetAddress.lookup(hostName)).first;
-  var server = await HttpServer.bindSecure(host, 0, serverContext, backlog: 5);
+main() async {
+  var HOST = (await InternetAddress.lookup(HOST_NAME)).first;
+  var server = await HttpServer.bindSecure(HOST, 0, serverContext, backlog: 5);
   server.listen((request) {
     request.listen((_) {}, onDone: () {
       request.response.close();
     });
   });
 
-  SecurityContext goodContext = SecurityContext()
+  SecurityContext goodContext = new SecurityContext()
     ..setTrustedCertificates(localFile('certificates/trusted_certs.pem'));
-  SecurityContext badContext = SecurityContext();
+  SecurityContext badContext = new SecurityContext();
   SecurityContext defaultContext = SecurityContext.defaultContext;
 
   await runClient(server.port, goodContext, true, 'pass');
@@ -49,21 +53,19 @@ Future<void> main() async {
   server.close();
 }
 
-Future<void> runClient(int port, SecurityContext context,
-    Object callbackReturns, String result) async {
-  HttpClient client = HttpClient(context: context);
+Future runClient(
+    int port, SecurityContext context, callbackReturns, result) async {
+  HttpClient client = new HttpClient(context: context);
   client.badCertificateCallback = (X509Certificate certificate, host, port) {
     Expect.isTrue(certificate.subject.contains('rootauthority'));
     Expect.isTrue(certificate.issuer.contains('rootauthority'));
     // Throw exception if one is requested.
-    if (callbackReturns == 'exception') {
-      throw CustomException();
-    }
-    return callbackReturns as bool;
+    if (callbackReturns == 'exception') throw new CustomException();
+    return callbackReturns;
   };
 
   try {
-    var request = await client.getUrl(Uri.parse('https://$hostName:$port/'));
+    var request = await client.getUrl(Uri.parse('https://$HOST_NAME:$port/'));
     Expect.equals('pass', result);
     await request.close();
   } catch (error) {

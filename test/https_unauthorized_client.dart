@@ -32,15 +32,24 @@ Future<void> runClients(int port) {
 
   var testFutures = <Future<void>>[];
   for (int i = 0; i < 20; ++i) {
-    testFutures.add(client.getUrl(Uri.parse('https://$hostName:$port/')).then(
-        (HttpClientRequest request) {
-      expect(false, 'Request succeeded');
-    }, onError: (Object e) {
-      // Remove ArgumentError once null default context is supported.
-      expect(
-          e is HandshakeException || e is SocketException || e is ArgumentError,
-          'Error is wrong type: $e');
-    }));
+    testFutures.add(
+      client
+          .getUrl(Uri.parse('https://$hostName:$port/'))
+          .then(
+            (HttpClientRequest request) {
+              expect(false, 'Request succeeded');
+            },
+            onError: (Object e) {
+              // Remove ArgumentError once null default context is supported.
+              expect(
+                e is HandshakeException ||
+                    e is SocketException ||
+                    e is ArgumentError,
+                'Error is wrong type: $e',
+              );
+            },
+          ),
+    );
   }
   return Future.wait(testFutures);
 }

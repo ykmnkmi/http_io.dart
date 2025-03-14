@@ -6,7 +6,7 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io' show Platform, Process, exit;
+import 'package:http_io/http_io.dart' show Platform, Process, exit;
 
 import 'package:http_io/http_io.dart';
 
@@ -30,8 +30,11 @@ final SecurityContext clientSecurityContext = () {
 
 void main(List<String> args) async {
   if (args.isNotEmpty && args[0] == 'server') {
-    var server =
-        await SecureServerSocket.bind('localhost', 0, serverSecurityContext);
+    var server = await SecureServerSocket.bind(
+      'localhost',
+      0,
+      serverSecurityContext,
+    );
     print('ok ${server.port}');
     server.listen((socket) {
       print('server: got connection');
@@ -47,19 +50,18 @@ void main(List<String> args) async {
   var serverProcess = await Process.start(Platform.executable, [
     ...Platform.executableArguments,
     Platform.script.toFilePath(),
-    'server'
+    'server',
   ]);
   var serverPortCompleter = Completer<int>();
 
-  serverProcess.stdout
-      .transform(utf8.decoder)
-      .transform(LineSplitter())
-      .listen((line) {
-    print('server stdout: $line');
-    if (line.startsWith('ok')) {
-      serverPortCompleter.complete(int.parse(line.substring('ok'.length)));
-    }
-  });
+  serverProcess.stdout.transform(utf8.decoder).transform(LineSplitter()).listen(
+    (line) {
+      print('server stdout: $line');
+      if (line.startsWith('ok')) {
+        serverPortCompleter.complete(int.parse(line.substring('ok'.length)));
+      }
+    },
+  );
   serverProcess.stderr
       .transform(utf8.decoder)
       .transform(LineSplitter())
@@ -68,17 +70,23 @@ void main(List<String> args) async {
   int port = await serverPortCompleter.future;
 
   var errorCompleter = Completer<Object?>();
-  await runZonedGuarded(() async {
-    var socket = await SecureSocket.connect('localhost', port,
-        context: clientSecurityContext);
-    socket.write(<int>[1, 2, 3]);
-  }, (e, st) {
-    // Even if server disconnects during later parts of handshake, since
-    // TLS v1.3 client might not notice it until attempt to communicate with
-    // the server.
-    print('thrownException: $e');
-    errorCompleter.complete(e);
-  });
+  await runZonedGuarded(
+    () async {
+      var socket = await SecureSocket.connect(
+        'localhost',
+        port,
+        context: clientSecurityContext,
+      );
+      socket.write(<int>[1, 2, 3]);
+    },
+    (e, st) {
+      // Even if server disconnects during later parts of handshake, since
+      // TLS v1.3 client might not notice it until attempt to communicate with
+      // the server.
+      print('thrownException: $e');
+      errorCompleter.complete(e);
+    },
+  );
   Expect.isTrue((await errorCompleter.future) is SocketException);
   serverProcess.kill();
 

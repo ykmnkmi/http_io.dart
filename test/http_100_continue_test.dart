@@ -2,14 +2,14 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+import "dart:async";
 import 'dart:convert';
+import "package:http_io/http_io.dart";
 
-import 'package:http_io/http_io.dart';
+import "package:expect/expect.dart";
 
-import 'expect.dart';
-
-Future<void> test(List<int> responseBytes, int bodyLength) async {
-  bool fullRequest(List<int> bytes) {
+void test(responseBytes, bodyLength) async {
+  fullRequest(bytes) {
     var len = bytes.length;
     return len > 4 &&
         bytes[len - 4] == 13 &&
@@ -18,8 +18,8 @@ Future<void> test(List<int> responseBytes, int bodyLength) async {
         bytes[len - 1] == 10;
   }
 
-  Future<void> handleSocket(Socket socket) async {
-    var bytes = <int>[];
+  handleSocket(socket) async {
+    var bytes = [];
     await for (var data in socket) {
       bytes.addAll(data);
       if (fullRequest(bytes)) {
@@ -32,7 +32,7 @@ Future<void> test(List<int> responseBytes, int bodyLength) async {
   var server = await ServerSocket.bind('127.0.0.1', 0);
   server.listen(handleSocket);
 
-  var client = HttpClient();
+  var client = new HttpClient();
   var request =
       await client.getUrl(Uri.parse('http://127.0.0.1:${server.port}/'));
   var response = await request.close();
@@ -42,7 +42,7 @@ Future<void> test(List<int> responseBytes, int bodyLength) async {
   server.close();
 }
 
-void main() {
+main() {
   var r1 = '''
 HTTP/1.1 100 Continue\r
 \r

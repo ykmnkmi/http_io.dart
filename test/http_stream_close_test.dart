@@ -1,18 +1,19 @@
 // Copyright (c) 2013, the Dart project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
+//
 
-import 'package:http_io/http_io.dart';
+import "package:http_io/http_io.dart";
 
-void main() {
+main() {
   bool serverOnClosed = false;
   bool clientOnClosed = false;
   bool requestOnClosed = false;
 
-  HttpServer.bind('127.0.0.1', 0).then((server) {
-    var client = HttpClient();
+  HttpServer.bind("127.0.0.1", 0).then((server) {
+    var client = new HttpClient();
 
-    void checkDone() {
+    checkDone() {
       if (serverOnClosed && clientOnClosed && requestOnClosed) {
         server.close();
         client.close();
@@ -25,20 +26,20 @@ void main() {
           serverOnClosed = true;
           checkDone();
         });
-        request.response.write('hello!');
+        request.response.write("hello!");
         request.response.close();
       });
     });
 
     client
-        .postUrl(Uri.parse('http://127.0.0.1:${server.port}'))
+        .postUrl(Uri.parse("http://127.0.0.1:${server.port}"))
         .then((request) {
-      request.contentLength = 'hello!'.length;
+      request.contentLength = "hello!".length;
       request.done.then((_) {
         clientOnClosed = true;
         checkDone();
       });
-      request.write('hello!');
+      request.write("hello!");
       return request.close();
     }).then((response) {
       response.listen((_) {}, onDone: () {

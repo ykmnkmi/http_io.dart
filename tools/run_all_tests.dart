@@ -18,35 +18,41 @@ Future<void> main() async {
 
     String content = entity.readAsStringSync();
 
-    List<List<String>> vmOptions = optionsRE
-        .allMatches(content)
-        .map<List<String>>(extractVMOptions)
-        .toList();
+    List<List<String>> vmOptions =
+        optionsRE
+            .allMatches(content)
+            .map<List<String>>(extractVMOptions)
+            .toList();
 
     if (vmOptions.isEmpty) {
       stdout.writeln('dart ${entity.path}');
 
       ReceivePort receivePort = ReceivePort();
-      SendPort sendPort = receivePort.sendPort;
 
-      Isolate isolate = await Isolate.spawnUri(
-        Directory.current.uri.resolveUri(entity.uri),
-        <String>[],
-        null,
-        onExit: sendPort,
-        onError: sendPort,
-      );
+      try {
+        SendPort sendPort = receivePort.sendPort;
 
-      Object? message = await receivePort.first;
-      isolate.kill(priority: Isolate.immediate);
-      receivePort.close();
-
-      if (message is List) {
-        Error.throwWithStackTrace(
-          message[0] as Object,
-          StackTrace.fromString(message[1] as String),
+        Isolate isolate = await Isolate.spawnUri(
+          Directory.current.uri.resolveUri(entity.uri),
+          <String>[],
+          null,
+          onExit: sendPort,
+          onError: sendPort,
         );
+
+        Object? message = await receivePort.first;
+        isolate.kill(priority: Isolate.immediate);
+
+        if (message is List) {
+          stderr.writeln(message[0]);
+          stderr.writeln(message[1]);
+        }
+      } catch (error, stackTrace) {
+        stderr.writeln(error);
+        stderr.writeln(stackTrace);
       }
+
+      receivePort.close();
     } else {
       for (List<String> options in vmOptions) {
         options = <String>[...options, entity.path];

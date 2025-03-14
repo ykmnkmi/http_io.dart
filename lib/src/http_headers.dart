@@ -4,7 +4,7 @@
 
 part of 'http.dart';
 
-final _digitsValidator = RegExp(r'^\d+$');
+final _digitsValidator = RegExp(r"^\d+$");
 
 class _HttpHeaders implements HttpHeaders {
   final Map<String, List<String>> _headers;
@@ -23,11 +23,12 @@ class _HttpHeaders implements HttpHeaders {
 
   final int _defaultPortForScheme;
 
-  _HttpHeaders(this.protocolVersion,
-      {int defaultPortForScheme = HttpClient.defaultHttpPort,
-      _HttpHeaders? initialHeaders})
-      : _headers = HashMap<String, List<String>>(),
-        _defaultPortForScheme = defaultPortForScheme {
+  _HttpHeaders(
+    this.protocolVersion, {
+    int defaultPortForScheme = HttpClient.defaultHttpPort,
+    _HttpHeaders? initialHeaders,
+  }) : _headers = HashMap<String, List<String>>(),
+       _defaultPortForScheme = defaultPortForScheme {
     if (initialHeaders != null) {
       initialHeaders._headers.forEach((name, value) => _headers[name] = value);
       _contentLength = initialHeaders._contentLength;
@@ -36,30 +37,25 @@ class _HttpHeaders implements HttpHeaders {
       _host = initialHeaders._host;
       _port = initialHeaders._port;
     }
-    if (protocolVersion == '1.0') {
+    if (protocolVersion == "1.0") {
       _persistentConnection = false;
       _chunkedTransferEncoding = false;
     }
   }
 
-  @override
   List<String>? operator [](String name) => _headers[_validateField(name)];
 
-  @override
   String? value(String name) {
     name = _validateField(name);
     List<String>? values = _headers[name];
-    if (values == null) {
-      return null;
-    }
+    if (values == null) return null;
     assert(values.isNotEmpty);
     if (values.length > 1) {
-      throw HttpException('More than one value for header $name');
+      throw HttpException("More than one value for header $name");
     }
     return values[0];
   }
 
-  @override
   void add(String name, value, {bool preserveHeaderCase = false}) {
     _checkMutable();
     String lowercaseName = _validateField(name);
@@ -72,17 +68,16 @@ class _HttpHeaders implements HttpHeaders {
     _addAll(lowercaseName, value);
   }
 
-  void _addAll(String name, Object value) {
+  void _addAll(String name, value) {
     if (value is Iterable) {
       for (var v in value) {
-        _add(name, _validateValue(v as Object));
+        _add(name, _validateValue(v));
       }
     } else {
       _add(name, _validateValue(value));
     }
   }
 
-  @override
   void set(String name, Object value, {bool preserveHeaderCase = false}) {
     _checkMutable();
     String lowercaseName = _validateField(name);
@@ -100,7 +95,6 @@ class _HttpHeaders implements HttpHeaders {
     _addAll(lowercaseName, value);
   }
 
-  @override
   void remove(String name, Object value) {
     _checkMutable();
     name = _validateField(name);
@@ -113,12 +107,11 @@ class _HttpHeaders implements HttpHeaders {
         _originalHeaderNames?.remove(name);
       }
     }
-    if (name == HttpHeaders.transferEncodingHeader && value == 'chunked') {
+    if (name == HttpHeaders.transferEncodingHeader && value == "chunked") {
       _chunkedTransferEncoding = false;
     }
   }
 
-  @override
   void removeAll(String name) {
     _checkMutable();
     name = _validateField(name);
@@ -126,7 +119,6 @@ class _HttpHeaders implements HttpHeaders {
     _originalHeaderNames?.remove(name);
   }
 
-  @override
   void forEach(void Function(String name, List<String> values) action) {
     _headers.forEach((String name, List<String> values) {
       String originalName = _originalHeaderName(name);
@@ -134,121 +126,104 @@ class _HttpHeaders implements HttpHeaders {
     });
   }
 
-  @override
   void noFolding(String name) {
     name = _validateField(name);
     (_noFoldingHeaders ??= <String>[]).add(name);
   }
 
-  @override
   bool get persistentConnection => _persistentConnection;
 
-  @override
-  set persistentConnection(bool persistentConnection) {
+  void set persistentConnection(bool persistentConnection) {
     _checkMutable();
-    if (persistentConnection == _persistentConnection) {
-      return;
-    }
-    var originalName = _originalHeaderName(HttpHeaders.connectionHeader);
+    if (persistentConnection == _persistentConnection) return;
+    final originalName = _originalHeaderName(HttpHeaders.connectionHeader);
     if (persistentConnection) {
-      if (protocolVersion == '1.1') {
-        remove(HttpHeaders.connectionHeader, 'close');
+      if (protocolVersion == "1.1") {
+        remove(HttpHeaders.connectionHeader, "close");
       } else {
         if (_contentLength < 0) {
           throw HttpException(
-              "Trying to set 'Connection: Keep-Alive' on HTTP 1.0 headers with "
-              'no ContentLength');
+            "Trying to set 'Connection: Keep-Alive' on HTTP 1.0 headers with "
+            "no ContentLength",
+          );
         }
-        add(originalName, 'keep-alive', preserveHeaderCase: true);
+        add(originalName, "keep-alive", preserveHeaderCase: true);
       }
     } else {
-      if (protocolVersion == '1.1') {
-        add(originalName, 'close', preserveHeaderCase: true);
+      if (protocolVersion == "1.1") {
+        add(originalName, "close", preserveHeaderCase: true);
       } else {
-        remove(HttpHeaders.connectionHeader, 'keep-alive');
+        remove(HttpHeaders.connectionHeader, "keep-alive");
       }
     }
     _persistentConnection = persistentConnection;
   }
 
-  @override
   int get contentLength => _contentLength;
 
-  @override
-  set contentLength(int contentLength) {
+  void set contentLength(int contentLength) {
     _checkMutable();
-    if (protocolVersion == '1.0' &&
+    if (protocolVersion == "1.0" &&
         persistentConnection &&
         contentLength == -1) {
       throw HttpException(
-          'Trying to clear ContentLength on HTTP 1.0 headers with '
-          "'Connection: Keep-Alive' set");
+        "Trying to clear ContentLength on HTTP 1.0 headers with "
+        "'Connection: Keep-Alive' set",
+      );
     }
-    if (_contentLength == contentLength) {
-      return;
-    }
+    if (_contentLength == contentLength) return;
     _contentLength = contentLength;
     if (_contentLength >= 0) {
-      if (chunkedTransferEncoding) {
-        chunkedTransferEncoding = false;
-      }
+      if (chunkedTransferEncoding) chunkedTransferEncoding = false;
       _set(HttpHeaders.contentLengthHeader, contentLength.toString());
     } else {
       _headers.remove(HttpHeaders.contentLengthHeader);
-      if (protocolVersion == '1.1') {
+      if (protocolVersion == "1.1") {
         chunkedTransferEncoding = true;
       }
     }
   }
 
-  @override
   bool get chunkedTransferEncoding => _chunkedTransferEncoding;
 
-  @override
-  set chunkedTransferEncoding(bool chunkedTransferEncoding) {
+  void set chunkedTransferEncoding(bool chunkedTransferEncoding) {
     _checkMutable();
-    if (chunkedTransferEncoding && protocolVersion == '1.0') {
+    if (chunkedTransferEncoding && protocolVersion == "1.0") {
       throw HttpException(
-          "Trying to set 'Transfer-Encoding: Chunked' on HTTP 1.0 headers");
+        "Trying to set 'Transfer-Encoding: Chunked' on HTTP 1.0 headers",
+      );
     }
-    if (chunkedTransferEncoding == _chunkedTransferEncoding) {
-      return;
-    }
+    if (chunkedTransferEncoding == _chunkedTransferEncoding) return;
     if (chunkedTransferEncoding) {
       List<String>? values = _headers[HttpHeaders.transferEncodingHeader];
-      if (values == null || !values.contains('chunked')) {
+      if (values == null || !values.contains("chunked")) {
         // Headers does not specify chunked encoding - add it if set.
-        _addValue(HttpHeaders.transferEncodingHeader, 'chunked');
+        _addValue(HttpHeaders.transferEncodingHeader, "chunked");
       }
       contentLength = -1;
     } else {
       // Headers does specify chunked encoding - remove it if not set.
-      remove(HttpHeaders.transferEncodingHeader, 'chunked');
+      remove(HttpHeaders.transferEncodingHeader, "chunked");
     }
     _chunkedTransferEncoding = chunkedTransferEncoding;
   }
 
-  @override
   String? get host => _host;
 
-  @override
-  set host(String? host) {
+  void set host(String? host) {
     _checkMutable();
     _host = host;
     _updateHostHeader();
   }
 
-  @override
   int? get port => _port;
 
-  @override
-  set port(int? port) {
+  void set port(int? port) {
     _checkMutable();
     _port = port;
     _updateHostHeader();
   }
 
-  @override
   DateTime? get ifModifiedSince {
     List<String>? values = _headers[HttpHeaders.ifModifiedSinceHeader];
     if (values != null) {
@@ -262,8 +237,7 @@ class _HttpHeaders implements HttpHeaders {
     return null;
   }
 
-  @override
-  set ifModifiedSince(DateTime? ifModifiedSince) {
+  void set ifModifiedSince(DateTime? ifModifiedSince) {
     _checkMutable();
     if (ifModifiedSince == null) {
       _headers.remove(HttpHeaders.ifModifiedSinceHeader);
@@ -274,7 +248,6 @@ class _HttpHeaders implements HttpHeaders {
     }
   }
 
-  @override
   DateTime? get date {
     List<String>? values = _headers[HttpHeaders.dateHeader];
     if (values != null) {
@@ -288,8 +261,7 @@ class _HttpHeaders implements HttpHeaders {
     return null;
   }
 
-  @override
-  set date(DateTime? date) {
+  void set date(DateTime? date) {
     _checkMutable();
     if (date == null) {
       _headers.remove(HttpHeaders.dateHeader);
@@ -300,7 +272,6 @@ class _HttpHeaders implements HttpHeaders {
     }
   }
 
-  @override
   DateTime? get expires {
     List<String>? values = _headers[HttpHeaders.expiresHeader];
     if (values != null) {
@@ -314,8 +285,7 @@ class _HttpHeaders implements HttpHeaders {
     return null;
   }
 
-  @override
-  set expires(DateTime? expires) {
+  void set expires(DateTime? expires) {
     _checkMutable();
     if (expires == null) {
       _headers.remove(HttpHeaders.expiresHeader);
@@ -326,7 +296,6 @@ class _HttpHeaders implements HttpHeaders {
     }
   }
 
-  @override
   ContentType? get contentType {
     var values = _headers[HttpHeaders.contentTypeHeader];
     if (values != null) {
@@ -336,8 +305,7 @@ class _HttpHeaders implements HttpHeaders {
     }
   }
 
-  @override
-  set contentType(ContentType? contentType) {
+  void set contentType(ContentType? contentType) {
     _checkMutable();
     if (contentType == null) {
       _headers.remove(HttpHeaders.contentTypeHeader);
@@ -346,7 +314,6 @@ class _HttpHeaders implements HttpHeaders {
     }
   }
 
-  @override
   void clear() {
     _checkMutable();
     _headers.clear();
@@ -358,7 +325,7 @@ class _HttpHeaders implements HttpHeaders {
   }
 
   // [name] must be a lower-case version of the name.
-  void _add(String name, Object value) {
+  void _add(String name, value) {
     assert(name == _validateField(name));
     // Use the length as index on what method to call. This is notable
     // faster than computing hash and looking up in a hash-map.
@@ -381,13 +348,13 @@ class _HttpHeaders implements HttpHeaders {
         break;
       case 10:
         if (HttpHeaders.connectionHeader == name) {
-          _addConnection(name, value as String);
+          _addConnection(name, value);
           return;
         }
         break;
       case 12:
         if (HttpHeaders.contentTypeHeader == name) {
-          _addContentType(name, value as String);
+          _addContentType(name, value);
           return;
         }
         break;
@@ -410,69 +377,69 @@ class _HttpHeaders implements HttpHeaders {
     _addValue(name, value);
   }
 
-  void _addContentLength(String name, Object value) {
+  void _addContentLength(String name, value) {
     if (value is int) {
       if (value < 0) {
-        throw HttpException('Content-Length must contain only digits');
+        throw HttpException("Content-Length must contain only digits");
       }
     } else if (value is String) {
       if (!_digitsValidator.hasMatch(value)) {
-        throw HttpException('Content-Length must contain only digits');
+        throw HttpException("Content-Length must contain only digits");
       }
       value = int.parse(value);
     } else {
-      throw HttpException('Unexpected type for header named $name');
+      throw HttpException("Unexpected type for header named $name");
     }
     contentLength = value;
   }
 
-  void _addTransferEncoding(String name, Object value) {
-    if (value == 'chunked') {
+  void _addTransferEncoding(String name, value) {
+    if (value == "chunked") {
       chunkedTransferEncoding = true;
     } else {
       _addValue(HttpHeaders.transferEncodingHeader, value);
     }
   }
 
-  void _addDate(String name, Object value) {
+  void _addDate(String name, value) {
     if (value is DateTime) {
       date = value;
     } else if (value is String) {
       _set(HttpHeaders.dateHeader, value);
     } else {
-      throw HttpException('Unexpected type for header named $name');
+      throw HttpException("Unexpected type for header named $name");
     }
   }
 
-  void _addExpires(String name, Object value) {
+  void _addExpires(String name, value) {
     if (value is DateTime) {
       expires = value;
     } else if (value is String) {
       _set(HttpHeaders.expiresHeader, value);
     } else {
-      throw HttpException('Unexpected type for header named $name');
+      throw HttpException("Unexpected type for header named $name");
     }
   }
 
-  void _addIfModifiedSince(String name, Object value) {
+  void _addIfModifiedSince(String name, value) {
     if (value is DateTime) {
       ifModifiedSince = value;
     } else if (value is String) {
       _set(HttpHeaders.ifModifiedSinceHeader, value);
     } else {
-      throw HttpException('Unexpected type for header named $name');
+      throw HttpException("Unexpected type for header named $name");
     }
   }
 
-  void _addHost(String name, Object value) {
+  void _addHost(String name, value) {
     if (value is String) {
       // value.indexOf will only work for ipv4, ipv6 which has multiple : in its
       // host part needs lastIndexOf
-      int pos = value.lastIndexOf(':');
+      int pos = value.lastIndexOf(":");
       // According to RFC 3986, section 3.2.2, host part of ipv6 address must be
       // enclosed by square brackets.
       // https://serverfault.com/questions/205793/how-can-one-distinguish-the-host-and-the-port-in-an-ipv6-url
-      if (pos == -1 || value.startsWith('[') && value.endsWith(']')) {
+      if (pos == -1 || value.startsWith("[") && value.endsWith("]")) {
         _host = value;
         _port = HttpClient.defaultHttpPort;
       } else {
@@ -493,7 +460,7 @@ class _HttpHeaders implements HttpHeaders {
       }
       _set(HttpHeaders.hostHeader, value);
     } else {
-      throw HttpException('Unexpected type for header named $name');
+      throw HttpException("Unexpected type for header named $name");
     }
   }
 
@@ -507,12 +474,12 @@ class _HttpHeaders implements HttpHeaders {
     _addValue(name, value);
   }
 
-  void _addContentType(String name, String value) {
+  void _addContentType(String name, value) {
     _set(HttpHeaders.contentTypeHeader, value);
   }
 
   void _addValue(String name, Object value) {
-    List<String> values = _headers[name] ??= <String>[];
+    List<String> values = (_headers[name] ??= <String>[]);
     values.add(_valueToString(value));
   }
 
@@ -532,23 +499,19 @@ class _HttpHeaders implements HttpHeaders {
   }
 
   void _checkMutable() {
-    if (!_mutable) {
-      throw HttpException('HTTP headers are not mutable');
-    }
+    if (!_mutable) throw HttpException("HTTP headers are not mutable");
   }
 
   void _updateHostHeader() {
     var host = _host;
     if (host != null) {
       bool defaultPort = _port == null || _port == _defaultPortForScheme;
-      _set('host', defaultPort ? host : '$host:$_port');
+      _set("host", defaultPort ? host : "$host:$_port");
     }
   }
 
   bool _foldHeader(String name) {
-    if (name == HttpHeaders.setCookieHeader) {
-      return false;
-    }
+    if (name == HttpHeaders.setCookieHeader) return false;
     var noFoldingHeaders = _noFoldingHeaders;
     return noFoldingHeaders == null || !noFoldingHeaders.contains(name);
   }
@@ -563,9 +526,10 @@ class _HttpHeaders implements HttpHeaders {
     // Content-Length header field when the request message does not
     // contain a payload body and the method semantics do not anticipate
     // such a body.
-    String? ignoreHeader = _contentLength == 0 && skipZeroContentLength
-        ? HttpHeaders.contentLengthHeader
-        : null;
+    String? ignoreHeader =
+        _contentLength == 0 && skipZeroContentLength
+            ? HttpHeaders.contentLengthHeader
+            : null;
     _headers.forEach((String name, List<String> values) {
       if (ignoreHeader == name) {
         return;
@@ -574,51 +538,50 @@ class _HttpHeaders implements HttpHeaders {
       bool fold = _foldHeader(name);
       var nameData = originalName.codeUnits;
       builder.add(nameData);
-      builder.addByte(_CharCode.colon);
-      builder.addByte(_CharCode.sp);
+      builder.addByte(_CharCode.COLON);
+      builder.addByte(_CharCode.SP);
       for (int i = 0; i < values.length; i++) {
         if (i > 0) {
           if (fold) {
-            builder.addByte(_CharCode.comma);
-            builder.addByte(_CharCode.sp);
+            builder.addByte(_CharCode.COMMA);
+            builder.addByte(_CharCode.SP);
           } else {
-            builder.addByte(_CharCode.cr);
-            builder.addByte(_CharCode.lf);
+            builder.addByte(_CharCode.CR);
+            builder.addByte(_CharCode.LF);
             builder.add(nameData);
-            builder.addByte(_CharCode.colon);
-            builder.addByte(_CharCode.sp);
+            builder.addByte(_CharCode.COLON);
+            builder.addByte(_CharCode.SP);
           }
         }
         builder.add(values[i].codeUnits);
       }
-      builder.addByte(_CharCode.cr);
-      builder.addByte(_CharCode.lf);
+      builder.addByte(_CharCode.CR);
+      builder.addByte(_CharCode.LF);
     });
   }
 
-  @override
   String toString() {
     StringBuffer sb = StringBuffer();
     _headers.forEach((String name, List<String> values) {
       String originalName = _originalHeaderName(name);
       sb
         ..write(originalName)
-        ..write(': ');
+        ..write(": ");
       bool fold = _foldHeader(name);
       for (int i = 0; i < values.length; i++) {
         if (i > 0) {
           if (fold) {
-            sb.write(', ');
+            sb.write(", ");
           } else {
             sb
-              ..write('\n')
+              ..write("\n")
               ..write(originalName)
-              ..write(': ');
+              ..write(": ");
           }
         }
         sb.write(values[i]);
       }
-      sb.write('\n');
+      sb.write("\n");
     });
     return sb.toString();
   }
@@ -633,9 +596,7 @@ class _HttpHeaders implements HttpHeaders {
 
       void skipWS() {
         while (!done()) {
-          if (s[index] != ' ' && s[index] != '\t') {
-            return;
-          }
+          if (s[index] != " " && s[index] != "\t") return;
           index++;
         }
       }
@@ -643,9 +604,7 @@ class _HttpHeaders implements HttpHeaders {
       String parseName() {
         int start = index;
         while (!done()) {
-          if (s[index] == ' ' || s[index] == '\t' || s[index] == '=') {
-            break;
-          }
+          if (s[index] == " " || s[index] == "\t" || s[index] == "=") break;
           index++;
         }
         return s.substring(start, index);
@@ -654,33 +613,25 @@ class _HttpHeaders implements HttpHeaders {
       String parseValue() {
         int start = index;
         while (!done()) {
-          if (s[index] == ' ' || s[index] == '\t' || s[index] == ';') {
-            break;
-          }
+          if (s[index] == " " || s[index] == "\t" || s[index] == ";") break;
           index++;
         }
         return s.substring(start, index);
       }
 
       bool expect(String expected) {
-        if (done()) {
-          return false;
-        }
-        if (s[index] != expected) {
-          return false;
-        }
+        if (done()) return false;
+        if (s[index] != expected) return false;
         index++;
         return true;
       }
 
       while (!done()) {
         skipWS();
-        if (done()) {
-          return;
-        }
+        if (done()) return;
         String name = parseName();
         skipWS();
-        if (!expect('=')) {
+        if (!expect("=")) {
           index = s.indexOf(';', index);
           continue;
         }
@@ -692,10 +643,8 @@ class _HttpHeaders implements HttpHeaders {
           // Skip it, invalid cookie data.
         }
         skipWS();
-        if (done()) {
-          return;
-        }
-        if (!expect(';')) {
+        if (done()) return;
+        if (!expect(";")) {
           index = s.indexOf(';', index);
           continue;
         }
@@ -715,20 +664,24 @@ class _HttpHeaders implements HttpHeaders {
     for (var i = 0; i < field.length; i++) {
       if (!_HttpParser._isTokenChar(field.codeUnitAt(i))) {
         throw FormatException(
-            'Invalid HTTP header field name: ${json.encode(field)}', field, i);
+          "Invalid HTTP header field name: ${json.encode(field)}",
+          field,
+          i,
+        );
       }
     }
     return field.toLowerCase();
   }
 
   static Object _validateValue(Object value) {
-    if (value is! String) {
-      return value;
-    }
-    for (var i = 0; i < value.length; i++) {
-      if (!_HttpParser._isValueChar(value.codeUnitAt(i))) {
+    if (value is! String) return value;
+    for (var i = 0; i < (value).length; i++) {
+      if (!_HttpParser._isValueChar((value).codeUnitAt(i))) {
         throw FormatException(
-            'Invalid HTTP header field value: ${json.encode(value)}', value, i);
+          "Invalid HTTP header field value: ${json.encode(value)}",
+          value,
+          i,
+        );
       }
     }
     return value;
@@ -744,30 +697,27 @@ class _HeaderValue implements HeaderValue {
   Map<String, String?>? _parameters;
   Map<String, String?>? _unmodifiableParameters;
 
-  _HeaderValue([this._value = '', Map<String, String?> parameters = const {}]) {
-    // TODO(40614): Remove once non-nullability is sound.
-    if (parameters.isNotEmpty) {
-      _parameters = HashMap<String, String?>.from(parameters);
-    }
+  _HeaderValue([this._value = "", Map<String, String?> parameters = const {}]) {
+    _parameters = HashMap<String, String?>.from(parameters);
   }
 
-  static _HeaderValue parse(String value,
-      {String parameterSeparator = ';',
-      String? valueSeparator,
-      bool preserveBackslash = false}) {
+  static _HeaderValue parse(
+    String value, {
+    String parameterSeparator = ";",
+    String? valueSeparator,
+    bool preserveBackslash = false,
+  }) {
     // Parse the string.
     var result = _HeaderValue();
     result._parse(value, parameterSeparator, valueSeparator, preserveBackslash);
     return result;
   }
 
-  @override
   String get value => _value;
 
   Map<String, String?> _ensureParameters() =>
       _parameters ??= <String, String?>{};
 
-  @override
   Map<String, String?> get parameters =>
       _unmodifiableParameters ??= UnmodifiableMapView(_ensureParameters());
 
@@ -775,7 +725,7 @@ class _HeaderValue implements HeaderValue {
     if (token.isEmpty) {
       return false;
     }
-    var delimiters = '"(),/:;<=>?@[]{}';
+    final delimiters = "\"(),/:;<=>?@[]{}";
     for (int i = 0; i < token.length; i++) {
       int codeUnit = token.codeUnitAt(i);
       if (codeUnit <= 32 || codeUnit >= 127 || delimiters.contains(token[i])) {
@@ -785,7 +735,6 @@ class _HeaderValue implements HeaderValue {
     return true;
   }
 
-  @override
   String toString() {
     StringBuffer sb = StringBuffer();
     sb.write(_value);
@@ -793,10 +742,10 @@ class _HeaderValue implements HeaderValue {
     if (parameters != null && parameters.isNotEmpty) {
       parameters.forEach((String name, String? value) {
         sb
-          ..write('; ')
+          ..write("; ")
           ..write(name);
         if (value != null) {
-          sb.write('=');
+          sb.write("=");
           if (_isToken(value)) {
             sb.write(value);
           } else {
@@ -806,7 +755,7 @@ class _HeaderValue implements HeaderValue {
               // Can use codeUnitAt here instead.
               int codeUnit = value.codeUnitAt(i);
               if (codeUnit == 92 /* backslash */ ||
-                  codeUnit == 34 /* double quote */) {
+                  codeUnit == 34 /* double quote */ ) {
                 sb.write(value.substring(start, i));
                 sb.write(r'\');
                 start = i;
@@ -822,17 +771,19 @@ class _HeaderValue implements HeaderValue {
     return sb.toString();
   }
 
-  void _parse(String s, String parameterSeparator, String? valueSeparator,
-      bool preserveBackslash) {
+  void _parse(
+    String s,
+    String parameterSeparator,
+    String? valueSeparator,
+    bool preserveBackslash,
+  ) {
     int index = 0;
 
     bool done() => index == s.length;
 
     void skipWS() {
       while (!done()) {
-        if (s[index] != ' ' && s[index] != '\t') {
-          return;
-        }
+        if (s[index] != " " && s[index] != "\t") return;
         index++;
       }
     }
@@ -841,12 +792,11 @@ class _HeaderValue implements HeaderValue {
       int start = index;
       while (!done()) {
         var char = s[index];
-        if (char == ' ' ||
-            char == '\t' ||
+        if (char == " " ||
+            char == "\t" ||
             char == valueSeparator ||
-            char == parameterSeparator) {
+            char == parameterSeparator)
           break;
-        }
         index++;
       }
       return s.substring(start, index);
@@ -854,7 +804,7 @@ class _HeaderValue implements HeaderValue {
 
     void expect(String expected) {
       if (done() || s[index] != expected) {
-        throw HttpException('Failed to parse header value');
+        throw HttpException("Failed to parse header value");
       }
       index++;
     }
@@ -874,34 +824,33 @@ class _HeaderValue implements HeaderValue {
         int start = index;
         while (!done()) {
           var char = s[index];
-          if (char == ' ' ||
-              char == '\t' ||
-              char == '=' ||
+          if (char == " " ||
+              char == "\t" ||
+              char == "=" ||
               char == parameterSeparator ||
-              char == valueSeparator) {
+              char == valueSeparator)
             break;
-          }
           index++;
         }
         return s.substring(start, index).toLowerCase();
       }
 
       String parseParameterValue() {
-        if (!done() && s[index] == '"') {
+        if (!done() && s[index] == "\"") {
           // Parse quoted value.
           StringBuffer sb = StringBuffer();
           index++;
           while (!done()) {
             var char = s[index];
-            if (char == '\\') {
+            if (char == "\\") {
               if (index + 1 == s.length) {
-                throw HttpException('Failed to parse header value');
+                throw HttpException("Failed to parse header value");
               }
-              if (preserveBackslash && s[index + 1] != '"') {
+              if (preserveBackslash && s[index + 1] != "\"") {
                 sb.write(char);
               }
               index++;
-            } else if (char == '"') {
+            } else if (char == "\"") {
               index++;
               return sb.toString();
             }
@@ -909,7 +858,7 @@ class _HeaderValue implements HeaderValue {
             sb.write(char);
             index++;
           }
-          throw HttpException('Failed to parse header value');
+          throw HttpException("Failed to parse header value");
         } else {
           // Parse non-quoted value.
           return parseValue();
@@ -918,12 +867,10 @@ class _HeaderValue implements HeaderValue {
 
       while (!done()) {
         skipWS();
-        if (done()) {
-          return;
-        }
+        if (done()) return;
         String name = parseParameterName();
         skipWS();
-        if (maybeExpect('=')) {
+        if (maybeExpect("=")) {
           skipWS();
           String value = parseParameterValue();
           if (name == 'charset' && this is _ContentType) {
@@ -935,13 +882,9 @@ class _HeaderValue implements HeaderValue {
         } else if (name.isNotEmpty) {
           parameters[name] = null;
         }
-        if (done()) {
-          return;
-        }
+        if (done()) return;
         // TODO: Implement support for multi-valued parameters.
-        if (s[index] == valueSeparator) {
-          return;
-        }
+        if (s[index] == valueSeparator) return;
         expect(parameterSeparator);
       }
     }
@@ -949,42 +892,36 @@ class _HeaderValue implements HeaderValue {
     skipWS();
     _value = parseValue();
     skipWS();
-    if (done()) {
-      return;
-    }
-    if (s[index] == valueSeparator) {
-      return;
-    }
+    if (done()) return;
+    if (s[index] == valueSeparator) return;
     maybeExpect(parameterSeparator);
     parseParameters();
   }
 }
 
 class _ContentType extends _HeaderValue implements ContentType {
-  String _primaryType = '';
-  String _subType = '';
+  String _primaryType = "";
+  String _subType = "";
 
-  _ContentType(String primaryType, String subType, String? charset,
-      Map<String, String?> parameters)
-      : _primaryType = primaryType,
-        _subType = subType,
-        super('') {
-    // TODO(40614): Remove once non-nullability is sound.
-    String emptyIfNull(String? string) => string ?? '';
-    _primaryType = emptyIfNull(_primaryType);
-    _subType = emptyIfNull(_subType);
-    _value = '$_primaryType/$_subType';
-    // TODO(40614): Remove once non-nullability is sound.
+  _ContentType(
+    String primaryType,
+    String subType,
+    String? charset,
+    Map<String, String?> parameters,
+  ) : _primaryType = primaryType,
+      _subType = subType,
+      super("") {
+    _value = "$_primaryType/$_subType";
     var parameterMap = _ensureParameters();
     parameters.forEach((String key, String? value) {
       String lowerCaseKey = key.toLowerCase();
-      if (lowerCaseKey == 'charset') {
+      if (lowerCaseKey == "charset") {
         value = value?.toLowerCase();
       }
       parameterMap[lowerCaseKey] = value;
     });
     if (charset != null) {
-      _ensureParameters()['charset'] = charset.toLowerCase();
+      _ensureParameters()["charset"] = charset.toLowerCase();
     }
   }
 
@@ -992,8 +929,8 @@ class _ContentType extends _HeaderValue implements ContentType {
 
   static _ContentType parse(String value) {
     var result = _ContentType._();
-    result._parse(value, ';', null, false);
-    int index = result._value.indexOf('/');
+    result._parse(value, ";", null, false);
+    int index = result._value.indexOf("/");
     if (index == -1 || index == (result._value.length - 1)) {
       result._primaryType = result._value.trim().toLowerCase();
     } else {
@@ -1004,70 +941,52 @@ class _ContentType extends _HeaderValue implements ContentType {
     return result;
   }
 
-  @override
   String get mimeType => '$primaryType/$subType';
 
-  @override
   String get primaryType => _primaryType;
 
-  @override
   String get subType => _subType;
 
-  @override
-  String? get charset => parameters['charset'];
+  String? get charset => parameters["charset"];
 }
 
 class _Cookie implements Cookie {
   String _name;
   String _value;
-  @override
   DateTime? expires;
-  @override
   int? maxAge;
-  @override
   String? domain;
   String? _path;
-  @override
   bool httpOnly = false;
-  @override
   bool secure = false;
-  @override
   SameSite? sameSite;
 
   _Cookie(String name, String value)
-      : _name = _validateName(name),
-        _value = _validateValue(value),
-        httpOnly = true;
+    : _name = _validateName(name),
+      _value = _validateValue(value),
+      httpOnly = true;
 
-  @override
   String get name => _name;
-  @override
   String get value => _value;
 
-  @override
   String? get path => _path;
 
-  @override
   set path(String? newPath) {
     _validatePath(newPath);
     _path = newPath;
   }
 
-  @override
   set name(String newName) {
     _validateName(newName);
     _name = newName;
   }
 
-  @override
   set value(String newValue) {
     _validateValue(newValue);
     _value = newValue;
   }
 
-  _Cookie.fromSetCookieValue(String value)
-      : _name = '',
-        _value = '' {
+  _Cookie.fromSetCookieValue(String value) : _name = "", _value = "" {
     // Parse the 'set-cookie' header value.
     _parseSetCookieValue(value);
   }
@@ -1081,9 +1000,7 @@ class _Cookie implements Cookie {
     String parseName() {
       int start = index;
       while (!done()) {
-        if (s[index] == '=') {
-          break;
-        }
+        if (s[index] == "=") break;
         index++;
       }
       return s.substring(start, index).trim();
@@ -1092,9 +1009,7 @@ class _Cookie implements Cookie {
     String parseValue() {
       int start = index;
       while (!done()) {
-        if (s[index] == ';') {
-          break;
-        }
+        if (s[index] == ";") break;
         index++;
       }
       return s.substring(start, index).trim();
@@ -1104,9 +1019,7 @@ class _Cookie implements Cookie {
       String parseAttributeName() {
         int start = index;
         while (!done()) {
-          if (s[index] == '=' || s[index] == ';') {
-            break;
-          }
+          if (s[index] == "=" || s[index] == ";") break;
           index++;
         }
         return s.substring(start, index).trim().toLowerCase();
@@ -1115,9 +1028,7 @@ class _Cookie implements Cookie {
       String parseAttributeValue() {
         int start = index;
         while (!done()) {
-          if (s[index] == ';') {
-            break;
-          }
+          if (s[index] == ";") break;
           index++;
         }
         return s.substring(start, index).trim().toLowerCase();
@@ -1125,111 +1036,102 @@ class _Cookie implements Cookie {
 
       while (!done()) {
         String name = parseAttributeName();
-        String value = '';
-        if (!done() && s[index] == '=') {
+        String value = "";
+        if (!done() && s[index] == "=") {
           index++; // Skip the = character.
           value = parseAttributeValue();
         }
-        if (name == 'expires') {
+        if (name == "expires") {
           expires = HttpDate._parseCookieDate(value);
-        } else if (name == 'max-age') {
+        } else if (name == "max-age") {
           maxAge = int.parse(value);
-        } else if (name == 'domain') {
+        } else if (name == "domain") {
           domain = value;
-        } else if (name == 'path') {
+        } else if (name == "path") {
           path = value;
-        } else if (name == 'httponly') {
+        } else if (name == "httponly") {
           httpOnly = true;
-        } else if (name == 'secure') {
+        } else if (name == "secure") {
           secure = true;
-        } else if (name == 'samesite') {
+        } else if (name == "samesite") {
           sameSite = switch (value) {
-            'lax' => SameSite.lax,
-            'none' => SameSite.none,
-            'strict' => SameSite.strict,
-            _ => throw HttpException(
-                'SameSite value should be one of Lax, Strict or None.')
+            "lax" => SameSite.lax,
+            "none" => SameSite.none,
+            "strict" => SameSite.strict,
+            _ =>
+              throw HttpException(
+                'SameSite value should be one of Lax, Strict or None.',
+              ),
           };
         }
-        if (!done()) {
-          index++; // Skip the ; character
-        }
+        if (!done()) index++; // Skip the ; character
       }
     }
 
     _name = _validateName(parseName());
     if (done() || _name.isEmpty) {
-      throw HttpException('Failed to parse header value [$s]');
+      throw HttpException("Failed to parse header value [$s]");
     }
     index++; // Skip the = character.
     _value = _validateValue(parseValue());
-    if (done()) {
-      return;
-    }
+    if (done()) return;
     index++; // Skip the ; character.
     parseAttributes();
   }
 
-  @override
   String toString() {
     StringBuffer sb = StringBuffer();
     sb
       ..write(_name)
-      ..write('=')
+      ..write("=")
       ..write(_value);
     var expires = this.expires;
     if (expires != null) {
       sb
-        ..write('; Expires=')
+        ..write("; Expires=")
         ..write(HttpDate.format(expires));
     }
     if (maxAge != null) {
       sb
-        ..write('; Max-Age=')
+        ..write("; Max-Age=")
         ..write(maxAge);
     }
     if (domain != null) {
       sb
-        ..write('; Domain=')
+        ..write("; Domain=")
         ..write(domain);
     }
     if (path != null) {
       sb
-        ..write('; Path=')
+        ..write("; Path=")
         ..write(path);
     }
-    if (secure) {
-      sb.write('; Secure');
-    }
-    if (httpOnly) {
-      sb.write('; HttpOnly');
-    }
-    if (sameSite != null) {
-      sb.write('; $sameSite');
-    }
+    if (secure) sb.write("; Secure");
+    if (httpOnly) sb.write("; HttpOnly");
+    if (sameSite != null) sb.write("; $sameSite");
 
     return sb.toString();
   }
 
   static String _validateName(String newName) {
     const separators = [
-      '(',
-      ')',
-      '<',
-      '>',
-      '@',
-      ',',
-      ';',
-      ':',
-      '\\',
+      "(",
+      ")",
+      "<",
+      ">",
+      "@",
+      ",",
+      ";",
+      ":",
+      "\\",
       '"',
-      '/',
-      '[',
-      ']',
-      '?',
-      '=',
-      '{',
-      '}'
+      "/",
+      "[",
+      "]",
+      "?",
+      "=",
+      "{",
+      "}",
     ];
     for (int i = 0; i < newName.length; i++) {
       int codeUnit = newName.codeUnitAt(i);
@@ -1237,15 +1139,18 @@ class _Cookie implements Cookie {
           codeUnit >= 127 ||
           separators.contains(newName[i])) {
         throw FormatException(
-            "Invalid character in cookie name, code unit: '$codeUnit'",
-            newName,
-            i);
+          "Invalid character in cookie name, code unit: '$codeUnit'",
+          newName,
+          i,
+        );
       }
     }
     return newName;
   }
 
   static String _validateValue(String newValue) {
+    // Per RFC 6265, consider surrounding "" as part of the value, but otherwise
+    // double quotes are not allowed.
     int start = 0;
     int end = newValue.length;
     if (2 <= newValue.length &&
@@ -1263,27 +1168,27 @@ class _Cookie implements Cookie {
           (codeUnit >= 0x3C && codeUnit <= 0x5B) ||
           (codeUnit >= 0x5D && codeUnit <= 0x7E))) {
         throw FormatException(
-            "Invalid character in cookie value, code unit: '$codeUnit'",
-            newValue,
-            i);
+          "Invalid character in cookie value, code unit: '$codeUnit'",
+          newValue,
+          i,
+        );
       }
     }
     return newValue;
   }
 
   static void _validatePath(String? path) {
-    if (path == null) {
-      return;
-    }
+    if (path == null) return;
     for (int i = 0; i < path.length; i++) {
       int codeUnit = path.codeUnitAt(i);
       // According to RFC 6265, semicolon and controls should not occur in the
       // path.
       // path-value = <any CHAR except CTLs or ";">
       // CTLs = %x00-1F / %x7F
-      if (codeUnit < 0x20 || codeUnit >= 0x7f || codeUnit == 0x3b /*;*/) {
+      if (codeUnit < 0x20 || codeUnit >= 0x7f || codeUnit == 0x3b /*;*/ ) {
         throw FormatException(
-            "Invalid character in cookie path, code unit: '$codeUnit'");
+          "Invalid character in cookie path, code unit: '$codeUnit'",
+        );
       }
     }
   }

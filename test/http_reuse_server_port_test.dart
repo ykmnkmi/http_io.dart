@@ -1,16 +1,21 @@
 // Copyright (c) 2013, the Dart project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
+//
+// VMOptions=
+// VMOptions=--short_socket_read
+// VMOptions=--short_socket_write
+// VMOptions=--short_socket_read --short_socket_write
 
 import 'dart:async';
-
 import 'package:http_io/http_io.dart';
 
-import 'async_helper.dart';
+import "package:expect/async_helper.dart";
+import "package:expect/expect.dart";
 
 Future<int> runServer(int port, int connections, bool clean) {
-  var completer = Completer<int>();
-  HttpServer.bind('127.0.0.1', port).then((server) {
+  var completer = new Completer<int>();
+  HttpServer.bind("127.0.0.1", port).then((server) {
     int i = 0;
     server.listen((request) {
       request.cast<List<int>>().pipe(request.response);
@@ -21,16 +26,14 @@ Future<int> runServer(int port, int connections, bool clean) {
       }
     });
 
-    Future.wait(List.generate(connections, (_) {
-      var client = HttpClient();
+    Future.wait(new List.generate(connections, (_) {
+      var client = new HttpClient();
       return client
-          .get('127.0.0.1', server.port, '/')
+          .get("127.0.0.1", server.port, "/")
           .then((request) => request.close())
-          .then((response) => response.drain<void>())
-          .catchError((Object e) {
-        if (clean) {
-          throw e;
-        }
+          .then((response) => response.drain())
+          .catchError((e) {
+        if (clean) throw e;
       });
     })).then((_) {
       if (clean) {

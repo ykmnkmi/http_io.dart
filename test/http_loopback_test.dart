@@ -2,18 +2,16 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import 'dart:async';
-
-import 'package:http_io/http_io.dart';
-
-import 'expect.dart';
+import "dart:async";
+import "package:http_io/http_io.dart";
+import "package:expect/expect.dart";
 
 /// Creates a callback that listens for incoming connections.
 /// If [remotePorts] is not null then callback would add remote port of each
 /// new connection to the given list.
-void Function(RawSocket serverSide) makeListener([List<int>? remotePorts]) {
+makeListener([List<int>? remotePorts]) {
   return (RawSocket serverSide) {
-    void serveData(RawSocketEvent event) {
+    serveData(RawSocketEvent event) {
       serverSide.shutdown(SocketDirection.send);
     }
 
@@ -26,24 +24,24 @@ void Function(RawSocket serverSide) makeListener([List<int>? remotePorts]) {
 /// if the server is listening to IPv4 then you can't connect via IPv6.
 Future<void> failureTest(
     InternetAddress serverAddr, InternetAddress clientAddr) async {
-  var remotePorts = <int>[];
-  var server = await RawServerSocket.bind(serverAddr, 0);
+  final remotePorts = <int>[];
+  final server = await RawServerSocket.bind(serverAddr, 0);
   server.listen(makeListener(remotePorts));
 
   bool success = false;
   try {
-    var client = await RawSocket.connect(clientAddr, server.port);
-    var clientPort = client.port;
+    final client = await RawSocket.connect(clientAddr, server.port);
+    final clientPort = client.port;
 
     // We might actually succeed in connecting somewhere (e.g. to another test
     // which by chance started listening to the same port).
     // To make this test more robust we add a check that verifies that we did
     // not connect to our server by checking if clientPort is within
     // the list of remotePorts observed by the server. It should not be there.
-    await Future<void>.delayed(Duration(seconds: 2));
+    await Future.delayed(Duration(seconds: 2));
     success = !remotePorts.contains(clientPort);
     await client.close();
-  } on SocketException catch (_) {
+  } on SocketException catch (e) {
     // We expect that we fail to connect to IPv4 server via IPv6 client and
     // vice versa.
     success = true;
@@ -57,11 +55,11 @@ Future<void> failureTest(
 }
 
 Future<void> successTest(InternetAddress address) async {
-  var server = await RawServerSocket.bind(address, 0);
+  final server = await RawServerSocket.bind(address, 0);
   server.listen(makeListener());
   bool testFailure = false;
   try {
-    var client = await RawSocket.connect(address, server.port);
+    final client = await RawSocket.connect(address, server.port);
     await client.close();
   } catch (e) {
     testFailure = true;
@@ -71,7 +69,7 @@ Future<void> successTest(InternetAddress address) async {
   }
 }
 
-Future<void> main() async {
+main() async {
   await failureTest(InternetAddress.loopbackIPv4, InternetAddress.loopbackIPv6);
   await failureTest(InternetAddress.loopbackIPv6, InternetAddress.loopbackIPv4);
   await successTest(InternetAddress.loopbackIPv4);

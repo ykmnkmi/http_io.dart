@@ -2,17 +2,20 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-// ignore_for_file: avoid_print
+library dart._http;
 
-import 'dart:async';
-import 'dart:convert';
-import 'dart:math';
-import 'dart:typed_data';
+import "dart:async";
+import "dart:convert";
+// ignore: IMPORT_INTERNAL_LIBRARY
+import "package:http_io/http_io.dart"
+    show
+        TestingClass$_WebSocketProtocolTransformer,
+        Testing$_WebSocketProtocolTransformer;
+import "dart:math";
+import "dart:typed_data";
 
-import 'package:http_io/http_io.dart';
-
-import 'async_helper.dart';
-import 'expect.dart';
+import "package:expect/async_helper.dart";
+import "package:expect/expect.dart";
 
 typedef _WebSocketProtocolTransformer
     = TestingClass$_WebSocketProtocolTransformer;
@@ -29,50 +32,45 @@ class WebSocketMessageCollector {
 
   int messageCount = 0;
 
-  List<int>? data;
+  var data;
 
   void Function()? onClosed;
 
-  WebSocketMessageCollector(Stream<dynamic> stream, [this.expectedMessage]) {
+  WebSocketMessageCollector(Stream stream,
+      [List<int>? this.expectedMessage = null]) {
     stream.listen(onMessageData, onDone: onClosed, onError: onError);
   }
 
-  void onMessageData(dynamic buffer) {
+  void onMessageData(buffer) {
     if (buffer is String) {
       buffer = utf8.encode(buffer);
     }
-    Expect.listEquals(expectedMessage!, buffer as List<int>);
+    Expect.listEquals(expectedMessage!, buffer);
     messageCount++;
     data = buffer;
   }
 
-  void onError(Object e, StackTrace? trace) {
-    String msg = 'Unexpected error $e';
-    if (trace != null) {
-      msg += '\nStackTrace: $trace';
-    }
+  void onError(e, trace) {
+    String msg = "Unexpected error $e";
+    if (trace != null) msg += "\nStackTrace: $trace";
     Expect.fail(msg);
   }
 }
 
 // Web socket constants.
-const int frameOpCodeText = 1;
-const int frameOpCodeBinary = 2;
+const int FRAME_OPCODE_TEXT = 1;
+const int FRAME_OPCODE_BINARY = 2;
 
 // Function for building a web socket frame.
 List<int> createFrame(bool fin, int opcode, int? maskingKey, List<int> data,
     int offset, int count) {
   int frameSize = 2;
-  if (count > 125) {
-    frameSize += 2;
-  }
-  if (count > 65535) {
-    frameSize += 6;
-  }
+  if (count > 125) frameSize += 2;
+  if (count > 65535) frameSize += 6;
   frameSize += count;
   // No masking.
   assert(maskingKey == null);
-  List<int> frame = Uint8List(frameSize);
+  List<int> frame = new Uint8List(frameSize);
   int frameIndex = 0;
   frame[frameIndex++] = (fin ? 0x80 : 0x00) | opcode;
   if (count < 126) {
@@ -96,9 +94,9 @@ void testFullMessages() {
   void testMessage(int opcode, List<int> message) {
     int messageCount = 0;
     // Use the same web socket protocol transformer for all frames.
-    var transformer = _WebSocketProtocolTransformer();
-    var controller = StreamController<List<int>>(sync: true);
-    WebSocketMessageCollector mc = WebSocketMessageCollector(
+    var transformer = new _WebSocketProtocolTransformer();
+    var controller = new StreamController<List<int>>(sync: true);
+    WebSocketMessageCollector mc = new WebSocketMessageCollector(
         controller.stream.transform(transformer), message);
 
     List<int> frame =
@@ -133,7 +131,7 @@ void testFullMessages() {
         Expect.isNotNull(mc.data);
       }
       Expect.equals(messageCount, mc.messageCount);
-      print('Messages test, messages $messageCount');
+      print("Messages test, messages $messageCount");
     };
     controller.close();
   }
@@ -141,11 +139,9 @@ void testFullMessages() {
   void runTest(int from, int to, int step) {
     for (int messageLength = from; messageLength < to; messageLength += step) {
       List<int> message = [for (int i = 0; i < messageLength; i++) i & 0x7F];
-      testMessage(frameOpCodeText, message);
-      for (int i = 0; i < messageLength; i++) {
-        message[i] = i & 0xFF;
-      }
-      testMessage(frameOpCodeBinary, message);
+      testMessage(FRAME_OPCODE_TEXT, message);
+      for (int i = 0; i < messageLength; i++) message[i] = i & 0xFF;
+      testMessage(FRAME_OPCODE_BINARY, message);
     }
   }
 
@@ -159,10 +155,10 @@ void testFullMessages() {
 // Test processing of frames which are split into fragments.
 void testFragmentedMessages() {
   // Use the same web socket protocol transformer for all frames.
-  var transformer = _WebSocketProtocolTransformer();
-  var controller = StreamController<List<int>>(sync: true);
+  var transformer = new _WebSocketProtocolTransformer();
+  var controller = new StreamController<List<int>>(sync: true);
   WebSocketMessageCollector mc =
-      WebSocketMessageCollector(controller.stream.transform(transformer));
+      new WebSocketMessageCollector(controller.stream.transform(transformer));
 
   int messageCount = 0;
   int frameCount = 0;
@@ -203,11 +199,9 @@ void testFragmentedMessages() {
   void runTest(int from, int to, int step) {
     for (int messageLength = from; messageLength < to; messageLength += step) {
       List<int> message = [for (int i = 0; i < messageLength; i++) i & 0x7F];
-      testMessageFragmentation(frameOpCodeText, message);
-      for (int i = 0; i < messageLength; i++) {
-        message[i] = i & 0xFF;
-      }
-      testMessageFragmentation(frameOpCodeBinary, message);
+      testMessageFragmentation(FRAME_OPCODE_TEXT, message);
+      for (int i = 0; i < messageLength; i++) message[i] = i & 0xFF;
+      testMessageFragmentation(FRAME_OPCODE_BINARY, message);
     }
   }
 
@@ -216,20 +210,20 @@ void testFragmentedMessages() {
   runTest(120, 130, 1);
   runTest(0, 1000, 100);
   runTest(65534, 65537, 1);
-  print('Fragment messages test, messages $messageCount, frames $frameCount');
+  print("Fragment messages test, messages $messageCount, frames $frameCount");
   Expect.equals(messageCount, mc.messageCount);
 }
 
 void testUnmaskedMessage() {
-  var transformer = _WebSocketProtocolTransformer(true);
-  var controller = StreamController<List<int>>(sync: true);
+  var transformer = new _WebSocketProtocolTransformer(true);
+  var controller = new StreamController<List<int>>(sync: true);
   asyncStart();
   controller.stream.transform(transformer).listen((_) {}, onError: (e) {
     asyncEnd();
   });
-  var message = Uint8List(10);
+  var message = new Uint8List(10);
   List<int> frame =
-      createFrame(true, frameOpCodeBinary, null, message, 0, message.length);
+      createFrame(true, FRAME_OPCODE_BINARY, null, message, 0, message.length);
   controller.add(frame);
 }
 

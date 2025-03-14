@@ -2,31 +2,29 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-// ignore_for_file: avoid_print
-
 import 'dart:async';
-
 import 'package:http_io/http_io.dart';
+import 'dart:convert';
 
-import 'async_helper.dart';
-import 'expect.dart';
+import 'package:expect/async_helper.dart';
+import 'package:expect/expect.dart';
 
-Future<void> testBindShared(String host, bool v6Only) async {
+testBindShared(String host, bool v6Only) async {
   asyncStart();
 
   // Sent a single request using a new HttpClient to ensure a new TCP
   // connection is used.
-  Future<void> singleRequest(String host, int port, int statusCode) async {
-    var client = HttpClient();
+  Future singleRequest(host, port, statusCode) async {
+    var client = new HttpClient();
     var request = await client.open('GET', host, port, '/');
     var response = await request.close();
-    await response.drain<void>();
+    await response.drain();
     Expect.equals(statusCode, response.statusCode);
     client.close(force: true);
   }
 
-  Completer<void> server1Request = Completer<void>();
-  Completer<void> server2Request = Completer();
+  Completer server1Request = new Completer();
+  Completer server2Request = new Completer();
 
   var server1 = await HttpServer.bind(host, 0, v6Only: v6Only, shared: true);
   var port = server1.port;
@@ -68,7 +66,7 @@ void main() {
     if (ok) {
       addresses.add('::1');
     }
-    var futures = <Future<void>>[];
+    var futures = <Future>[];
     for (var host in addresses) {
       futures.add(testBindShared(host, false));
       futures.add(testBindShared(host, true));

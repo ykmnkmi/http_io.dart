@@ -20,8 +20,9 @@ Future<void> main() async {
   for (var i = 0; i < max; i++) {
     Future(() async {
       try {
-        var request = await client
-            .getUrl(Uri.parse('http://localhost:${servers[i].port}/'));
+        var request = await client.getUrl(
+          Uri.parse('http://localhost:${servers[i].port}/'),
+        );
         got++;
         if (got == max) {
           // Test that no stack overflow happens.

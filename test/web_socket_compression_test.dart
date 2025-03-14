@@ -7,27 +7,23 @@
 // VMOptions=--short_socket_write
 // VMOptions=--short_socket_read --short_socket_write
 
-// ignore_for_file: avoid_print
+import "dart:async";
+import "dart:convert";
+import "package:http_io/http_io.dart";
+import "dart:math";
+import "dart:typed_data";
 
-import 'dart:async';
-import 'dart:convert';
-import 'dart:io' show Platform;
-import 'dart:math';
-import 'dart:typed_data';
+import "package:crypto/crypto.dart";
+import "package:expect/async_helper.dart";
+import "package:expect/expect.dart";
 
-import 'package:crypto/crypto.dart';
-import 'package:http_io/http_io.dart';
+const WEB_SOCKET_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
-import 'async_helper.dart';
-import 'expect.dart';
+const String HOST_NAME = 'localhost';
 
-const webSocketGUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
+String localFile(path) => Platform.script.resolve(path).toFilePath();
 
-const String hostName = 'localhost';
-
-String localFile(String path) => Platform.script.resolve(path).toFilePath();
-
-SecurityContext serverContext = SecurityContext()
+SecurityContext serverContext = new SecurityContext()
   ..useCertificateChain(localFile('certificates/server_chain.pem'))
   ..usePrivateKey(localFile('certificates/server_key.pem'),
       password: 'dartdart');
@@ -38,65 +34,62 @@ class SecurityConfiguration {
   SecurityConfiguration(this.secure);
 
   Future<HttpServer> createServer({int backlog = 0}) => secure
-      ? HttpServer.bindSecure(hostName, 0, serverContext, backlog: backlog)
-      : HttpServer.bind(hostName, 0, backlog: backlog);
+      ? HttpServer.bindSecure(HOST_NAME, 0, serverContext, backlog: backlog)
+      : HttpServer.bind(HOST_NAME, 0, backlog: backlog);
 
   Future<WebSocket> createClient(int port) =>
       // TODO(whesse): Add client context argument to WebSocket.connect
-      WebSocket.connect('${secure ? "wss" : "ws"}://$hostName:$port/');
+      WebSocket.connect('${secure ? "wss" : "ws"}://$HOST_NAME:$port/');
 
   Future<HttpClientResponse> createWebsocket(String url, String headerValue) {
-    HttpClient httpClient = HttpClient();
+    HttpClient _httpClient = new HttpClient();
     Uri uri = Uri.parse(url);
 
-    Random random = Random();
+    Random random = new Random();
     // Generate 16 random bytes.
-    Uint8List nonceData = Uint8List(16);
+    Uint8List nonceData = new Uint8List(16);
     for (int i = 0; i < 16; i++) {
       nonceData[i] = random.nextInt(256);
     }
     String nonce = base64.encode(nonceData);
 
-    uri = Uri(
-        scheme: uri.isScheme('wss') ? 'https' : 'http',
+    uri = new Uri(
+        scheme: uri.isScheme("wss") ? "https" : "http",
         userInfo: uri.userInfo,
         host: uri.host,
         port: uri.port,
         path: uri.path,
         query: uri.query,
         fragment: uri.fragment);
-    return httpClient.openUrl('GET', uri).then((request) {
-      if (uri.userInfo.isNotEmpty) {
+    return _httpClient.openUrl("GET", uri).then((request) {
+      if (uri.userInfo != null && !uri.userInfo.isEmpty) {
         // If the URL contains user information use that for basic
         // authorization.
         String auth = base64.encode(utf8.encode(uri.userInfo));
-        request.headers.set(HttpHeaders.authorizationHeader, 'Basic $auth');
+        request.headers.set(HttpHeaders.authorizationHeader, "Basic $auth");
       }
       // Setup the initial handshake.
       request.headers
-        ..set(HttpHeaders.connectionHeader, 'Upgrade')
-        ..set(HttpHeaders.upgradeHeader, 'websocket')
-        ..set('Sec-WebSocket-Key', nonce)
-        ..set('Cache-Control', 'no-cache')
-        ..set('Sec-WebSocket-Version', '13')
-        ..set('Sec-WebSocket-Extensions', headerValue);
+        ..set(HttpHeaders.connectionHeader, "Upgrade")
+        ..set(HttpHeaders.upgradeHeader, "websocket")
+        ..set("Sec-WebSocket-Key", nonce)
+        ..set("Cache-Control", "no-cache")
+        ..set("Sec-WebSocket-Version", "13")
+        ..set("Sec-WebSocket-Extensions", headerValue);
 
       return request.close();
     });
   }
 
-  void testCompressionSupport({
-    bool server = false,
-    bool client = false,
-    bool contextTakeover = false,
-  }) {
+  void testCompressionSupport(
+      {server = false, client = false, contextTakeover = false}) {
     asyncStart();
 
-    var clientOptions = CompressionOptions(
+    var clientOptions = new CompressionOptions(
         enabled: client,
         serverNoContextTakeover: contextTakeover,
         clientNoContextTakeover: contextTakeover);
-    var serverOptions = CompressionOptions(
+    var serverOptions = new CompressionOptions(
         enabled: server,
         serverNoContextTakeover: contextTakeover,
         clientNoContextTakeover: contextTakeover);
@@ -107,21 +100,21 @@ class SecurityConfiguration {
         WebSocketTransformer.upgrade(request, compression: serverOptions)
             .then((webSocket) {
           webSocket.listen((message) {
-            Expect.equals('Hello World', message);
+            Expect.equals("Hello World", message);
 
             webSocket.add(message);
             webSocket.close();
           });
-          webSocket.add('Hello World');
+          webSocket.add("Hello World");
         });
       });
 
-      var url = '${secure ? "wss" : "ws"}://$hostName:${server.port}/';
+      var url = '${secure ? "wss" : "ws"}://$HOST_NAME:${server.port}/';
       WebSocket.connect(url, compression: clientOptions).then((websocket) {
         var future = websocket.listen((message) {
-          Expect.equals('Hello World', message);
-        }).asFuture<void>();
-        websocket.add('Hello World');
+          Expect.equals("Hello World", message);
+        }).asFuture();
+        websocket.add("Hello World");
         return future;
       }).then((_) {
         server.close();
@@ -142,28 +135,28 @@ class SecurityConfiguration {
         WebSocketTransformer.upgrade(request, compression: serverOpts)
             .then((webSocket) {
           webSocket.listen((message) {
-            Expect.equals('Hello World', message);
+            Expect.equals("Hello World", message);
             webSocket.add(message);
           });
         });
       });
 
-      var url = '${secure ? "wss" : "ws"}://$hostName:${server.port}/';
+      var url = '${secure ? "wss" : "ws"}://$HOST_NAME:${server.port}/';
       WebSocket.connect(url, compression: clientOpts).then((websocket) {
         var i = 1;
         websocket.listen((message) {
-          Expect.equals('Hello World', message);
+          Expect.equals("Hello World", message);
           if (i == messages) {
             websocket.close();
             return;
           }
-          websocket.add('Hello World');
+          websocket.add("Hello World");
           i++;
         }, onDone: () {
           server.close();
           asyncEnd();
         });
-        websocket.add('Hello World');
+        websocket.add("Hello World");
       });
     });
   }
@@ -178,36 +171,36 @@ class SecurityConfiguration {
             'websocket', request.headers.value(HttpHeaders.upgradeHeader));
 
         var key = request.headers.value('Sec-WebSocket-Key');
-        var digest = sha1.convert('$key$webSocketGUID'.codeUnits);
+        var digest = sha1.convert("$key$WEB_SOCKET_GUID".codeUnits);
         var accept = base64.encode(digest.bytes);
         request.response
           ..statusCode = HttpStatus.switchingProtocols
-          ..headers.add(HttpHeaders.connectionHeader, 'Upgrade')
-          ..headers.add(HttpHeaders.upgradeHeader, 'websocket')
-          ..headers.add('Sec-WebSocket-Accept', accept)
+          ..headers.add(HttpHeaders.connectionHeader, "Upgrade")
+          ..headers.add(HttpHeaders.upgradeHeader, "websocket")
+          ..headers.add("Sec-WebSocket-Accept", accept)
           ..headers.add(
-              'Sec-WebSocket-Extensions',
-              'permessage-deflate;'
+              "Sec-WebSocket-Extensions",
+              "permessage-deflate;"
                   // Test quoted values and space padded =
                   'server_max_window_bits="10"; client_max_window_bits = 12'
                   'client_no_context_takeover; server_no_context_takeover');
         request.response.contentLength = 0;
         request.response.detachSocket().then((socket) {
-          return WebSocket.fromUpgradedSocket(socket, serverSide: true);
+          return new WebSocket.fromUpgradedSocket(socket, serverSide: true);
         }).then((websocket) {
-          websocket.add('Hello');
+          websocket.add("Hello");
           websocket.close();
           asyncEnd();
         });
       });
 
-      var url = '${secure ? "wss" : "ws"}://$hostName:${server.port}/';
+      var url = '${secure ? "wss" : "ws"}://$HOST_NAME:${server.port}/';
 
       WebSocket.connect(url).then((websocket) {
         return websocket.listen((message) {
-          Expect.equals('Hello', message);
+          Expect.equals("Hello", message);
           websocket.close();
-        }).asFuture<void>();
+        }).asFuture();
       }).then((_) => server.close());
     });
   }
@@ -223,7 +216,7 @@ class SecurityConfiguration {
         WebSocketTransformer.upgrade(request, compression: serverCompression)
             .then((webSocket) {
           webSocket.listen((message) {
-            Expect.equals('Hello World', message);
+            Expect.equals("Hello World", message);
 
             webSocket.add(message);
             webSocket.close();
@@ -231,25 +224,25 @@ class SecurityConfiguration {
         });
       });
 
-      var url = '${secure ? "wss" : "ws"}://$hostName:${server.port}/';
+      var url = '${secure ? "wss" : "ws"}://$HOST_NAME:${server.port}/';
       createWebsocket(url, headerValue).then((HttpClientResponse response) {
         Expect.equals(response.statusCode, HttpStatus.switchingProtocols);
         print(response.headers.value('Sec-WebSocket-Extensions'));
         Expect.equals(
-            response.headers.value('Sec-WebSocket-Extensions'), expected);
+            response.headers.value("Sec-WebSocket-Extensions"), expected);
 
-        String _ = response.headers.value('Sec-WebSocket-Accept')!;
+        String accept = response.headers.value("Sec-WebSocket-Accept")!;
 
         var protocol = response.headers.value('Sec-WebSocket-Protocol');
         return response.detachSocket().then((socket) =>
-            WebSocket.fromUpgradedSocket(socket,
+            new WebSocket.fromUpgradedSocket(socket,
                 protocol: protocol, serverSide: false));
       }).then((websocket) {
         var future = websocket.listen((message) {
-          Expect.equals('Hello', message);
+          Expect.equals("Hello", message);
           websocket.close();
-        }).asFuture<void>();
-        websocket.add('Hello World');
+        }).asFuture();
+        websocket.add("Hello World");
         return future;
       }).then((_) {
         server.close();
@@ -284,13 +277,13 @@ class SecurityConfiguration {
         });
       });
 
-      var url = '${secure ? "wss" : "ws"}://$hostName:${server.port}/';
+      var url = '${secure ? "wss" : "ws"}://$HOST_NAME:${server.port}/';
 
       WebSocket.connect(url, compression: compression).then((websocket) {
         var future = websocket.listen((message) {
           Expect.equals('Hello World', message);
           websocket.close();
-        }).asFuture<void>();
+        }).asFuture();
         websocket.add('Hello World');
         return future;
       }).then((_) {
@@ -314,15 +307,15 @@ class SecurityConfiguration {
 
     // Test Multiple messages with various context takeover configurations.
     // no context takeover on the server.
-    var serverComp = CompressionOptions(serverNoContextTakeover: true);
+    var serverComp = new CompressionOptions(serverNoContextTakeover: true);
     testContextSupport(
         serverOpts: serverComp, clientOpts: serverComp, messages: 5);
     // no contexttakeover on the client.
-    var clientComp = CompressionOptions(clientNoContextTakeover: true);
+    var clientComp = new CompressionOptions(clientNoContextTakeover: true);
     testContextSupport(
         serverOpts: clientComp, clientOpts: clientComp, messages: 5);
     // no context takeover enabled for both.
-    var compression = CompressionOptions(
+    var compression = new CompressionOptions(
         serverNoContextTakeover: true, clientNoContextTakeover: true);
     testContextSupport(
         serverOpts: compression, clientOpts: compression, messages: 5);
@@ -335,16 +328,16 @@ class SecurityConfiguration {
     testCompressionHeaders();
     // Chrome headers
     testReturnHeaders('permessage-deflate; client_max_window_bits',
-        'permessage-deflate; client_max_window_bits=15');
+        "permessage-deflate; client_max_window_bits=15");
     // Firefox headers
     testReturnHeaders(
-        'permessage-deflate', 'permessage-deflate; client_max_window_bits=15');
+        'permessage-deflate', "permessage-deflate; client_max_window_bits=15");
     // Ensure max_window_bits resize appropriately.
     testReturnHeaders(
         'permessage-deflate; server_max_window_bits=10',
-        'permessage-deflate;'
-            ' server_max_window_bits=10;'
-            ' client_max_window_bits=10');
+        "permessage-deflate;"
+            " server_max_window_bits=10;"
+            " client_max_window_bits=10");
     // Don't provider context takeover if requested but not enabled.
     // Default is not enabled.
     testReturnHeaders(
@@ -352,7 +345,7 @@ class SecurityConfiguration {
             'client_no_context_takeover',
         'permessage-deflate; client_max_window_bits=15');
     // Enable context Takeover and provide if requested.
-    compression = CompressionOptions(
+    compression = new CompressionOptions(
         clientNoContextTakeover: true, serverNoContextTakeover: true);
     testReturnHeaders(
         'permessage-deflate; client_max_window_bits; '
@@ -361,7 +354,7 @@ class SecurityConfiguration {
             'client_max_window_bits=15',
         serverCompression: compression);
     // Enable context takeover and don't provide if not requested
-    compression = CompressionOptions(
+    compression = new CompressionOptions(
         clientNoContextTakeover: true, serverNoContextTakeover: true);
     testReturnHeaders('permessage-deflate; client_max_window_bits; ',
         'permessage-deflate; client_max_window_bits=15',
@@ -369,10 +362,10 @@ class SecurityConfiguration {
 
     compression = CompressionOptions.compressionDefault;
     testClientRequestHeaders(compression);
-    compression = CompressionOptions(
+    compression = new CompressionOptions(
         clientNoContextTakeover: true, serverNoContextTakeover: true);
     testClientRequestHeaders(compression);
-    compression = CompressionOptions(
+    compression = new CompressionOptions(
         clientNoContextTakeover: true,
         serverNoContextTakeover: true,
         clientMaxWindowBits: 8,
@@ -381,8 +374,8 @@ class SecurityConfiguration {
   }
 }
 
-void main() {
-  SecurityConfiguration(false).runTests();
+main() {
+  new SecurityConfiguration(false).runTests();
   // TODO(whesse): Make WebSocket.connect() take an optional context: parameter.
   // new SecurityConfiguration(true).runTests();
 }

@@ -2,14 +2,16 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import 'package:http_io/http_io.dart';
+import "package:http_io/http_io.dart";
 
-import 'expect.dart';
+import "package:expect/expect.dart";
+
+// See also http_headers_test.dart.
 
 Future<void> main() async {
-  var server = await HttpServer.bind('localhost', 0);
-  var request = await HttpClient().get('localhost', server.port, '/');
-  var headers = request.headers;
+  final server = await HttpServer.bind("localhost", 0);
+  final request = await HttpClient().get("localhost", server.port, "/");
+  final headers = request.headers;
   headers.contentLength = 100;
   headers.set('Content-Length', 100);
   Expect.equals('100', headers['Content-Length']?[0]);

@@ -7,11 +7,13 @@
 // ignore_for_file: avoid_print
 
 import 'dart:async';
-import 'dart:io';
+import 'package:http_io/http_io.dart';
 
 // Create a temporary directory and delete it when the test function exits.
 Future<void> withTempDir(
-    String prefix, Future<void> Function(Directory dir) test) async {
+  String prefix,
+  Future<void> Function(Directory dir) test,
+) async {
   var tempDir = Directory.systemTemp.createTempSync(prefix);
   try {
     await runZonedGuarded(() => test(tempDir), (e, st) {

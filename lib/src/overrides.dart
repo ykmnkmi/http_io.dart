@@ -33,7 +33,7 @@ abstract class HttpOverrides {
   static HttpOverrides? _global;
 
   static HttpOverrides? get current {
-    return Zone.current[_httpOverridesToken] as HttpOverrides? ?? _global;
+    return Zone.current[_httpOverridesToken] ?? _global;
   }
 
   /// The [HttpOverrides] to use in the root [Zone].
@@ -46,14 +46,20 @@ abstract class HttpOverrides {
   }
 
   /// Runs [body] in a fresh [Zone] using the provided overrides.
-  static R runZoned<R>(R Function() body,
-      {HttpClient Function(SecurityContext?)? createHttpClient,
-      String Function(Uri uri, Map<String, String>? environment)?
-          findProxyFromEnvironment}) {
-    HttpOverrides overrides =
-        _HttpOverridesScope(createHttpClient, findProxyFromEnvironment);
-    return dart_async
-        .runZoned<R>(body, zoneValues: {_httpOverridesToken: overrides});
+  static R runZoned<R>(
+    R Function() body, {
+    HttpClient Function(SecurityContext?)? createHttpClient,
+    String Function(Uri uri, Map<String, String>? environment)?
+    findProxyFromEnvironment,
+  }) {
+    HttpOverrides overrides = _HttpOverridesScope(
+      createHttpClient,
+      findProxyFromEnvironment,
+    );
+    return dart_async.runZoned<R>(
+      body,
+      zoneValues: {_httpOverridesToken: overrides},
+    );
   }
 
   /// Runs [body] in a fresh [Zone] using the overrides found in [overrides].
@@ -61,8 +67,10 @@ abstract class HttpOverrides {
   /// Note that [overrides] should be an instance of a class that extends
   /// [HttpOverrides].
   static R runWithHttpOverrides<R>(R Function() body, HttpOverrides overrides) {
-    return dart_async
-        .runZoned<R>(body, zoneValues: {_httpOverridesToken: overrides});
+    return dart_async.runZoned<R>(
+      body,
+      zoneValues: {_httpOverridesToken: overrides},
+    );
   }
 
   /// Returns a new [HttpClient] using the given [context].
@@ -86,20 +94,16 @@ class _HttpOverridesScope extends HttpOverrides {
   final HttpOverrides? _previous = HttpOverrides.current;
   final HttpClient Function(SecurityContext?)? _createHttpClient;
   final String Function(Uri uri, Map<String, String>? environment)?
-      _findProxyFromEnvironment;
+  _findProxyFromEnvironment;
 
   _HttpOverridesScope(this._createHttpClient, this._findProxyFromEnvironment);
 
   @override
   HttpClient createHttpClient(SecurityContext? context) {
     var createHttpClient = _createHttpClient;
-    if (createHttpClient != null) {
-      return createHttpClient(context);
-    }
+    if (createHttpClient != null) return createHttpClient(context);
     var previous = _previous;
-    if (previous != null) {
-      return previous.createHttpClient(context);
-    }
+    if (previous != null) return previous.createHttpClient(context);
     return super.createHttpClient(context);
   }
 

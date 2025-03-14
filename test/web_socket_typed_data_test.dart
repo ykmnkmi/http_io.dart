@@ -7,29 +7,29 @@
 // VMOptions=--short_socket_write
 // VMOptions=--short_socket_read --short_socket_write
 
-import 'dart:async';
-import 'dart:typed_data';
+import "package:expect/expect.dart";
+import "dart:async";
+import "package:http_io/http_io.dart";
+import "dart:isolate";
+import "dart:typed_data";
 
-import 'package:http_io/http_io.dart';
-
-import 'expect.dart';
-
-Future<HttpServer> createServer() => HttpServer.bind('127.0.0.1', 0);
+Future<HttpServer> createServer() => HttpServer.bind("127.0.0.1", 0);
 
 Future<WebSocket> createClient(int port, bool compression) => compression
     ? WebSocket.connect('ws://127.0.0.1:$port/')
     : WebSocket.connect('ws://127.0.0.1:$port/',
         compression: CompressionOptions.compressionOff);
 
-void test(List<int> expected, List<List<int>> testData, bool compression) {
+void test(expected, testData, compression) {
   createServer().then((server) {
     var messageCount = 0;
     var transformer = compression
-        ? WebSocketTransformer()
-        : WebSocketTransformer(compression: CompressionOptions.compressionOff);
+        ? new WebSocketTransformer()
+        : new WebSocketTransformer(
+            compression: CompressionOptions.compressionOff);
     server.transform(transformer).listen((webSocket) {
       webSocket.listen((message) {
-        Expect.listEquals(expected, message as List);
+        Expect.listEquals(expected, message);
         webSocket.add(testData[messageCount]);
         messageCount++;
       }, onDone: () => Expect.equals(testData.length, messageCount));
@@ -38,94 +38,91 @@ void test(List<int> expected, List<List<int>> testData, bool compression) {
     createClient(server.port, compression).then((webSocket) {
       var messageCount = 0;
       webSocket.listen((message) {
-        Expect.listEquals(expected, message as List);
+        Expect.listEquals(expected, message);
         messageCount++;
-        if (messageCount == testData.length) {
-          webSocket.close();
-        }
+        if (messageCount == testData.length) webSocket.close();
       }, onDone: server.close);
       testData.forEach(webSocket.add);
     });
   });
 }
 
-void testUintLists({bool compression = false}) {
-  var fillData = List.generate(256, (index) => index);
+testUintLists({bool compression = false}) {
+  var fillData = new List.generate(256, (index) => index);
   var testData = [
-    Uint8List(256),
-    Uint8ClampedList(256),
-    Uint16List(256),
-    Uint32List(256),
-    Uint64List(256),
+    new Uint8List(256),
+    new Uint8ClampedList(256),
+    new Uint16List(256),
+    new Uint32List(256),
+    new Uint64List(256),
   ];
-  for (var list in testData) {
-    list.setAll(0, fillData);
-  }
+  testData.forEach((list) => list.setAll(0, fillData));
   test(fillData, testData, compression);
 }
 
-void testIntLists({bool compression = false}) {
-  var fillData = List.generate(128, (index) => index);
+testIntLists({bool compression = false}) {
+  var fillData = new List.generate(128, (index) => index);
   var testData = [
-    Int8List(128),
-    Int16List(128),
-    Int32List(128),
-    Int64List(128),
+    new Int8List(128),
+    new Int16List(128),
+    new Int32List(128),
+    new Int64List(128),
   ];
-  for (var list in testData) {
-    list.setAll(0, fillData);
-  }
+  testData.forEach((list) => list.setAll(0, fillData));
   test(fillData, testData, compression);
 }
 
 void testOutOfRangeClient({bool compression = false}) {
   createServer().then((server) {
+    var messageCount = 0;
     var transformer = compression
-        ? WebSocketTransformer()
-        : WebSocketTransformer(compression: CompressionOptions.compressionOff);
+        ? new WebSocketTransformer()
+        : new WebSocketTransformer(
+            compression: CompressionOptions.compressionOff);
     server.transform(transformer).listen((webSocket) {
-      webSocket.listen((message) => Expect.fail('No message expected'));
+      webSocket.listen((message) => Expect.fail("No message expected"));
     });
 
-    Future<void> clientError(List<int> data) {
+    Future clientError(data) {
       return createClient(server.port, compression).then((webSocket) {
-        webSocket.listen((message) => Expect.fail('No message expected'));
+        var messageCount = 0;
+        webSocket.listen((message) => Expect.fail("No message expected"));
         webSocket.add(data);
         webSocket.close();
         return webSocket.done;
       });
     }
 
-    Future<bool> expectError(List<int> data) {
-      var completer = Completer<bool>();
+    Future expectError(data) {
+      var completer = new Completer();
       clientError(data)
-          .then((_) => completer.completeError('Message $data did not fail'))
+          .then((_) => completer.completeError("Message $data did not fail"))
           .catchError((e) => completer.complete(true));
       return completer.future;
     }
 
-    var futures = <Future<bool>>[];
-    List<int> data;
-    data = Uint16List(1);
+    var futures = <Future>[];
+    var data;
+    data = new Uint16List(1);
     data[0] = 256;
     futures.add(expectError(data));
-    data = Uint32List(1);
+    data = new Uint32List(1);
     data[0] = 256;
     futures.add(expectError(data));
-    data = Uint64List(1);
+    data = new Uint64List(1);
     data[0] = 256;
     futures.add(expectError(data));
-    data = Int16List(1);
-    data[0] = 256;
-    futures.add(expectError(data));
-    data[0] = -1;
-    futures.add(expectError(data));
-    data = Int32List(1);
+    data = new Int16List(1);
     data[0] = 256;
     futures.add(expectError(data));
     data[0] = -1;
     futures.add(expectError(data));
-    data = Int64List(1);
+    data = new Int32List(1);
+    data[0] = 256;
+    futures.add(expectError(data));
+    data[0] = -1;
+    futures.add(expectError(data));
+    data = new Int64List(1);
     data[0] = 256;
     futures.add(expectError(data));
     data[0] = -1;
@@ -138,45 +135,45 @@ void testOutOfRangeClient({bool compression = false}) {
 }
 
 void testOutOfRangeServer({bool compression = false}) {
-  var futures = <Future<bool>>[];
-  var testData = <List<int>>[];
-  List<int> data;
-  data = Uint16List(1);
+  var futures = <Future>[];
+  var testData = [];
+  var data;
+  data = new Uint16List(1);
   data[0] = 256;
   testData.add(data);
-  data = Uint32List(1);
+  data = new Uint32List(1);
   data[0] = 256;
   testData.add(data);
-  data = Uint64List(1);
+  data = new Uint64List(1);
   data[0] = 256;
   testData.add(data);
-  data = Int16List(1);
+  data = new Int16List(1);
   data[0] = 256;
   testData.add(data);
-  data = Int16List(1);
+  data = new Int16List(1);
   data[0] = -1;
   testData.add(data);
-  data = Int32List(1);
+  data = new Int32List(1);
   data[0] = 256;
   testData.add(data);
-  data = Int32List(1);
+  data = new Int32List(1);
   data[0] = -1;
   testData.add(data);
-  data = Int64List(1);
+  data = new Int64List(1);
   data[0] = 256;
   testData.add(data);
-  data = Int64List(1);
+  data = new Int64List(1);
   data[0] = -1;
   testData.add(data);
   testData.add([-1]);
   testData.add([256]);
 
-  var allDone = Completer<bool>();
+  var allDone = new Completer();
 
-  Future<bool> expectError(Future<void> future) {
-    var completer = Completer<bool>();
+  Future expectError(future) {
+    var completer = new Completer();
     future
-        .then((_) => completer.completeError('Message $data did not fail'))
+        .then((_) => completer.completeError("Message $data did not fail"))
         .catchError((e) => completer.complete(true));
     return completer.future;
   }
@@ -184,40 +181,37 @@ void testOutOfRangeServer({bool compression = false}) {
   createServer().then((server) {
     var messageCount = 0;
     var transformer = compression
-        ? WebSocketTransformer()
-        : WebSocketTransformer(compression: CompressionOptions.compressionOff);
+        ? new WebSocketTransformer()
+        : new WebSocketTransformer(
+            compression: CompressionOptions.compressionOff);
     server.transform(transformer).listen((webSocket) {
       webSocket.listen((message) {
         messageCount++;
-        webSocket.add(testData[(message as List<int>)[0]]);
+        webSocket.add(testData[message[0]]);
         webSocket.close();
         futures.add(expectError(webSocket.done));
-        if (messageCount == testData.length) {
-          allDone.complete(true);
-        }
+        if (messageCount == testData.length) allDone.complete(true);
       });
     });
 
-    Future<bool> x(int i) {
-      var completer = Completer<bool>();
+    Future x(int i) {
+      var completer = new Completer();
       createClient(server.port, compression).then((webSocket) {
-        webSocket.listen((message) => Expect.fail('No message expected'),
+        webSocket.listen((message) => Expect.fail("No message expected"),
             onDone: () => completer.complete(true),
-            onError: (Object e) => completer.completeError(e));
+            onError: (e) => completer.completeError(e));
         webSocket.add([i]);
       });
       return completer.future;
     }
 
-    for (int i = 0; i < testData.length; i++) {
-      futures.add(x(i));
-    }
+    for (int i = 0; i < testData.length; i++) futures.add(x(i));
     allDone.future
         .then((_) => Future.wait(futures).then((_) => server.close()));
   });
 }
 
-void main() {
+main() {
   testUintLists();
   testUintLists(compression: true);
   testIntLists();

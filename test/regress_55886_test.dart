@@ -8,18 +8,16 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io' show IOSink;
-
 import 'package:http_io/http_io.dart';
 
-import 'async_helper.dart';
-import 'expect.dart';
+import 'package:expect/async_helper.dart';
+import 'package:expect/expect.dart';
 
 Future<void> pipeStream(Stream<List<int>> from, IOSink to) async {
   bool wasCancelled = false;
 
   StreamSubscription<List<int>>? subscription;
-  late StreamController<List<int>> streamController;
+  late final StreamController<List<int>> streamController;
   streamController = StreamController<List<int>>(
     onPause: () {
       subscription?.pause();
@@ -42,7 +40,7 @@ Future<void> pipeStream(Stream<List<int>> from, IOSink to) async {
           subscription?.cancel();
           subscription = null;
         },
-        onError: (Object e, StackTrace st) {
+        onError: (e, st) {
           streamController.addError(e, st);
           subscription?.cancel();
           subscription = null;
@@ -57,8 +55,8 @@ Future<void> pipeStream(Stream<List<int>> from, IOSink to) async {
 
 Stream<List<int>> generateSlowly() async* {
   for (var i = 0; i < 100; i++) {
-    yield utf8.encode('item $i');
-    await Future<void>.delayed(Duration(milliseconds: 100));
+    yield utf8.encode("item $i");
+    await Future.delayed(Duration(milliseconds: 100));
   }
 }
 
@@ -73,17 +71,17 @@ Future<void> serve(HttpServer server) async {
 void main() async {
   asyncStart();
 
-  var server = await HttpServer.bind('localhost', 0);
+  final server = await HttpServer.bind('localhost', 0);
   serve(server).then((_) => asyncEnd());
 
   // Send request and then cancel response stream subscription after
   // the first chunk. This should cause server to close the connection
   // and cancel subscription to the stream which is being piped into
   // the response.
-  var client = HttpClient();
-  var rq = await client.get('localhost', server.port, '/');
-  var rs = await rq.close();
-  late StreamSubscription<String> sub;
+  final client = HttpClient();
+  final rq = await client.get('localhost', server.port, '/');
+  final rs = await rq.close();
+  late StreamSubscription sub;
   sub = rs.map(utf8.decode).listen((msg) {
     sub.cancel();
   });

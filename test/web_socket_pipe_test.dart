@@ -7,27 +7,21 @@
 // VMOptions=--short_socket_write
 // VMOptions=--short_socket_read --short_socket_write
 
-// ignore_for_file: avoid_print
+import "package:expect/expect.dart";
+import "dart:async";
+import "package:http_io/http_io.dart";
 
-import 'dart:async';
-
-import 'package:http_io/http_io.dart';
-
-import 'expect.dart';
-
-StreamTransformer<dynamic, dynamic> createReverseStringTransformer() {
-  return StreamTransformer<dynamic, dynamic>.fromHandlers(
+createReverseStringTransformer() {
+  return new StreamTransformer<dynamic, dynamic>.fromHandlers(
       handleData: (data, sink) {
-    var sb = StringBuffer();
-    for (int i = (data as String).length - 1; i >= 0; i--) {
-      sb.write(data[i]);
-    }
+    var sb = new StringBuffer();
+    for (int i = data.length - 1; i >= 0; i--) sb.write(data[i]);
     sink.add(sb.toString());
   });
 }
 
-void testPipe({required int messages, required bool transform}) {
-  HttpServer.bind('127.0.0.1', 0).then((server) {
+testPipe({required int messages, required bool transform}) {
+  HttpServer.bind("127.0.0.1", 0).then((server) {
     server.listen((request) {
       WebSocketTransformer.upgrade(request).then((websocket) {
         (transform
@@ -37,11 +31,11 @@ void testPipe({required int messages, required bool transform}) {
             .then((_) => server.close());
       });
     });
-    WebSocket.connect('ws://127.0.0.1:${server.port}/').then((client) {
+    WebSocket.connect("ws://127.0.0.1:${server.port}/").then((client) {
       var count = 0;
-      void next() {
+      next() {
         if (count < messages) {
-          client.add('Hello');
+          client.add("Hello");
         } else {
           client.close();
         }
@@ -50,12 +44,12 @@ void testPipe({required int messages, required bool transform}) {
       client.listen((data) {
         count++;
         if (transform) {
-          Expect.equals('olleH', data);
+          Expect.equals("olleH", data);
         } else {
-          Expect.equals('Hello', data);
+          Expect.equals("Hello", data);
         }
         next();
-      }, onDone: () => print('Client received close'));
+      }, onDone: () => print("Client received close"));
 
       next();
     });

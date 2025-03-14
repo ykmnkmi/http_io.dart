@@ -1,10 +1,14 @@
 name: http_io
 repository: https://github.com/dart-lang/http_io
 description: HTTP Client and Server APIs.
-version: 0.0.22
+version: 0.0.23
 
 environment:
-  sdk: ">=3.6.0 <4.0.0"
+  sdk: ">=3.7.1 <4.0.0"
+
+workspace:
+  - packages/async_helper
+  - packages/expect
 
 dependencies:
   meta: ^1.16.0
@@ -12,5 +16,5 @@ dependencies:
 dev_dependencies:
   convert: ^3.1.2
   crypto: ^3.0.6
-  lints: ^5.1.0
-  test: ^1.25.14
+  lints: ^5.1.1
+  test: ^1.25.15

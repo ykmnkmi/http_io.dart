@@ -2,37 +2,36 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import 'package:http_io/http_io.dart';
-
-import 'expect.dart';
+import "package:expect/expect.dart";
+import "package:http_io/http_io.dart";
 
 void testHttpConnectionInfo() {
-  HttpServer.bind('0.0.0.0', 0).then((server) {
+  HttpServer.bind("0.0.0.0", 0).then((server) {
     int? clientPort;
 
     server.listen((request) {
       var response = request.response;
-      Expect.isTrue(request.connectionInfo?.remoteAddress is InternetAddress);
-      Expect.isTrue(response.connectionInfo?.remoteAddress is InternetAddress);
-      Expect.equals(request.connectionInfo?.localPort, server.port);
-      Expect.equals(response.connectionInfo?.localPort, server.port);
+      Expect.isTrue(request.connectionInfo!.remoteAddress is InternetAddress);
+      Expect.isTrue(response.connectionInfo!.remoteAddress is InternetAddress);
+      Expect.equals(request.connectionInfo!.localPort, server.port);
+      Expect.equals(response.connectionInfo!.localPort, server.port);
       Expect.isNotNull(clientPort);
-      Expect.equals(request.connectionInfo?.remotePort, clientPort);
-      Expect.equals(response.connectionInfo?.remotePort, clientPort);
+      Expect.equals(request.connectionInfo!.remotePort, clientPort);
+      Expect.equals(response.connectionInfo!.remotePort, clientPort);
       request.listen((_) {}, onDone: () {
         request.response.close();
       });
     });
 
-    HttpClient client = HttpClient();
-    client.get('127.0.0.1', server.port, '/').then((request) {
-      Expect.isTrue(request.connectionInfo?.remoteAddress is InternetAddress);
-      Expect.equals(request.connectionInfo?.remotePort, server.port);
-      clientPort = request.connectionInfo?.localPort;
+    HttpClient client = new HttpClient();
+    client.get("127.0.0.1", server.port, "/").then((request) {
+      Expect.isTrue(request.connectionInfo!.remoteAddress is InternetAddress);
+      Expect.equals(request.connectionInfo!.remotePort, server.port);
+      clientPort = request.connectionInfo!.localPort;
       return request.close();
     }).then((response) {
-      Expect.equals(server.port, response.connectionInfo?.remotePort);
-      Expect.equals(clientPort, response.connectionInfo?.localPort);
+      Expect.equals(server.port, response.connectionInfo!.remotePort);
+      Expect.equals(clientPort, response.connectionInfo!.localPort);
       response.listen((_) {}, onDone: () {
         client.close();
         server.close();

@@ -1,37 +1,38 @@
 // Copyright (c) 2013, the Dart project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
+//
 
-import 'package:http_io/http_io.dart';
-
-import 'expect.dart';
+import "package:expect/expect.dart";
+import "dart:isolate";
+import "package:http_io/http_io.dart";
 
 void setConnectionHeaders(HttpHeaders headers) {
-  headers.add(HttpHeaders.connectionHeader, 'my-connection-header1');
-  headers.add('My-Connection-Header1', 'some-value1');
-  headers.add(HttpHeaders.connectionHeader, 'my-connection-header2');
-  headers.add('My-Connection-Header2', 'some-value2');
+  headers.add(HttpHeaders.connectionHeader, "my-connection-header1");
+  headers.add("My-Connection-Header1", "some-value1");
+  headers.add(HttpHeaders.connectionHeader, "my-connection-header2");
+  headers.add("My-Connection-Header2", "some-value2");
 }
 
 void checkExpectedConnectionHeaders(
     HttpHeaders headers, bool persistentConnection) {
-  Expect.equals('some-value1', headers.value('My-Connection-Header1'));
-  Expect.equals('some-value2', headers.value('My-Connection-Header2'));
+  Expect.equals("some-value1", headers.value("My-Connection-Header1"));
+  Expect.equals("some-value2", headers.value("My-Connection-Header2"));
   Expect.isTrue(headers[HttpHeaders.connectionHeader]!
-      .any((value) => value.toLowerCase() == 'my-connection-header1'));
+      .any((value) => value.toLowerCase() == "my-connection-header1"));
   Expect.isTrue(headers[HttpHeaders.connectionHeader]!
-      .any((value) => value.toLowerCase() == 'my-connection-header2'));
+      .any((value) => value.toLowerCase() == "my-connection-header2"));
   if (persistentConnection) {
     Expect.equals(2, headers[HttpHeaders.connectionHeader]!.length);
   } else {
     Expect.equals(3, headers[HttpHeaders.connectionHeader]!.length);
     Expect.isTrue(headers[HttpHeaders.connectionHeader]!
-        .any((value) => value.toLowerCase() == 'close'));
+        .any((value) => value.toLowerCase() == "close"));
   }
 }
 
 void test(int totalConnections, bool clientPersistentConnection) {
-  HttpServer.bind('127.0.0.1', 0).then((server) {
+  HttpServer.bind("127.0.0.1", 0).then((server) {
     server.listen((HttpRequest request) {
       // Check expected request.
       Expect.equals(clientPersistentConnection, request.persistentConnection);
@@ -50,10 +51,10 @@ void test(int totalConnections, bool clientPersistentConnection) {
     });
 
     int count = 0;
-    HttpClient client = HttpClient();
+    HttpClient client = new HttpClient();
     for (int i = 0; i < totalConnections; i++) {
       client
-          .get('127.0.0.1', server.port, '/')
+          .get("127.0.0.1", server.port, "/")
           .then((HttpClientRequest request) {
         setConnectionHeaders(request.headers);
         request.persistentConnection = clientPersistentConnection;

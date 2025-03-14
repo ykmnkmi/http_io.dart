@@ -1,23 +1,28 @@
 // Copyright (c) 2013, the Dart project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
+//
+// VMOptions=
+// VMOptions=--short_socket_read
+// VMOptions=--short_socket_write
+// VMOptions=--short_socket_read --short_socket_write
 
-import 'dart:async';
-
-import 'package:http_io/http_io.dart';
+import "dart:async";
+import "package:http_io/http_io.dart";
+import "package:expect/expect.dart";
 
 void test1(int totalConnections) {
   // Server which just closes immediately.
-  HttpServer.bind('127.0.0.1', 0).then((server) {
+  HttpServer.bind("127.0.0.1", 0).then((server) {
     server.listen((HttpRequest request) {
       request.response.close();
     });
 
     int count = 0;
-    HttpClient client = HttpClient();
+    HttpClient client = new HttpClient();
     for (int i = 0; i < totalConnections; i++) {
       client
-          .get('127.0.0.1', server.port, '/')
+          .get("127.0.0.1", server.port, "/")
           .then((HttpClientRequest request) => request.close())
           .then((HttpClientResponse response) {
         response.listen((_) {}, onDone: () {
@@ -34,23 +39,23 @@ void test1(int totalConnections) {
 
 void test2(int totalConnections, int outputStreamWrites) {
   // Server which responds without waiting for request body.
-  HttpServer.bind('127.0.0.1', 0).then((server) {
+  HttpServer.bind("127.0.0.1", 0).then((server) {
     server.listen((HttpRequest request) {
-      request.response.write('!dlrow ,olleH');
+      request.response.write("!dlrow ,olleH");
       request.response.close();
     });
 
     int count = 0;
-    HttpClient client = HttpClient();
+    HttpClient client = new HttpClient();
     for (int i = 0; i < totalConnections; i++) {
       client
-          .get('127.0.0.1', server.port, '/')
+          .get("127.0.0.1", server.port, "/")
           .then((HttpClientRequest request) {
         request.contentLength = -1;
         for (int i = 0; i < outputStreamWrites; i++) {
-          request.write('Hello, world!');
+          request.write("Hello, world!");
         }
-        Future<HttpClientResponse?>.value(request.done).catchError((_) => null);
+        request.done.catchError((_) {});
         return request.close();
       }).then((HttpClientResponse response) {
         response.listen((_) {}, onDone: () {
@@ -59,7 +64,7 @@ void test2(int totalConnections, int outputStreamWrites) {
             client.close(force: true);
             server.close();
           }
-        }, onError: (Object e) {} /* ignore */);
+        }, onError: (e) {} /* ignore */);
       }).catchError((error) {
         count++;
         if (count == totalConnections) {
@@ -73,22 +78,22 @@ void test2(int totalConnections, int outputStreamWrites) {
 
 void test3(int totalConnections) {
   // Server which responds when request body has been received.
-  HttpServer.bind('127.0.0.1', 0).then((server) {
+  HttpServer.bind("127.0.0.1", 0).then((server) {
     server.listen((HttpRequest request) {
       request.listen((_) {}, onDone: () {
-        request.response.write('!dlrow ,olleH');
+        request.response.write("!dlrow ,olleH");
         request.response.close();
       });
     });
 
     int count = 0;
-    HttpClient client = HttpClient();
+    HttpClient client = new HttpClient();
     for (int i = 0; i < totalConnections; i++) {
       client
-          .get('127.0.0.1', server.port, '/')
+          .get("127.0.0.1", server.port, "/")
           .then((HttpClientRequest request) {
         request.contentLength = -1;
-        request.write('Hello, world!');
+        request.write("Hello, world!");
         return request.close();
       }).then((HttpClientResponse response) {
         response.listen((_) {}, onDone: () {
@@ -104,10 +109,10 @@ void test3(int totalConnections) {
 }
 
 void test4() {
-  HttpServer.bind('127.0.0.1', 0).then((server) {
+  HttpServer.bind("127.0.0.1", 0).then((server) {
     server.listen((var request) {
       request.listen((_) {}, onDone: () {
-        Timer.periodic(Duration(milliseconds: 100), (timer) {
+        new Timer.periodic(new Duration(milliseconds: 100), (timer) {
           if (server.connectionsInfo().total == 0) {
             server.close();
             timer.cancel();
@@ -117,9 +122,9 @@ void test4() {
       });
     });
 
-    var client = HttpClient();
+    var client = new HttpClient();
     client
-        .get('127.0.0.1', server.port, '/')
+        .get("127.0.0.1", server.port, "/")
         .then((request) => request.close())
         .then((response) {
       response.listen((_) {}, onDone: () {
@@ -130,7 +135,7 @@ void test4() {
 }
 
 void test5(int totalConnections) {
-  HttpServer.bind('127.0.0.1', 0).then((server) {
+  HttpServer.bind("127.0.0.1", 0).then((server) {
     server.listen((request) {
       request.listen((_) {}, onDone: () {
         request.response.close();
@@ -141,18 +146,17 @@ void test5(int totalConnections) {
     // Create a number of client requests and keep then active. Then
     // close the client and wait for the server to lose all active
     // connections.
-    var client = HttpClient();
+    var client = new HttpClient();
     client.maxConnectionsPerHost = totalConnections;
     for (int i = 0; i < totalConnections; i++) {
       client
-          .post('127.0.0.1', server.port, '/')
+          .post("127.0.0.1", server.port, "/")
           .then((request) {
             request.add([0]);
             // TODO(sgjesse): Make this test work with
             //request.response instead of request.close() return
             //return request.response;
-            Future<HttpClientResponse?>.value(request.done)
-                .catchError((e) => null);
+            Future<HttpClientResponse?>.value(request.done).catchError((e) {});
             return request.close();
           })
           .then((response) {})
@@ -160,7 +164,7 @@ void test5(int totalConnections) {
               test: (e) => e is HttpException || e is SocketException);
     }
     bool clientClosed = false;
-    Timer.periodic(Duration(milliseconds: 100), (timer) {
+    new Timer.periodic(new Duration(milliseconds: 100), (timer) {
       if (!clientClosed) {
         if (server.connectionsInfo().total == totalConnections) {
           clientClosed = true;

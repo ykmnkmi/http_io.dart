@@ -2,9 +2,9 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import 'package:http_io/http_io.dart';
+import "package:http_io/http_io.dart";
 
-import 'expect.dart';
+import "package:expect/expect.dart";
 
 void testCookies() {
   var cookies = [
@@ -14,49 +14,45 @@ void testCookies() {
     {'Abc': 'Def', 'SID': 'sffFSDF4FsdfF56765'}
   ];
 
-  HttpServer.bind('127.0.0.1', 0).then((server) {
+  HttpServer.bind("127.0.0.1", 0).then((server) {
     server.listen((HttpRequest request) {
       // Collect the cookies in a map.
-      var cookiesMap = <String, String>{};
-      for (var c in request.cookies) {
-        cookiesMap[c.name] = c.value;
-      }
+      var cookiesMap = {};
+      request.cookies.forEach((c) => cookiesMap[c.name] = c.value);
       int index = int.parse(request.uri.path.substring(1));
       Expect.mapEquals(cookies[index], cookiesMap);
       // Return the same cookies to the client.
       cookiesMap.forEach((k, v) {
-        request.response.cookies.add(Cookie(k, v));
+        request.response.cookies.add(new Cookie(k, v));
       });
       request.response.close();
     });
 
     int count = 0;
-    HttpClient client = HttpClient();
+    HttpClient client = new HttpClient();
     for (int i = 0; i < cookies.length; i++) {
-      client.get('127.0.0.1', server.port, '/$i').then((request) {
+      client.get("127.0.0.1", server.port, "/$i").then((request) {
         // Send the cookies to the server.
         cookies[i].forEach((k, v) {
-          request.cookies.add(Cookie(k, v));
+          request.cookies.add(new Cookie(k, v));
         });
         return request.close();
       }).then((response) {
         // Expect the same cookies back.
-        var cookiesMap = <String, String>{};
-        for (var c in response.cookies) {
-          cookiesMap[c.name] = c.value;
-        }
+        var cookiesMap = {};
+        response.cookies.forEach((c) => cookiesMap[c.name] = c.value);
         Expect.mapEquals(cookies[i], cookiesMap);
-        for (var c in response.cookies) {
-          Expect.isTrue(c.httpOnly);
-        }
+        response.cookies.forEach((c) => Expect.isTrue(c.httpOnly));
         response.listen((d) {}, onDone: () {
           if (++count == cookies.length) {
             client.close();
             server.close();
           }
         });
-      }).catchError((Object e, StackTrace trace) {
-        Expect.fail('Unexpected error $e\nStackTrace: $trace');
+      }).catchError((e, trace) {
+        String msg = "Unexpected error $e";
+        if (trace != null) msg += "\nStackTrace: $trace";
+        Expect.fail(msg);
       });
     }
   });
@@ -88,11 +84,11 @@ void testValidateCookieWithDoubleQuotes() {
 }
 
 void testValidatePath() {
-  Cookie cookie = Cookie.fromSetCookieValue(' cname = cval; path= / ');
+  Cookie cookie = Cookie.fromSetCookieValue(" cname = cval; path= / ");
   Expect.equals('/', cookie.path);
   cookie.path = null;
   Expect.throws<FormatException>(() {
-    cookie.path = 'something; ';
+    cookie.path = "something; ";
   }, (e) => e.toString().contains('Invalid character'));
 
   StringBuffer buffer = StringBuffer();
@@ -116,43 +112,37 @@ void testValidatePath() {
 
 void testCookieSameSite() {
   Cookie cookie1 = Cookie.fromSetCookieValue(
-      'name=cookie_name; Expires=Sat, 01 Apr 2023 00:00:00 GMT; Secure; '
-      'HttpOnly; Path=/; SameSite=None');
+      "name=cookie_name; Expires=Sat, 01 Apr 2023 00:00:00 GMT; Secure; "
+          "HttpOnly; Path=/; SameSite=None");
   Expect.equals(cookie1.sameSite, SameSite.none);
   Cookie cookie2 = Cookie.fromSetCookieValue(
-      'name=cookie_name; Expires=Sat, 01 Apr 2023 00:00:00 GMT; HttpOnly; '
-      'Path=/; SameSite=Lax');
+      "name=cookie_name; Expires=Sat, 01 Apr 2023 00:00:00 GMT; HttpOnly; "
+          "Path=/; SameSite=Lax");
   Expect.equals(cookie2.sameSite, SameSite.lax);
   Cookie cookie3 = Cookie.fromSetCookieValue(
-      'name=cookie_name; Expires=Sat, 01 Apr 2023 00:00:00 GMT; HttpOnly; '
-      'Path=/; SameSite=LAX');
+      "name=cookie_name; Expires=Sat, 01 Apr 2023 00:00:00 GMT; HttpOnly; "
+          "Path=/; SameSite=LAX");
   Expect.equals(cookie3.sameSite, SameSite.lax);
   Cookie cookie4 = Cookie.fromSetCookieValue(
-      'name=cookie_name; Expires=Sat, 01 Apr 2023 00:00:00 GMT; HttpOnly; '
-      'Path=/; SameSite= Lax');
+      "name=cookie_name; Expires=Sat, 01 Apr 2023 00:00:00 GMT; HttpOnly; "
+          "Path=/; SameSite= Lax");
   Expect.equals(cookie4.sameSite, SameSite.lax);
   Cookie cookie5 = Cookie.fromSetCookieValue(
-      'name=cookie_name; Expires=Sat, 01 Apr 2023 00:00:00 GMT; HttpOnly; '
-      'Path=/; sAmEsItE= nOnE');
+      "name=cookie_name; Expires=Sat, 01 Apr 2023 00:00:00 GMT; HttpOnly; "
+          "Path=/; sAmEsItE= nOnE");
   Expect.equals(cookie5.sameSite, SameSite.none);
-  Expect.throws<HttpException>(
-      () => Cookie.fromSetCookieValue(
-          'name=cookie_name; Expires=Sat, 01 Apr 2023 00:00:00 GMT; HttpOnly; '
-          'Path=/; SameSite=Relax'),
-      (e) =>
-          e.message == 'SameSite value should be one of Lax, Strict or None.');
-  Expect.throws<HttpException>(
-      () => Cookie.fromSetCookieValue(
-          'name=cookie_name; Expires=Sat, 01 Apr 2023 00:00:00 GMT; HttpOnly; '
-          'Path=/; SameSite='),
-      (e) =>
-          e.message == 'SameSite value should be one of Lax, Strict or None.');
-  Expect.throws<HttpException>(
-      () => Cookie.fromSetCookieValue(
-          'name=cookie_name; Expires=Sat, 01 Apr 2023 00:00:00 GMT; HttpOnly; '
-          'Path=/; SameSite=无'),
-      (e) =>
-          e.message == 'SameSite value should be one of Lax, Strict or None.');
+  Expect.throws<HttpException>(() => Cookie.fromSetCookieValue(
+      "name=cookie_name; Expires=Sat, 01 Apr 2023 00:00:00 GMT; HttpOnly; "
+          "Path=/; SameSite=Relax"),
+      (e) => e.message == "SameSite value should be one of Lax, Strict or None.");
+  Expect.throws<HttpException>(() => Cookie.fromSetCookieValue(
+      "name=cookie_name; Expires=Sat, 01 Apr 2023 00:00:00 GMT; HttpOnly; "
+          "Path=/; SameSite="),
+      (e) => e.message == "SameSite value should be one of Lax, Strict or None.");
+  Expect.throws<HttpException>(() => Cookie.fromSetCookieValue(
+      "name=cookie_name; Expires=Sat, 01 Apr 2023 00:00:00 GMT; HttpOnly; "
+          "Path=/; SameSite=无"),
+      (e) => e.message == "SameSite value should be one of Lax, Strict or None.");
 }
 
 void main() {
