@@ -2,7 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-part of 'http.dart';
+// ignore_for_file: camel_case_extensions, camel_case_types, library_private_types_in_public_api, non_constant_identifier_names
 
 /// Stubs and class aliases which make private names available for use in
 /// tests.  These should never be exported publically.
@@ -33,43 +33,62 @@ part of 'http.dart';
 /// ```markdown
 ///    `instance._privateName`
 /// ```
+part of 'http.dart';
 
 typedef TestingClass$_Cookie = _Cookie;
+
 typedef TestingClass$_HttpHeaders = _HttpHeaders;
+
 typedef TestingClass$_HttpParser = _HttpParser;
+
 typedef TestingClass$_SHA1 = _SHA1;
+
 typedef TestingClass$_WebSocketProtocolTransformer =
     _WebSocketProtocolTransformer;
+
 typedef TestingClass$_WebSocketImpl = _WebSocketImpl;
 
 extension Testing$HttpDate on HttpDate {
-  static DateTime test$_parseCookieDate(String date) =>
-      HttpDate._parseCookieDate(date);
+  static DateTime test$_parseCookieDate(String date) {
+    return HttpDate._parseCookieDate(date);
+  }
 }
 
 extension Testing$_HttpHeaders on _HttpHeaders {
-  void test$_build(BytesBuilder builder) => this._build(builder);
-  List<Cookie> test$_parseCookies() => this._parseCookies();
+  void test$_build(BytesBuilder builder) {
+    _build(builder);
+  }
+
+  List<Cookie> test$_parseCookies() {
+    return _parseCookies();
+  }
 }
 
 extension Testing$_WebSocketProtocolTransformer
     on _WebSocketProtocolTransformer {
-  int get test$_state => this._state;
+  int get test$_state {
+    return _state;
+  }
 }
 
 extension Testing$_WebSocketImpl on _WebSocketImpl {
   static Future<WebSocket> connect(
     String url,
     Iterable<String>? protocols,
-    Map<String, dynamic>? headers, {
+    Map<String, Object>? headers, {
     CompressionOptions compression = CompressionOptions.compressionDefault,
     HttpClient? customClient,
-  }) => _WebSocketImpl.connect(
-    url,
-    protocols,
-    headers,
-    compression: compression,
-    customClient: customClient,
-  );
-  Timer? get test$_pingTimer => this._pingTimer;
+  }) {
+    return _WebSocketImpl.connect(
+      url,
+      protocols,
+      headers,
+      compression: compression,
+      customClient: customClient,
+    );
+  }
+
+  Timer? get test$_pingTimer {
+    return _pingTimer;
+  }
 }

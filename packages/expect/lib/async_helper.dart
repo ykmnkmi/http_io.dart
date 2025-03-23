@@ -31,13 +31,14 @@
 /// After every `asyncStart()` called is matched with a corresponding
 /// `asyncEnd()` or `asyncSuccess(_)` call, the testing driver will be notified
 /// that the tests is done.
-library async_helper;
+library;
 
 import 'dart:async';
 
 import 'package:expect/expect.dart';
 
 bool _initialized = false;
+
 int _asyncLevel = 0;
 
 Exception _buildException(String msg) {
@@ -48,17 +49,23 @@ Exception _buildException(String msg) {
 ///
 /// If [count] is provided, expect [count] [asyncEnd] calls instead of just one.
 void asyncStart([int count = 1]) {
-  if (count <= 0) return;
+  if (count <= 0) {
+    return;
+  }
+
   if (_initialized && _asyncLevel == 0) {
     throw _buildException(
       'asyncStart() was called even though we are done '
       'with testing.',
     );
   }
+
   if (!_initialized) {
+    // ignore: avoid_print
     print('unittest-suite-wait-for-done');
     _initialized = true;
   }
+
   _asyncLevel += count;
 }
 
@@ -74,8 +81,11 @@ void asyncEnd() {
       );
     }
   }
+
   _asyncLevel--;
+
   if (_asyncLevel == 0) {
+    // ignore: avoid_print
     print('unittest-suite-success');
   }
 }
@@ -120,37 +130,30 @@ Future<void> asyncTest(Future<void> Function() test) {
 /// failed test expectation, that error cannot be caught and accepted.
 Future<T> asyncExpectThrows<T extends Object>(
   Future<void> result, [
-  String reason = "",
+  String reason = '',
 ]) {
   // Delay computing the header text until the test has failed.
   // The header computation uses complicated language features,
   // and language tests should avoid doing complicated things
   // until after the actual test has had a chance to succeed.
   String header() {
-    // Handle null being passed in from legacy code
-    // while also avoiding producing an unnecessary null check warning here.
-    if ((reason as dynamic) == null) reason = "";
     // Only include the type in the message if it's not `Object` or a top type.
-    var type = Object() is! T ? "<$T>" : "";
-    return "asyncExpectThrows$type($reason):";
-  }
-
-  // Unsound null-safety check.
-  if ((result as dynamic) == null) {
-    Expect.testError("${header()} result Future must not be null.");
+    String type = Object() is! T ? '<$T>' : '';
+    return 'asyncExpectThrows$type($reason):';
   }
 
   // TODO(rnystrom): It might useful to validate that T is not bound to
   // ExpectException since that won't work.
-
   asyncStart();
   return result.then<T>(
     (_) {
-      throw ExpectException("${header()} Did not throw.");
+      throw ExpectException('${header()} Did not throw.');
     },
-    onError: (error, stack) {
+    onError: (Object error, StackTrace stack) {
       // A test failure doesn't count as throwing. Rethrow it.
-      if (error is ExpectException) throw error;
+      if (error is ExpectException) {
+        throw error;
+      }
 
       if (error is! T) {
         // Throws something unexpected.
@@ -173,7 +176,7 @@ Future<T> asyncExpectThrows<T extends Object>(
 Future<T?> asyncExpectThrowsWhen<T extends Object>(
   bool condition,
   Future<void> result, [
-  String reason = "",
+  String reason = '',
 ]) {
   return condition
       ? asyncExpectThrows<T>(result, reason)

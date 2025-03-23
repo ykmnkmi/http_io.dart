@@ -18,4 +18,4 @@ part of 'http.dart';
 /// was refused.
 /// If this function returns normally, the connection attempt will proceed.
 @pragma('vm:entry-point')
-void Function(Uri) _httpConnectionHook = (_) {};
+void Function(Uri) _httpConnectionHook = (Uri _) {};

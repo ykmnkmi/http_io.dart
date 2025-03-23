@@ -73,9 +73,10 @@ part 'websocket_impl.dart';
 /// ```dart
 /// import 'dart:io';
 ///
-/// void main() async {
-///   var server = await HttpServer.bind(InternetAddress.anyIPv6, 80);
-///   await server.forEach((HttpRequest request) {
+/// Future<void> main() async {
+///   HttpServer server = await HttpServer.bind(InternetAddress.anyIPv6, 80);
+///
+///   server.listen((HttpRequest request) {
 ///     request.response.write('Hello, world!');
 ///     request.response.close();
 ///   });
@@ -102,16 +103,25 @@ part 'websocket_impl.dart';
 /// ```dart
 /// import 'dart:io';
 ///
-/// void main() async {
-///   var chain =
+/// Future<void> main() async {
+///   String chain =
 ///       Platform.script.resolve('certificates/server_chain.pem').toFilePath();
-///   var key = Platform.script.resolve('certificates/server_key.pem').toFilePath();
-///   var context = SecurityContext()
-///     ..useCertificateChain(chain)
-///     ..usePrivateKey(key, password: 'dartdart');
-///   var server =
-///       await HttpServer.bindSecure(InternetAddress.anyIPv6, 443, context);
-///   await server.forEach((HttpRequest request) {
+///
+///   String key =
+///       Platform.script.resolve('certificates/server_key.pem').toFilePath();
+///
+///   SecurityContext context =
+///       SecurityContext()
+///         ..useCertificateChain(chain)
+///         ..usePrivateKey(key, password: 'dartdart');
+///
+///   HttpServer server = await HttpServer.bindSecure(
+///     InternetAddress.anyIPv6,
+///     443,
+///     context,
+///   );
+///
+///   server.listen((HttpRequest request) {
 ///     request.response.write('Hello, world!');
 ///     request.response.close();
 ///   });
@@ -202,12 +212,14 @@ abstract class HttpServer implements Stream<HttpRequest> {
   /// distributed among all the bound `HttpServer`s. Connections can be
   /// distributed over multiple isolates this way.
   static Future<HttpServer> bind(
-    address,
+    Object address,
     int port, {
     int backlog = 0,
     bool v6Only = false,
     bool shared = false,
-  }) => _HttpServer.bind(address, port, backlog, v6Only, shared);
+  }) {
+    return _HttpServer.bind(address, port, backlog, v6Only, shared);
+  }
 
   /// The [address] can either be a [String] or an
   /// [InternetAddress]. If [address] is a [String], [bind] will
@@ -246,30 +258,32 @@ abstract class HttpServer implements Stream<HttpRequest> {
   /// isolates are bound to the port, then the incoming connections will be
   /// distributed among all the bound `HttpServer`s. Connections can be
   /// distributed over multiple isolates this way.
-
   static Future<HttpServer> bindSecure(
-    address,
+    Object address,
     int port,
     SecurityContext context, {
     int backlog = 0,
     bool v6Only = false,
     bool requestClientCertificate = false,
     bool shared = false,
-  }) => _HttpServer.bindSecure(
-    address,
-    port,
-    context,
-    backlog,
-    v6Only,
-    requestClientCertificate,
-    shared,
-  );
+  }) {
+    return _HttpServer.bindSecure(
+      address,
+      port,
+      context,
+      backlog,
+      v6Only,
+      requestClientCertificate,
+      shared,
+    );
+  }
 
   /// Attaches the HTTP server to an existing [ServerSocket]. When the
   /// [HttpServer] is closed, the [HttpServer] will just detach itself,
   /// closing current connections but not closing [serverSocket].
-  factory HttpServer.listenOn(ServerSocket serverSocket) =>
-      _HttpServer.listenOn(serverSocket);
+  factory HttpServer.listenOn(ServerSocket serverSocket) {
+    return _HttpServer.listenOn(serverSocket);
+  }
 
   /// Permanently stops this [HttpServer] from listening for new
   /// connections.  This closes the [Stream] of [HttpRequest]s with a
@@ -278,7 +292,7 @@ abstract class HttpServer implements Stream<HttpRequest> {
   /// means that the port listened on no longer in use.
   ///
   /// If [force] is `true`, active connections will be closed immediately.
-  Future close({bool force = false});
+  Future<void> close({bool force = false});
 
   /// The port that the server is listening on.
   ///
@@ -349,73 +363,76 @@ class HttpConnectionsInfo {
 /// The most common mode of operation is to use `set()` for setting a value,
 /// and `value()` for retrieving a value.
 abstract interface class HttpHeaders {
-  static const acceptHeader = "accept";
-  static const acceptCharsetHeader = "accept-charset";
-  static const acceptEncodingHeader = "accept-encoding";
-  static const acceptLanguageHeader = "accept-language";
-  static const acceptRangesHeader = "accept-ranges";
-  static const accessControlAllowCredentialsHeader =
+  static const String acceptHeader = 'accept';
+  static const String acceptCharsetHeader = 'accept-charset';
+  static const String acceptEncodingHeader = 'accept-encoding';
+  static const String acceptLanguageHeader = 'accept-language';
+  static const String acceptRangesHeader = 'accept-ranges';
+  static const String accessControlAllowCredentialsHeader =
       'access-control-allow-credentials';
-  static const accessControlAllowHeadersHeader = 'access-control-allow-headers';
-  static const accessControlAllowMethodsHeader = 'access-control-allow-methods';
-  static const accessControlAllowOriginHeader = 'access-control-allow-origin';
-  static const accessControlExposeHeadersHeader =
+  static const String accessControlAllowHeadersHeader =
+      'access-control-allow-headers';
+  static const String accessControlAllowMethodsHeader =
+      'access-control-allow-methods';
+  static const String accessControlAllowOriginHeader =
+      'access-control-allow-origin';
+  static const String accessControlExposeHeadersHeader =
       'access-control-expose-headers';
-  static const accessControlMaxAgeHeader = 'access-control-max-age';
-  static const accessControlRequestHeadersHeader =
+  static const String accessControlMaxAgeHeader = 'access-control-max-age';
+  static const String accessControlRequestHeadersHeader =
       'access-control-request-headers';
-  static const accessControlRequestMethodHeader =
+  static const String accessControlRequestMethodHeader =
       'access-control-request-method';
-  static const ageHeader = "age";
-  static const allowHeader = "allow";
-  static const authorizationHeader = "authorization";
-  static const cacheControlHeader = "cache-control";
-  static const connectionHeader = "connection";
-  static const contentEncodingHeader = "content-encoding";
-  static const contentLanguageHeader = "content-language";
-  static const contentLengthHeader = "content-length";
-  static const contentLocationHeader = "content-location";
-  static const contentMD5Header = "content-md5";
-  static const contentRangeHeader = "content-range";
-  static const contentTypeHeader = "content-type";
-  static const dateHeader = "date";
-  static const etagHeader = "etag";
-  static const expectHeader = "expect";
-  static const expiresHeader = "expires";
-  static const fromHeader = "from";
-  static const hostHeader = "host";
-  static const ifMatchHeader = "if-match";
-  static const ifModifiedSinceHeader = "if-modified-since";
-  static const ifNoneMatchHeader = "if-none-match";
-  static const ifRangeHeader = "if-range";
-  static const ifUnmodifiedSinceHeader = "if-unmodified-since";
-  static const lastModifiedHeader = "last-modified";
-  static const locationHeader = "location";
-  static const maxForwardsHeader = "max-forwards";
-  static const pragmaHeader = "pragma";
-  static const proxyAuthenticateHeader = "proxy-authenticate";
-  static const proxyAuthorizationHeader = "proxy-authorization";
-  static const rangeHeader = "range";
-  static const refererHeader = "referer";
-  static const retryAfterHeader = "retry-after";
-  static const serverHeader = "server";
-  static const teHeader = "te";
-  static const trailerHeader = "trailer";
-  static const transferEncodingHeader = "transfer-encoding";
-  static const upgradeHeader = "upgrade";
-  static const userAgentHeader = "user-agent";
-  static const varyHeader = "vary";
-  static const viaHeader = "via";
-  static const warningHeader = "warning";
-  static const wwwAuthenticateHeader = "www-authenticate";
-  static const contentDisposition = "content-disposition";
+  static const String ageHeader = 'age';
+  static const String allowHeader = 'allow';
+  static const String authorizationHeader = 'authorization';
+  static const String cacheControlHeader = 'cache-control';
+  static const String connectionHeader = 'connection';
+  static const String contentEncodingHeader = 'content-encoding';
+  static const String contentLanguageHeader = 'content-language';
+  static const String contentLengthHeader = 'content-length';
+  static const String contentLocationHeader = 'content-location';
+  static const String contentMD5Header = 'content-md5';
+  static const String contentRangeHeader = 'content-range';
+  static const String contentTypeHeader = 'content-type';
+  static const String dateHeader = 'date';
+  static const String etagHeader = 'etag';
+  static const String expectHeader = 'expect';
+  static const String expiresHeader = 'expires';
+  static const String fromHeader = 'from';
+  static const String hostHeader = 'host';
+  static const String ifMatchHeader = 'if-match';
+  static const String ifModifiedSinceHeader = 'if-modified-since';
+  static const String ifNoneMatchHeader = 'if-none-match';
+  static const String ifRangeHeader = 'if-range';
+  static const String ifUnmodifiedSinceHeader = 'if-unmodified-since';
+  static const String lastModifiedHeader = 'last-modified';
+  static const String locationHeader = 'location';
+  static const String maxForwardsHeader = 'max-forwards';
+  static const String pragmaHeader = 'pragma';
+  static const String proxyAuthenticateHeader = 'proxy-authenticate';
+  static const String proxyAuthorizationHeader = 'proxy-authorization';
+  static const String rangeHeader = 'range';
+  static const String refererHeader = 'referer';
+  static const String retryAfterHeader = 'retry-after';
+  static const String serverHeader = 'server';
+  static const String teHeader = 'te';
+  static const String trailerHeader = 'trailer';
+  static const String transferEncodingHeader = 'transfer-encoding';
+  static const String upgradeHeader = 'upgrade';
+  static const String userAgentHeader = 'user-agent';
+  static const String varyHeader = 'vary';
+  static const String viaHeader = 'via';
+  static const String warningHeader = 'warning';
+  static const String wwwAuthenticateHeader = 'www-authenticate';
+  static const String contentDisposition = 'content-disposition';
 
   // Cookie headers from RFC 6265.
-  static const cookieHeader = "cookie";
-  static const setCookieHeader = "set-cookie";
+  static const String cookieHeader = 'cookie';
+  static const String setCookieHeader = 'set-cookie';
 
   // TODO(39783): Document this.
-  static const generalHeaders = [
+  static const List<String> generalHeaders = <String>[
     cacheControlHeader,
     connectionHeader,
     dateHeader,
@@ -427,7 +444,7 @@ abstract interface class HttpHeaders {
     warningHeader,
   ];
 
-  static const entityHeaders = [
+  static const List<String> entityHeaders = <String>[
     allowHeader,
     contentEncodingHeader,
     contentLanguageHeader,
@@ -440,7 +457,7 @@ abstract interface class HttpHeaders {
     lastModifiedHeader,
   ];
 
-  static const responseHeaders = [
+  static const List<String> responseHeaders = <String>[
     acceptRangesHeader,
     ageHeader,
     etagHeader,
@@ -453,7 +470,7 @@ abstract interface class HttpHeaders {
     contentDisposition,
   ];
 
-  static const requestHeaders = [
+  static const List<String> requestHeaders = <String>[
     acceptHeader,
     acceptCharsetHeader,
     acceptEncodingHeader,
@@ -626,8 +643,8 @@ abstract interface class HttpHeaders {
 abstract interface class HeaderValue {
   /// Creates a new header value object setting the value and parameters.
   factory HeaderValue([
-    String value = "",
-    Map<String, String?> parameters = const {},
+    String value = '',
+    Map<String, String?> parameters = const <String, String?>{},
   ]) {
     return _HeaderValue(value, parameters);
   }
@@ -636,7 +653,7 @@ abstract interface class HeaderValue {
   /// string with both value and optional parameters.
   static HeaderValue parse(
     String value, {
-    String parameterSeparator = ";",
+    String parameterSeparator = ';',
     String? valueSeparator,
     bool preserveBackslash = false,
   }) {
@@ -660,6 +677,7 @@ abstract interface class HeaderValue {
   /// ```plaintext
   /// value; parameter1=value1; parameter2=value2
   /// ```
+  @override
   String toString();
 }
 
@@ -674,24 +692,27 @@ abstract interface class HeaderValue {
 /// ```dart
 /// import 'dart:io';
 ///
-/// void main() async {
-///   HttpServer.bind("localhost", 8080).then((server) {
-///     server.listen((request) {
+/// void main() {
+///   HttpServer.bind("localhost", 8080).then((HttpServer server) {
+///     server.listen((HttpRequest request) {
 ///       final session = request.session;
+///
 ///       if (session.isNew) {
-///         session["cart"] = [];
+///         session["cart"] = <String>[];
 ///       }
+///
 ///       if (request.uri.queryParameters['buy'] != null) {
 ///         final item = request.uri.queryParameters['buy'];
-///         session["cart"].add(item);
+///         (session["cart"] as List<String>).add(item);
 ///       }
-///       session["cart"].cast<String>().forEach(request.response.writeln);
+///
+///       (session["cart"] as List<String>).forEach(request.response.writeln);
 ///       request.response.close();
 ///     });
 ///   });
 /// }
 /// ```
-abstract interface class HttpSession implements Map {
+abstract interface class HttpSession implements Map<Object?, Object?> {
   /// The id of the current session.
   String get id;
 
@@ -704,7 +725,7 @@ abstract interface class HttpSession implements Map {
   /// Sets a callback that will be called when the session is timed out.
   ///
   /// Calling this again will overwrite the previous value.
-  void set onTimeout(void Function() callback);
+  set onTimeout(void Function() callback);
 
   /// Whether the session has not yet been sent to the client.
   bool get isNew;
@@ -718,22 +739,30 @@ abstract interface class ContentType implements HeaderValue {
   /// Content type for plain text using UTF-8 encoding.
   ///
   ///     text/plain; charset=utf-8
-  static final text = ContentType("text", "plain", charset: "utf-8");
+  static final ContentType text = ContentType(
+    'text',
+    'plain',
+    charset: 'utf-8',
+  );
 
   /// Content type for HTML using UTF-8 encoding.
   ///
   ///    text/html; charset=utf-8
-  static final html = ContentType("text", "html", charset: "utf-8");
+  static final ContentType html = ContentType('text', 'html', charset: 'utf-8');
 
   /// Content type for JSON using UTF-8 encoding.
   ///
   ///    application/json; charset=utf-8
-  static final json = ContentType("application", "json", charset: "utf-8");
+  static final ContentType json = ContentType(
+    'application',
+    'json',
+    charset: 'utf-8',
+  );
 
   /// Content type for binary data.
   ///
   ///    application/octet-stream
-  static final binary = ContentType("application", "octet-stream");
+  static final ContentType binary = ContentType('application', 'octet-stream');
 
   /// Creates a new content type object setting the primary type and
   /// sub type. The charset and additional parameters can also be set
@@ -746,7 +775,7 @@ abstract interface class ContentType implements HeaderValue {
     String primaryType,
     String subType, {
     String? charset,
-    Map<String, String?> parameters = const {},
+    Map<String, String?> parameters = const <String, String?>{},
   }) {
     return _ContentType(primaryType, subType, charset, parameters);
   }
@@ -801,25 +830,27 @@ abstract interface class ContentType implements HeaderValue {
 final class SameSite {
   /// Default value, cookie with this value will generally not be sent on
   /// cross-site requests, unless the user is navigated to the original site.
-  static const lax = SameSite._("Lax");
+  static const SameSite lax = SameSite._('Lax');
 
   /// Cookie with this value will never be sent on cross-site requests.
-  static const strict = SameSite._("Strict");
+  static const SameSite strict = SameSite._('Strict');
 
   /// Cookie with this value will be sent in all requests.
   ///
   /// [Cookie.secure] must also be set to true, otherwise the `none` value
   /// will have no effect.
-  static const none = SameSite._("None");
+  static const SameSite none = SameSite._('None');
 
-  static const List<SameSite> values = [lax, strict, none];
-
-  final String name;
+  static const List<SameSite> values = <SameSite>[lax, strict, none];
 
   const SameSite._(this.name);
 
+  final String name;
+
   @override
-  String toString() => "SameSite=$name";
+  String toString() {
+    return 'SameSite=$name';
+  }
 }
 
 /// Representation of a cookie. For cookies received by the server as Cookie
@@ -827,6 +858,22 @@ final class SameSite {
 /// cookie for the 'set-cookie' header in the server and when receiving cookies
 /// in the client as 'set-cookie' headers all fields can be used.
 abstract interface class Cookie {
+  /// Creates a new cookie setting the name and value.
+  ///
+  /// [name] and [value] must be composed of valid characters according to RFC
+  /// 6265.
+  ///
+  /// By default the value of `httpOnly` will be set to `true`.
+  factory Cookie(String name, String value) {
+    return _Cookie(name, value);
+  }
+
+  /// Creates a new cookie by parsing a header value from a 'set-cookie'
+  /// header.
+  factory Cookie.fromSetCookieValue(String value) {
+    return _Cookie.fromSetCookieValue(value);
+  }
+
   /// The name of the cookie.
   ///
   /// Must be a `token` as specified in RFC 6265.
@@ -875,23 +922,10 @@ abstract interface class Cookie {
   /// See [SameSite] for more information.
   SameSite? sameSite;
 
-  /// Creates a new cookie setting the name and value.
-  ///
-  /// [name] and [value] must be composed of valid characters according to RFC
-  /// 6265.
-  ///
-  /// By default the value of `httpOnly` will be set to `true`.
-  factory Cookie(String name, String value) => _Cookie(name, value);
-
-  /// Creates a new cookie by parsing a header value from a 'set-cookie'
-  /// header.
-  factory Cookie.fromSetCookieValue(String value) {
-    return _Cookie.fromSetCookieValue(value);
-  }
-
   /// Returns the formatted string representation of the cookie. The
   /// string representation can be used for setting the Cookie or
   /// 'set-cookie' headers
+  @override
   String toString();
 }
 
@@ -1136,7 +1170,10 @@ abstract interface class HttpResponse implements IOSink {
   ///
   /// This method will also call `close`, and the returned future is
   /// the future returned by `close`.
-  Future redirect(Uri location, {int status = HttpStatus.movedTemporarily});
+  Future<void> redirect(
+    Uri location, {
+    int status = HttpStatus.movedTemporarily,
+  });
 
   /// Detaches the underlying socket from the HTTP server. When the
   /// socket is detached the HTTP server will no longer perform any
@@ -1198,14 +1235,21 @@ abstract interface class HttpResponse implements IOSink {
 /// leaks. Consider using [HttpClientResponse.drain] if the body is unused.
 ///
 /// ```dart import:convert
-/// var client = HttpClient();
+/// HttpClient client = HttpClient();
+///
 /// try {
-///   HttpClientRequest request = await client.get('localhost', 80, '/file.txt');
+///   HttpClientRequest request = await client.get(
+///     'localhost',
+///     80,
+///     '/file.txt',
+///   );
+///
 ///   // Optionally set up headers...
 ///   // Optionally write to the request object...
 ///   HttpClientResponse response = await request.close();
+///
 ///   // Process the response
-///   final stringData = await response.transform(utf8.decoder).join();
+///   String stringData = await response.transform(utf8.decoder).join();
 ///   print(stringData);
 /// } finally {
 ///   client.close();
@@ -1267,16 +1311,16 @@ abstract interface class HttpClient {
   /// timeline.
   ///
   /// Default is `false`.
-  static set enableTimelineLogging(bool value) {
-    final enabled = value;
+  static set enableTimelineLogging(bool enabled) {
     if (enabled != _enableTimelineLogging) {
-      if (!const bool.fromEnvironment("dart.vm.product")) {
+      if (!const bool.fromEnvironment('dart.vm.product')) {
         postEvent('HttpTimelineLoggingStateChange', {
-          'isolateId': Service.getIsolateID(Isolate.current),
+          'isolateId': Service.getIsolateId(Isolate.current),
           'enabled': enabled,
         });
       }
     }
+
     _enableTimelineLogging = enabled;
   }
 
@@ -1284,9 +1328,21 @@ abstract interface class HttpClient {
   /// developer timeline.
   ///
   /// Default is `false`.
-  static bool get enableTimelineLogging => _enableTimelineLogging;
+  static bool get enableTimelineLogging {
+    return _enableTimelineLogging;
+  }
 
   static bool _enableTimelineLogging = false;
+
+  factory HttpClient({SecurityContext? context}) {
+    HttpOverrides? overrides = HttpOverrides.current;
+
+    if (overrides == null) {
+      return _HttpClient(context);
+    }
+
+    return overrides.createHttpClient(context);
+  }
 
   /// Gets and sets the idle timeout of non-active persistent (keep-alive)
   /// connections.
@@ -1348,14 +1404,6 @@ abstract interface class HttpClient {
   /// If the userAgent is set to `null`, no default `User-Agent` header will be
   /// added to each request.
   String? userAgent;
-
-  factory HttpClient({SecurityContext? context}) {
-    HttpOverrides? overrides = HttpOverrides.current;
-    if (overrides == null) {
-      return _HttpClient(context);
-    }
-    return overrides.createHttpClient(context);
-  }
 
   /// Opens a HTTP connection.
   ///
@@ -1510,8 +1558,8 @@ abstract interface class HttpClient {
   /// set the `'authorization'` header on the request to avoid the overhead
   /// of a failed request, or issues due to missing request payload on retried
   /// request.
-  void set authenticate(
-    Future<bool> Function(Uri url, String scheme, String? realm)? f,
+  set authenticate(
+    Future<bool> Function(Uri url, String scheme, String? realm)? authenticate,
   );
 
   /// Add credentials to be used for authorizing HTTP requests.
@@ -1552,7 +1600,7 @@ abstract interface class HttpClient {
   ///   client.close();
   /// }
   /// ```
-  void set connectionFactory(
+  set connectionFactory(
     Future<ConnectionTask<Socket>> Function(
       Uri url,
       String? proxyHost,
@@ -1584,7 +1632,7 @@ abstract interface class HttpClient {
   /// The static function [findProxyFromEnvironment] on this class can
   /// be used to implement proxy server resolving based on environment
   /// variables.
-  void set findProxy(String Function(Uri url)? f);
+  set findProxy(String Function(Uri url)? findProxy);
 
   /// Function for resolving the proxy server to be used for a HTTP
   /// connection from the proxy configuration specified through
@@ -1640,9 +1688,11 @@ abstract interface class HttpClient {
     Map<String, String>? environment,
   }) {
     HttpOverrides? overrides = HttpOverrides.current;
+
     if (overrides == null) {
       return _HttpClient._findProxyFromEnvironment(url, environment);
     }
+
     return overrides.findProxyFromEnvironment(url, environment);
   }
 
@@ -1663,9 +1713,9 @@ abstract interface class HttpClient {
   /// If the [Future] completes with `true` the request will be retried
   /// using the updated credentials. Otherwise response processing will
   /// continue normally.
-  void set authenticateProxy(
+  set authenticateProxy(
     Future<bool> Function(String host, int port, String scheme, String? realm)?
-    f,
+    authenticateProxy,
   );
 
   /// Add credentials to be used for authorizing HTTP proxies.
@@ -1696,8 +1746,9 @@ abstract interface class HttpClient {
   /// the function that was the value of badCertificateCallback at the time
   /// the request is made, even if the value of badCertificateCallback
   /// has changed since then.
-  void set badCertificateCallback(
-    bool Function(X509Certificate cert, String host, int port)? callback,
+  set badCertificateCallback(
+    bool Function(X509Certificate cert, String host, int port)?
+    badCertificateCallback,
   );
 
   /// Sets a callback that will be called when new TLS keys are exchanged with
@@ -1713,7 +1764,7 @@ abstract interface class HttpClient {
   ///     final client = HttpClient();
   ///     client.keyLog = (line) => log.writeAsStringSync(line,
   ///         mode: FileMode.append);
-  void set keyLog(Function(String line)? callback);
+  set keyLog(void Function(String line)? callback);
 
   /// Shuts down the HTTP client.
   ///
@@ -1859,9 +1910,11 @@ abstract interface class HttpClientRequest implements IOSink {
   ///
   /// If an error occurs before the response is available, this future will
   /// complete with an error.
+  @override
   Future<HttpClientResponse> get done;
 
   /// Close the request for input. Returns the value of [done].
+  @override
   Future<HttpClientResponse> close();
 
   /// Gets information about the client connection.
@@ -2056,8 +2109,9 @@ abstract interface class HttpClientCredentials {}
 /// Represents credentials for basic authentication.
 abstract final class HttpClientBasicCredentials
     implements HttpClientCredentials {
-  factory HttpClientBasicCredentials(String username, String password) =>
-      _HttpClientBasicCredentials(username, password);
+  factory HttpClientBasicCredentials(String username, String password) {
+    return _HttpClientBasicCredentials(username, password);
+  }
 }
 
 /// Represents credentials for digest authentication. Digest
@@ -2066,15 +2120,18 @@ abstract final class HttpClientBasicCredentials
 /// "auth".
 abstract final class HttpClientDigestCredentials
     implements HttpClientCredentials {
-  factory HttpClientDigestCredentials(String username, String password) =>
-      _HttpClientDigestCredentials(username, password);
+  factory HttpClientDigestCredentials(String username, String password) {
+    return _HttpClientDigestCredentials(username, password);
+  }
 }
 
 /// Information about an [HttpRequest], [HttpResponse], [HttpClientRequest], or
 /// [HttpClientResponse] connection.
 abstract interface class HttpConnectionInfo {
   InternetAddress get remoteAddress;
+
   int get remotePort;
+
   int get localPort;
 }
 
@@ -2091,31 +2148,40 @@ abstract interface class RedirectInfo {
 }
 
 class HttpException implements IOException {
-  final String message;
-  final Uri? uri;
-
   const HttpException(this.message, {this.uri});
 
+  final String message;
+
+  final Uri? uri;
+
+  @override
   String toString() {
-    var b =
-        StringBuffer()
-          ..write('HttpException: ')
-          ..write(message);
-    var uri = this.uri;
+    StringBuffer buffer = StringBuffer('HttpException: ')..write(message);
+    Uri? uri = this.uri;
+
     if (uri != null) {
-      b.write(', uri = $uri');
+      buffer.write(', uri = $uri');
     }
-    return b.toString();
+
+    return buffer.toString();
   }
 }
 
 class RedirectException implements HttpException {
-  final String message;
-  final List<RedirectInfo> redirects;
-
   const RedirectException(this.message, this.redirects);
 
-  String toString() => "RedirectException: $message";
+  @override
+  final String message;
 
-  Uri? get uri => redirects.isEmpty ? null : redirects.last.location;
+  final List<RedirectInfo> redirects;
+
+  @override
+  Uri? get uri {
+    return redirects.isEmpty ? null : redirects.last.location;
+  }
+
+  @override
+  String toString() {
+    return 'RedirectException: $message';
+  }
 }

@@ -5,7 +5,7 @@
 part of 'http.dart';
 
 /// WebSocket status codes used when closing a WebSocket connection.
-abstract class WebSocketStatus {
+abstract interface class WebSocketStatus {
   static const int normalClosure = 1000;
   static const int goingAway = 1001;
   static const int protocolError = 1002;
@@ -50,6 +50,14 @@ class CompressionOptions {
     enabled: false,
   );
 
+  const CompressionOptions({
+    this.clientNoContextTakeover = false,
+    this.serverNoContextTakeover = false,
+    this.clientMaxWindowBits,
+    this.serverMaxWindowBits,
+    this.enabled = true,
+  });
+
   /// Whether the client will reuse its compression instances.
   final bool clientNoContextTakeover;
 
@@ -83,61 +91,58 @@ class CompressionOptions {
   /// new instance with compression disabled.
   final bool enabled;
 
-  const CompressionOptions({
-    this.clientNoContextTakeover = false,
-    this.serverNoContextTakeover = false,
-    this.clientMaxWindowBits,
-    this.serverMaxWindowBits,
-    this.enabled = true,
-  });
-
   /// Parses list of requested server headers to return server compression
   /// response headers.
   ///
   /// Uses [serverMaxWindowBits] value if set, otherwise will attempt to use
-  /// value from headers. Defaults to [WebSocket.DEFAULT_WINDOW_BITS]. Returns a
-  /// [_CompressionMaxWindowBits] object which contains the response headers and
-  /// negotiated max window bits.
+  /// value from headers. Defaults to [_WebSocketImpl.defaultWindowBits].
+  /// Returns a [_CompressionMaxWindowBits] object which contains the response
+  /// headers and negotiated max window bits.
   _CompressionMaxWindowBits _createServerResponseHeader(
     HeaderValue? requested,
   ) {
-    var info = _CompressionMaxWindowBits("", 0);
+    _CompressionMaxWindowBits info = _CompressionMaxWindowBits('', 0);
 
     String? part = requested?.parameters[_serverMaxWindowBits];
+
     if (part != null) {
       if (part.length >= 2 && part.startsWith('0')) {
-        throw ArgumentError("Illegal 0 padding on value.");
+        throw ArgumentError('Illegal 0 padding on value.');
       } else {
-        int mwb =
+        int maxWindowBits =
             serverMaxWindowBits ??
             int.tryParse(part) ??
-            _WebSocketImpl.DEFAULT_WINDOW_BITS;
-        info.headerValue = "; server_max_window_bits=$mwb";
-        info.maxWindowBits = mwb;
+            _WebSocketImpl.defaultWindowBits;
+
+        info
+          ..headerValue = '; server_max_window_bits=$maxWindowBits'
+          ..maxWindowBits = maxWindowBits;
       }
     } else {
-      info.headerValue = "";
-      info.maxWindowBits = _WebSocketImpl.DEFAULT_WINDOW_BITS;
+      info
+        ..headerValue = ''
+        ..maxWindowBits = _WebSocketImpl.defaultWindowBits;
     }
+
     return info;
   }
 
   /// Returns default values for client compression request headers.
   String _createClientRequestHeader(HeaderValue? requested, int size) {
-    var info = "";
+    String info = '';
 
     // If responding to a valid request, specify size
     if (requested != null) {
-      info = "; client_max_window_bits=$size";
+      info = '; client_max_window_bits=$size';
     } else {
       // Client request. Specify default
       if (clientMaxWindowBits == null) {
-        info = "; client_max_window_bits";
+        info = '; client_max_window_bits';
       } else {
-        info = "; client_max_window_bits=$clientMaxWindowBits";
+        info = '; client_max_window_bits=$clientMaxWindowBits';
       }
       if (serverMaxWindowBits != null) {
-        info += "; server_max_window_bits=$serverMaxWindowBits";
+        info += '; server_max_window_bits=$serverMaxWindowBits';
       }
     }
 
@@ -155,28 +160,33 @@ class CompressionOptions {
   /// [_CompressionMaxWindowBits] object with the response headers and
   /// negotiated `maxWindowBits` value.
   _CompressionMaxWindowBits _createHeader([HeaderValue? requested]) {
-    var info = _CompressionMaxWindowBits("", 0);
+    _CompressionMaxWindowBits info = _CompressionMaxWindowBits('', 0);
+
     if (!enabled) {
       return info;
     }
 
-    info.headerValue = _WebSocketImpl.PER_MESSAGE_DEFLATE;
+    info.headerValue = _WebSocketImpl.perMessageDeflate;
 
     if (clientNoContextTakeover &&
         (requested == null ||
             (requested.parameters.containsKey(_clientNoContextTakeover)))) {
-      info.headerValue += "; client_no_context_takeover";
+      info.headerValue += '; client_no_context_takeover';
     }
 
     if (serverNoContextTakeover &&
         (requested == null ||
             (requested.parameters.containsKey(_serverNoContextTakeover)))) {
-      info.headerValue += "; server_no_context_takeover";
+      info.headerValue += '; server_no_context_takeover';
     }
 
-    var headerList = _createServerResponseHeader(requested);
-    info.headerValue += headerList.headerValue;
-    info.maxWindowBits = headerList.maxWindowBits;
+    _CompressionMaxWindowBits headerList = _createServerResponseHeader(
+      requested,
+    );
+
+    info
+      ..headerValue += headerList.headerValue
+      ..maxWindowBits = headerList.maxWindowBits;
 
     info.headerValue += _createClientRequestHeader(
       requested,
@@ -227,8 +237,7 @@ abstract class WebSocketTransformer
   /// to negotiate with the specified [CompressionOptions]. If none is specified
   /// then the [WebSocket] will be created with the default [CompressionOptions].
   factory WebSocketTransformer({
-    /*String|Future<String>*/ Function(List<String> protocols)?
-    protocolSelector,
+    FutureOr<String> Function(List<String> protocols)? protocolSelector,
     CompressionOptions compression = CompressionOptions.compressionDefault,
   }) {
     return _WebSocketTransformerImpl(protocolSelector, compression);
@@ -251,7 +260,7 @@ abstract class WebSocketTransformer
   /// then the [WebSocket] will be created with the default [CompressionOptions].
   static Future<WebSocket> upgrade(
     HttpRequest request, {
-    Function(List<String> protocols)? protocolSelector,
+    FutureOr<String> Function(List<String> protocols)? protocolSelector,
     CompressionOptions compression = CompressionOptions.compressionDefault,
   }) {
     return _WebSocketTransformerImpl._upgrade(
@@ -271,10 +280,10 @@ abstract class WebSocketTransformer
 ///
 /// The stream exposes the messages received. A text message will be of type
 /// `String` and a binary message will be of type `List<int>`.
-abstract class WebSocket
+abstract interface class WebSocket
     implements
-        Stream<dynamic /*String|List<int>*/>,
-        StreamSink<dynamic /*String|List<int>*/> {
+        Stream<Object /*String|List<int>*/>,
+        StreamSink<Object /*String|List<int>*/> {
   /// Possible states of the connection.
   static const int connecting = 0;
   static const int open = 1;
@@ -307,7 +316,7 @@ abstract class WebSocket
   /// The [headers] argument is specifying additional HTTP headers for
   /// setting up the connection. This would typically be the `Origin`
   /// header and potentially cookies. The keys of the map are the header
-  /// fields and the values are either String or List<String>.
+  /// fields and the values are either String or List&lt;String&gt;.
   ///
   /// If [headers] is provided, there are a number of headers
   /// which are controlled by the WebSocket connection process. These
@@ -326,22 +335,18 @@ abstract class WebSocket
   static Future<WebSocket> connect(
     String url, {
     Iterable<String>? protocols,
-    Map<String, dynamic>? headers,
+    Map<String, Object>? headers,
     CompressionOptions compression = CompressionOptions.compressionDefault,
     HttpClient? customClient,
-  }) => _WebSocketImpl.connect(
-    url,
-    protocols,
-    headers,
-    compression: compression,
-    customClient: customClient,
-  );
-
-  @Deprecated(
-    'This constructor will be removed in Dart 2.0. Use `implements`'
-    ' instead of `extends` if implementing this abstract class.',
-  )
-  WebSocket();
+  }) {
+    return _WebSocketImpl.connect(
+      url,
+      protocols,
+      headers,
+      compression: compression,
+      customClient: customClient,
+    );
+  }
 
   /// Creates a WebSocket from an already-upgraded socket.
   ///
@@ -368,10 +373,11 @@ abstract class WebSocket
   }) {
     if (serverSide == null) {
       throw ArgumentError(
-        "The serverSide argument must be passed "
-        "explicitly to WebSocket.fromUpgradedSocket.",
+        'The serverSide argument must be passed '
+        'explicitly to WebSocket.fromUpgradedSocket.',
       );
     }
+
     return _WebSocketImpl._fromSocket(
       socket,
       protocol,
@@ -406,16 +412,19 @@ abstract class WebSocket
   /// arguments to send close information to the remote peer. If they are
   /// omitted, the peer will see [WebSocketStatus.noStatusReceived] code
   /// with no reason.
-  Future close([int? code, String? reason]);
+  @override
+  Future<void> close([int? code, String? reason]);
 
   /// Sends data on the WebSocket connection. The data in [data] must
   /// be either a `String`, or a `List<int>` holding bytes.
+  @override
   void add(/*String|List<int>*/ data);
 
   /// Sends data from a stream on WebSocket connection. Each data event from
   /// [stream] will be send as a single WebSocket frame. The data from [stream]
   /// must be either `String`s, or `List<int>`s holding bytes.
-  Future addStream(Stream stream);
+  @override
+  Future<void> addStream(Stream<Object> stream);
 
   /// Sends a text message with the text represented by [bytes].
   ///
@@ -424,7 +433,9 @@ abstract class WebSocket
   void addUtf8Text(List<int> bytes);
 
   /// Gets the user agent used for WebSocket connections.
-  static String? get userAgent => _WebSocketImpl.userAgent;
+  static String? get userAgent {
+    return _WebSocketImpl.userAgent;
+  }
 
   /// Sets the user agent to use for WebSocket connections.
   static set userAgent(String? userAgent) {
@@ -433,15 +444,18 @@ abstract class WebSocket
 }
 
 class WebSocketException implements IOException {
+  const WebSocketException([this.message = '', this.httpStatusCode]);
+
   final String message;
+
   final int? httpStatusCode;
 
-  const WebSocketException([this.message = "", this.httpStatusCode]);
-
+  @override
   String toString() {
     if (httpStatusCode != null) {
-      return "WebSocketException: $message, HTTP status code: $httpStatusCode";
+      return 'WebSocketException: $message, HTTP status code: $httpStatusCode';
     }
-    return "WebSocketException: $message";
+
+    return 'WebSocketException: $message';
   }
 }

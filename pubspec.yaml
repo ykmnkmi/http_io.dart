@@ -11,6 +11,8 @@ workspace:
   - packages/expect
 
 dependencies:
+  async_helper: any
+  expect: any
   meta: ^1.16.0
 
 dev_dependencies:

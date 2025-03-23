@@ -4,11 +4,13 @@
 
 part of 'http.dart';
 
-const String _DART_SESSION_ID = "DARTSESSID";
+const String _dartSessionId = 'DARTSESSID';
 
 // A _HttpSession is a node in a double-linked list, with _next and _prev being
 // the previous and next pointers.
-class _HttpSession implements HttpSession {
+final class _HttpSession implements HttpSession {
+  _HttpSession(this._sessionManager, this.id) : _lastSeen = DateTime.now();
+
   // Destroyed marked. Used by the http connection to see if a session is valid.
   bool _destroyed = false;
   bool _isNew = true;
@@ -16,14 +18,13 @@ class _HttpSession implements HttpSession {
   void Function()? _timeoutCallback;
   final _HttpSessionManager _sessionManager;
   // Pointers in timeout queue.
-  _HttpSession? _prev;
+  _HttpSession? _previous;
   _HttpSession? _next;
+  @override
   final String id;
+  final Map<Object?, Object?> _data = HashMap<Object?, Object?>();
 
-  final Map _data = HashMap();
-
-  _HttpSession(this._sessionManager, this.id) : _lastSeen = DateTime.now();
-
+  @override
   void destroy() {
     assert(!_destroyed);
     _destroyed = true;
@@ -38,61 +39,136 @@ class _HttpSession implements HttpSession {
     _sessionManager._bumpToEnd(this);
   }
 
-  DateTime get lastSeen => _lastSeen;
+  DateTime get lastSeen {
+    return _lastSeen;
+  }
 
-  bool get isNew => _isNew;
+  @override
+  bool get isNew {
+    return _isNew;
+  }
 
-  void set onTimeout(void Function()? callback) {
+  @override
+  set onTimeout(void Function()? callback) {
     _timeoutCallback = callback;
   }
 
   // Map implementation:
-  bool containsValue(value) => _data.containsValue(value);
-  bool containsKey(key) => _data.containsKey(key);
-  operator [](key) => _data[key];
+  @override
+  bool containsValue(value) {
+    return _data.containsValue(value);
+  }
+
+  @override
+  bool containsKey(key) {
+    return _data.containsKey(key);
+  }
+
+  @override
+  Object? operator [](key) {
+    return _data[key];
+  }
+
+  @override
   void operator []=(key, value) {
     _data[key] = value;
   }
 
-  putIfAbsent(key, ifAbsent) => _data.putIfAbsent(key, ifAbsent);
-  addAll(Map other) => _data.addAll(other);
-  remove(key) => _data.remove(key);
+  @override
+  Object? putIfAbsent(key, ifAbsent) {
+    return _data.putIfAbsent(key, ifAbsent);
+  }
+
+  @override
+  void addAll(Map<Object?, Object?> other) {
+    _data.addAll(other);
+  }
+
+  @override
+  Object? remove(key) {
+    return _data.remove(key);
+  }
+
+  @override
   void clear() {
     _data.clear();
   }
 
-  void forEach(void f(key, value)) {
+  @override
+  void forEach(void Function(Object? key, Object? value) f) {
     _data.forEach(f);
   }
 
-  Iterable<MapEntry> get entries => _data.entries;
+  @override
+  Iterable<MapEntry<Object?, Object?>> get entries {
+    return _data.entries;
+  }
 
-  void addEntries(Iterable<MapEntry> entries) {
+  @override
+  void addEntries(Iterable<MapEntry<Object?, Object?>> entries) {
     _data.addEntries(entries);
   }
 
-  Map<K, V> map<K, V>(MapEntry<K, V> transform(key, value)) =>
-      _data.map(transform);
+  @override
+  Map<K, V> map<K, V>(
+    MapEntry<K, V> Function(Object? key, Object? value) transform,
+  ) {
+    return _data.map(transform);
+  }
 
-  void removeWhere(bool test(key, value)) {
+  @override
+  void removeWhere(bool Function(Object? key, Object? value) test) {
     _data.removeWhere(test);
   }
 
-  Map<K, V> cast<K, V>() => _data.cast<K, V>();
-  update(key, update(value), {Function()? ifAbsent}) =>
-      _data.update(key, update, ifAbsent: ifAbsent);
+  @override
+  Map<K, V> cast<K, V>() {
+    return _data.cast<K, V>();
+  }
 
-  void updateAll(update(key, value)) {
+  @override
+  Object? update(
+    Object? key,
+    Object? Function(Object? value) update, {
+    Object? Function()? ifAbsent,
+  }) {
+    return _data.update(key, update, ifAbsent: ifAbsent);
+  }
+
+  @override
+  void updateAll(Object? Function(Object? key, Object? value) update) {
     _data.updateAll(update);
   }
 
-  Iterable get keys => _data.keys;
-  Iterable get values => _data.values;
-  int get length => _data.length;
-  bool get isEmpty => _data.isEmpty;
-  bool get isNotEmpty => _data.isNotEmpty;
+  @override
+  Iterable<Object?> get keys {
+    return _data.keys;
+  }
 
-  String toString() => 'HttpSession id:$id $_data';
+  @override
+  Iterable<Object?> get values {
+    return _data.values;
+  }
+
+  @override
+  int get length {
+    return _data.length;
+  }
+
+  @override
+  bool get isEmpty {
+    return _data.isEmpty;
+  }
+
+  @override
+  bool get isNotEmpty {
+    return _data.isNotEmpty;
+  }
+
+  @override
+  String toString() {
+    return 'HttpSession id:$id $_data';
+  }
 }
 
 // Private class used to manage all the active sessions. The sessions are stored
@@ -100,36 +176,41 @@ class _HttpSession implements HttpSession {
 //
 //  * In a map, mapping from ID to HttpSession.
 //  * In a linked list, used as a timeout queue.
-class _HttpSessionManager {
+final class _HttpSessionManager {
+  _HttpSessionManager() : _sessions = <String, _HttpSession>{};
+
   final Map<String, _HttpSession> _sessions;
   int _sessionTimeout = 20 * 60; // 20 mins.
   _HttpSession? _head;
   _HttpSession? _tail;
   Timer? _timer;
 
-  _HttpSessionManager() : _sessions = {};
-
   String createSessionId() {
-    const int _KEY_LENGTH = 16; // 128 bits.
-    var data = _CryptoUtils.getRandomBytes(_KEY_LENGTH);
+    const int keyLength = 16; // 128 bits.
+
+    Uint8List data = _CryptoUtils.getRandomBytes(keyLength);
     return _CryptoUtils.bytesToHex(data);
   }
 
-  _HttpSession? getSession(String id) => _sessions[id];
+  _HttpSession? getSession(String id) {
+    return _sessions[id];
+  }
 
   _HttpSession createSession() {
-    var id = createSessionId();
+    String id = createSessionId();
+
     // TODO(ajohnsen): Consider adding a limit and throwing an exception.
     // Should be very unlikely however.
     while (_sessions.containsKey(id)) {
       id = createSessionId();
     }
-    var session = _sessions[id] = _HttpSession(this, id);
+
+    _HttpSession session = _sessions[id] = _HttpSession(this, id);
     _addToTimeoutQueue(session);
     return session;
   }
 
-  void set sessionTimeout(int timeout) {
+  set sessionTimeout(int timeout) {
     _sessionTimeout = timeout;
     _stopTimer();
     _startTimer();
@@ -151,25 +232,30 @@ class _HttpSessionManager {
       _startTimer();
     } else {
       assert(_timer != null);
-      var tail = _tail!;
+
+      _HttpSession tail = _tail!;
+
       // Add to end.
       tail._next = session;
-      session._prev = tail;
+      session._previous = tail;
       _tail = session;
     }
   }
 
   void _removeFromTimeoutQueue(_HttpSession session) {
-    var next = session._next;
-    var prev = session._prev;
-    session._next = session._prev = null;
-    next?._prev = prev;
-    prev?._next = next;
+    _HttpSession? next = session._next;
+    _HttpSession? previous = session._previous;
+    session._next = session._previous = null;
+    next?._previous = previous;
+    previous?._next = next;
+
     if (_tail == session) {
-      _tail = prev;
+      _tail = previous;
     }
+
     if (_head == session) {
       _head = next;
+
       // We removed the head element, start new timer.
       _stopTimer();
       _startTimer();
@@ -178,16 +264,21 @@ class _HttpSessionManager {
 
   void _timerTimeout() {
     _stopTimer(); // Clear timer.
-    var session = _head!;
+
+    _HttpSession session = _head!;
     session.destroy(); // Will remove the session from timeout queue and map.
     session._timeoutCallback?.call();
   }
 
   void _startTimer() {
     assert(_timer == null);
-    var head = _head;
+
+    _HttpSession? head = _head;
+
     if (head != null) {
-      int seconds = DateTime.now().difference(head.lastSeen).inSeconds;
+      Duration difference = DateTime.now().difference(head.lastSeen);
+      int seconds = difference.inSeconds;
+
       _timer = Timer(
         Duration(seconds: _sessionTimeout - seconds),
         _timerTimeout,
@@ -196,7 +287,8 @@ class _HttpSessionManager {
   }
 
   void _stopTimer() {
-    var timer = _timer;
+    Timer? timer = _timer;
+
     if (timer != null) {
       timer.cancel();
       _timer = null;
