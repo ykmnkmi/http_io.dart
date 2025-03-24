@@ -1606,7 +1606,7 @@ abstract interface class HttpClient {
       String? proxyHost,
       int? proxyPort,
     )?
-    f,
+    connectionFactory,
   );
 
   /// Sets the function used to resolve the proxy server to be used for
