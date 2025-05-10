@@ -6,7 +6,6 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'package:http_io/http_io.dart' show Platform, Process, exit;
 
 import 'package:http_io/http_io.dart';
 

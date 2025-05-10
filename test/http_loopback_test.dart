@@ -2,14 +2,15 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import "dart:async";
-import "package:http_io/http_io.dart";
-import "package:expect/expect.dart";
+import 'dart:async';
+
+import 'package:expect/expect.dart';
+import 'package:http_io/http_io.dart';
 
 /// Creates a callback that listens for incoming connections.
 /// If [remotePorts] is not null then callback would add remote port of each
 /// new connection to the given list.
-makeListener([List<int>? remotePorts]) {
+void Function(RawSocket) makeListener([List<int>? remotePorts]) {
   return (RawSocket serverSide) {
     serveData(RawSocketEvent event) {
       serverSide.shutdown(SocketDirection.send);
@@ -23,15 +24,17 @@ makeListener([List<int>? remotePorts]) {
 /// Verify that you can't connect to loopback via mismatching protocol, e.g.
 /// if the server is listening to IPv4 then you can't connect via IPv6.
 Future<void> failureTest(
-    InternetAddress serverAddr, InternetAddress clientAddr) async {
-  final remotePorts = <int>[];
-  final server = await RawServerSocket.bind(serverAddr, 0);
+  InternetAddress serverAddr,
+  InternetAddress clientAddr,
+) async {
+  var remotePorts = <int>[];
+  var server = await RawServerSocket.bind(serverAddr, 0);
   server.listen(makeListener(remotePorts));
 
   bool success = false;
   try {
-    final client = await RawSocket.connect(clientAddr, server.port);
-    final clientPort = client.port;
+    var client = await RawSocket.connect(clientAddr, server.port);
+    var clientPort = client.port;
 
     // We might actually succeed in connecting somewhere (e.g. to another test
     // which by chance started listening to the same port).
@@ -48,18 +51,20 @@ Future<void> failureTest(
   } catch (e) {
     Expect.fail('Unexpected exception: $e');
   } finally {
-    Expect.isTrue(success,
-        'Unexpected connection to $serverAddr via $clientAddr address!');
+    Expect.isTrue(
+      success,
+      'Unexpected connection to $serverAddr via $clientAddr address!',
+    );
     await server.close();
   }
 }
 
 Future<void> successTest(InternetAddress address) async {
-  final server = await RawServerSocket.bind(address, 0);
+  var server = await RawServerSocket.bind(address, 0);
   server.listen(makeListener());
   bool testFailure = false;
   try {
-    final client = await RawSocket.connect(address, server.port);
+    var client = await RawSocket.connect(address, server.port);
     await client.close();
   } catch (e) {
     testFailure = true;

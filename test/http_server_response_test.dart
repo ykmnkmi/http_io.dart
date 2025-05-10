@@ -8,50 +8,60 @@
 // VMOptions=--short_socket_read --short_socket_write
 // OtherResources=http_server_response_test.dart
 
-import "package:expect/expect.dart";
-import "dart:async";
-import "package:http_io/http_io.dart";
-import "dart:typed_data";
+import 'dart:async';
+import 'dart:typed_data';
+
+import 'package:expect/expect.dart';
+import 'package:http_io/http_io.dart';
 
 // Platform.script may refer to a AOT or JIT snapshot, which are significantly
 // larger.
-File scriptSource = new File(
-    Platform.script.resolve("http_server_response_test.dart").toFilePath());
+File scriptSource = File(
+  Platform.script.resolve('http_server_response_test.dart').toFilePath(),
+);
 
-void testServerRequest(void handler(server, request),
-    {int? bytes, bool closeClient = false}) {
-  HttpServer.bind("127.0.0.1", 0).then((server) {
+void testServerRequest(
+  void handler(HttpServer server, HttpRequest request), {
+  int? bytes,
+  bool closeClient = false,
+}) {
+  HttpServer.bind('127.0.0.1', 0).then((server) {
     server.defaultResponseHeaders.clear();
     server.listen((request) {
       handler(server, request);
     });
 
-    var client = new HttpClient();
+    var client = HttpClient();
     // We only close the client on either
     // - Bad response headers
     // - Response done (with optional errors in between).
     client
-        .get("127.0.0.1", server.port, "/")
+        .get('127.0.0.1', server.port, '/')
         .then((request) => request.close())
         .then((response) {
-      int received = 0;
-      var subscription;
-      subscription = response.listen((data) {
-        if (closeClient) {
-          subscription.cancel();
+          int received = 0;
+          var subscription;
+          subscription = response.listen(
+            (data) {
+              if (closeClient) {
+                subscription.cancel();
+                client.close();
+              } else {
+                received += data.length;
+              }
+            },
+            onDone: () {
+              if (bytes != null) Expect.equals(received, bytes);
+              client.close();
+            },
+            onError: (error) {
+              Expect.isTrue(error is HttpException);
+            },
+          );
+        })
+        .catchError((error) {
           client.close();
-        } else {
-          received += data.length;
-        }
-      }, onDone: () {
-        if (bytes != null) Expect.equals(received, bytes);
-        client.close();
-      }, onError: (error) {
-        Expect.isTrue(error is HttpException);
-      });
-    }).catchError((error) {
-      client.close();
-    }, test: (e) => e is HttpException);
+        }, test: (e) => e is HttpException);
   });
 }
 
@@ -65,11 +75,9 @@ void testResponseDone() {
   });
 
   testServerRequest((server, request) {
-    new File("__nonexistent_file_")
-        .openRead()
-        .cast<List<int>>()
-        .pipe(request.response)
-        .catchError((e) {
+    File(
+      '__nonexistent_file_',
+    ).openRead().cast<List<int>>().pipe(request.response).catchError((e) {
       server.close();
     });
   });
@@ -104,7 +112,7 @@ void testResponseAddStream() {
   }, bytes: bytes * 2);
 
   testServerRequest((server, request) {
-    var controller = new StreamController<List<int>>(sync: true);
+    var controller = StreamController<List<int>>(sync: true);
     request.response.addStream(controller.stream).then((response) {
       response.close();
       response.done.then((_) => server.close());
@@ -114,18 +122,16 @@ void testResponseAddStream() {
 
   testServerRequest((server, request) {
     request.response
-        .addStream(new File("__nonexistent_file_").openRead())
+        .addStream(File('__nonexistent_file_').openRead())
         .catchError((e) {
-      server.close();
-    });
+          server.close();
+        });
   });
 
   testServerRequest((server, request) {
-    new File("__nonexistent_file_")
-        .openRead()
-        .cast<List<int>>()
-        .pipe(request.response)
-        .catchError((e) {
+    File(
+      '__nonexistent_file_',
+    ).openRead().cast<List<int>>().pipe(request.response).catchError((e) {
       server.close();
     });
   });
@@ -144,7 +150,7 @@ void testResponseAddStreamClosed() {
     int count = 0;
     write() {
       request.response.addStream(file.openRead()).then((response) {
-        request.response.write("sync data");
+        request.response.write('sync data');
         count++;
         if (count < 1000) {
           write();
@@ -216,9 +222,9 @@ void testBadResponseAdd() {
 
   testServerRequest((server, request) {
     request.response.contentLength = 0;
-    request.response.add(new Uint8List(64 * 1024));
-    request.response.add(new Uint8List(64 * 1024));
-    request.response.add(new Uint8List(64 * 1024));
+    request.response.add(Uint8List(64 * 1024));
+    request.response.add(Uint8List(64 * 1024));
+    request.response.add(Uint8List(64 * 1024));
     request.response.close();
     request.response.done.catchError((error) {
       server.close();
@@ -246,24 +252,27 @@ void testBadResponseClose() {
 }
 
 void testIgnoreRequestData() {
-  HttpServer.bind("127.0.0.1", 0).then((server) {
+  HttpServer.bind('127.0.0.1', 0).then((server) {
     server.listen((request) {
       // Ignore request data.
-      request.response.write("all-okay");
+      request.response.write('all-okay');
       request.response.close();
     });
 
-    var client = new HttpClient();
-    client.get("127.0.0.1", server.port, "/").then((request) {
-      request.contentLength = 1024 * 1024;
-      request.add(new Uint8List(1024 * 1024));
-      return request.close();
-    }).then((response) {
-      response.fold<int>(0, (s, b) => s + b.length).then((bytes) {
-        Expect.equals(8, bytes);
-        server.close();
-      });
-    });
+    var client = HttpClient();
+    client
+        .get('127.0.0.1', server.port, '/')
+        .then((request) {
+          request.contentLength = 1024 * 1024;
+          request.add(Uint8List(1024 * 1024));
+          return request.close();
+        })
+        .then((response) {
+          response.fold<int>(0, (s, b) => s + b.length).then((bytes) {
+            Expect.equals(8, bytes);
+            server.close();
+          });
+        });
   });
 }
 

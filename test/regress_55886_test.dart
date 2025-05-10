@@ -8,16 +8,16 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'package:http_io/http_io.dart';
 
 import 'package:expect/async_helper.dart';
 import 'package:expect/expect.dart';
+import 'package:http_io/http_io.dart';
 
 Future<void> pipeStream(Stream<List<int>> from, IOSink to) async {
   bool wasCancelled = false;
 
   StreamSubscription<List<int>>? subscription;
-  late final StreamController<List<int>> streamController;
+  late StreamController<List<int>> streamController;
   streamController = StreamController<List<int>>(
     onPause: () {
       subscription?.pause();
@@ -40,7 +40,7 @@ Future<void> pipeStream(Stream<List<int>> from, IOSink to) async {
           subscription?.cancel();
           subscription = null;
         },
-        onError: (e, st) {
+        onError: (Object e, StackTrace st) {
           streamController.addError(e, st);
           subscription?.cancel();
           subscription = null;
@@ -55,7 +55,7 @@ Future<void> pipeStream(Stream<List<int>> from, IOSink to) async {
 
 Stream<List<int>> generateSlowly() async* {
   for (var i = 0; i < 100; i++) {
-    yield utf8.encode("item $i");
+    yield utf8.encode('item $i');
     await Future.delayed(Duration(milliseconds: 100));
   }
 }
@@ -71,16 +71,16 @@ Future<void> serve(HttpServer server) async {
 void main() async {
   asyncStart();
 
-  final server = await HttpServer.bind('localhost', 0);
+  var server = await HttpServer.bind('localhost', 0);
   serve(server).then((_) => asyncEnd());
 
   // Send request and then cancel response stream subscription after
   // the first chunk. This should cause server to close the connection
   // and cancel subscription to the stream which is being piped into
   // the response.
-  final client = HttpClient();
-  final rq = await client.get('localhost', server.port, '/');
-  final rs = await rq.close();
+  var client = HttpClient();
+  var rq = await client.get('localhost', server.port, '/');
+  var rs = await rq.close();
   late StreamSubscription sub;
   sub = rs.map(utf8.decode).listen((msg) {
     sub.cancel();

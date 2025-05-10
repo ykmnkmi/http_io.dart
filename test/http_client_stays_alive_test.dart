@@ -4,9 +4,8 @@
 
 // OtherResources=http_client_stays_alive_test.dart
 
+import 'package:expect/async_helper.dart';
 import 'package:http_io/http_io.dart';
-
-import "package:expect/async_helper.dart";
 
 // NOTE: This test tries to ensure that an HttpClient will close it's
 // underlying idle connections after [HttpClient.idleTimeout].
@@ -33,27 +32,29 @@ void runServerProcess() {
         ..close();
     });
 
-    var sw = new Stopwatch()..start();
-    var script = Platform.script
-        .resolve('http_client_stays_alive_test.dart')
-        .toFilePath();
-    var arguments = <String>[]
-      ..addAll(Platform.executableArguments)
-      ..add(script)
-      ..add(url);
+    var sw = Stopwatch()..start();
+    var script =
+        Platform.script
+            .resolve('http_client_stays_alive_test.dart')
+            .toFilePath();
+    var arguments =
+        <String>[]
+          ..addAll(Platform.executableArguments)
+          ..add(script)
+          ..add(url);
     Process.run(Platform.executable, arguments).then((res) {
       subscription.cancel();
       if (res.exitCode != 0) {
-        throw "Child exited with ${res.exitCode} instead of 0. "
-            "(stdout: ${res.stdout}, stderr: ${res.stderr})";
+        throw 'Child exited with ${res.exitCode} instead of 0. '
+            '(stdout: ${res.stdout}, stderr: ${res.stderr})';
       }
       var seconds = sw.elapsed.inSeconds;
       // NOTE: There is a slight chance this will cause flakiness, but there is
       // no other good way of testing correctness of timing-dependent code
       // form the outside.
       if (seconds < SECONDS || (SECONDS + SLACK) < seconds) {
-        throw "Child did exit within $seconds seconds, but expected it to take "
-            "roughly between $SECONDS and ${SECONDS + SLACK} seconds.";
+        throw 'Child did exit within $seconds seconds, but expected it to take '
+            'roughly between $SECONDS and ${SECONDS + SLACK} seconds.';
       }
 
       asyncEnd();
@@ -66,7 +67,7 @@ void runClientProcess(String url) {
 
   // NOTE: We make an HTTP client request and then *forget to close* the HTTP
   // client instance. The idle timer should fire after SECONDS.
-  var client = new HttpClient();
+  var client = HttpClient();
   client.idleTimeout = const Duration(seconds: SECONDS);
 
   client

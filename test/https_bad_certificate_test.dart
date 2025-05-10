@@ -8,19 +8,22 @@
 
 // This test verifies that the bad certificate callback works in HttpClient.
 
-import "dart:async";
-import "package:http_io/http_io.dart";
+import 'dart:async';
 
-import "package:expect/expect.dart";
+import 'package:expect/expect.dart';
+import 'package:http_io/http_io.dart';
 
 final HOST_NAME = 'localhost';
 
-String localFile(path) => Platform.script.resolve(path).toFilePath();
+String localFile(String path) => Platform.script.resolve(path).toFilePath();
 
-SecurityContext serverContext = new SecurityContext()
-  ..useCertificateChain(localFile('certificates/server_chain.pem'))
-  ..usePrivateKey(localFile('certificates/server_key.pem'),
-      password: 'dartdart');
+SecurityContext serverContext =
+    SecurityContext()
+      ..useCertificateChain(localFile('certificates/server_chain.pem'))
+      ..usePrivateKey(
+        localFile('certificates/server_key.pem'),
+        password: 'dartdart',
+      );
 
 class CustomException {}
 
@@ -28,14 +31,18 @@ main() async {
   var HOST = (await InternetAddress.lookup(HOST_NAME)).first;
   var server = await HttpServer.bindSecure(HOST, 0, serverContext, backlog: 5);
   server.listen((request) {
-    request.listen((_) {}, onDone: () {
-      request.response.close();
-    });
+    request.listen(
+      (_) {},
+      onDone: () {
+        request.response.close();
+      },
+    );
   });
 
-  SecurityContext goodContext = new SecurityContext()
-    ..setTrustedCertificates(localFile('certificates/trusted_certs.pem'));
-  SecurityContext badContext = new SecurityContext();
+  SecurityContext goodContext =
+      SecurityContext()
+        ..setTrustedCertificates(localFile('certificates/trusted_certs.pem'));
+  SecurityContext badContext = SecurityContext();
   SecurityContext defaultContext = SecurityContext.defaultContext;
 
   await runClient(server.port, goodContext, true, 'pass');
@@ -54,14 +61,18 @@ main() async {
 }
 
 Future runClient(
-    int port, SecurityContext context, callbackReturns, result) async {
-  HttpClient client = new HttpClient(context: context);
+  int port,
+  SecurityContext context,
+  Object callbackReturns,
+  Object result,
+) async {
+  HttpClient client = HttpClient(context: context);
   client.badCertificateCallback = (X509Certificate certificate, host, port) {
     Expect.isTrue(certificate.subject.contains('rootauthority'));
     Expect.isTrue(certificate.issuer.contains('rootauthority'));
     // Throw exception if one is requested.
-    if (callbackReturns == 'exception') throw new CustomException();
-    return callbackReturns;
+    if (callbackReturns == 'exception') throw CustomException();
+    return callbackReturns as bool;
   };
 
   try {
@@ -71,8 +82,10 @@ Future runClient(
   } catch (error) {
     Expect.notEquals(result, 'pass');
     if (result == 'fail') {
-      Expect.isTrue(error is HandshakeException ||
-          (callbackReturns is! bool && error is TypeError));
+      Expect.isTrue(
+        error is HandshakeException ||
+            (callbackReturns is! bool && error is TypeError),
+      );
     } else if (result == 'throw') {
       Expect.isTrue(error is CustomException);
     } else {

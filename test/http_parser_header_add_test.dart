@@ -5,27 +5,27 @@
 // Verify that FormatException is thrown when HttpClient userAgent has
 // invalid value.
 
-import "dart:async";
-import "package:http_io/http_io.dart";
+import 'dart:async';
+
 // ignore: IMPORT_INTERNAL_LIBRARY
-import "package:http_io/http_io.dart" show TestingClass$_HttpHeaders, TestingClass$_HttpParser;
-import "package:expect/async_helper.dart";
-import "package:expect/expect.dart";
+import 'package:expect/async_helper.dart';
+import 'package:http_io/http_io.dart';
 
 typedef _HttpParser = TestingClass$_HttpParser;
 
 Future<void> testFormatException() async {
-  final server = await HttpServer.bind("127.0.0.1", 0);
+  var server = await HttpServer.bind('127.0.0.1', 0);
   server.listen((HttpRequest request) {
     request.response.statusCode = 200;
     request.response.close();
   });
 
   // The ’ character is U+2019 RIGHT SINGLE QUOTATION MARK.
-  final client = HttpClient()..userAgent = 'Bob’s browser';
+  var client = HttpClient()..userAgent = 'Bob’s browser';
   try {
     await asyncExpectThrows<FormatException>(
-        client.open("CONNECT", "127.0.0.1", server.port, "/"));
+      client.open('CONNECT', '127.0.0.1', server.port, '/'),
+    );
   } finally {
     client.close(force: true);
     server.close();
@@ -33,7 +33,7 @@ Future<void> testFormatException() async {
 }
 
 void testNullSubscriptionData() {
-  _HttpParser httpParser = new _HttpParser.requestParser();
+  _HttpParser httpParser = _HttpParser.requestParser();
   httpParser.detachIncoming().listen((data) {}, onDone: () {});
 }
 

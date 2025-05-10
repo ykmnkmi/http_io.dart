@@ -7,25 +7,28 @@
 // VMOptions=--short_socket_write
 // VMOptions=--short_socket_read --short_socket_write
 
-import "package:expect/expect.dart";
-import "dart:async";
-import "package:http_io/http_io.dart";
+import 'dart:async';
+
+import 'package:expect/expect.dart';
+import 'package:http_io/http_io.dart';
 
 void testSimpleDeadline(int connections) {
   HttpServer.bind('localhost', 0).then((server) {
     server.listen((request) {
       request.response.deadline = const Duration(seconds: 1000);
-      request.response.write("stuff");
+      request.response.write('stuff');
       request.response.close();
     });
 
     var futures = <Future>[];
-    var client = new HttpClient();
+    var client = HttpClient();
     for (int i = 0; i < connections; i++) {
-      futures.add(client
-          .get('localhost', server.port, '/')
-          .then((request) => request.close())
-          .then((response) => response.drain()));
+      futures.add(
+        client
+            .get('localhost', server.port, '/')
+            .then((request) => request.close())
+            .then((response) => response.drain()),
+      );
     }
     Future.wait(futures).then((_) => server.close());
   });
@@ -36,21 +39,26 @@ void testExceedDeadline(int connections) {
     server.listen((request) {
       request.response.deadline = const Duration(milliseconds: 100);
       request.response.contentLength = 10000;
-      request.response.write("stuff");
+      request.response.write('stuff');
     });
 
     var futures = <Future>[];
-    var client = new HttpClient();
+    var client = HttpClient();
     for (int i = 0; i < connections; i++) {
-      futures.add(client
-          .get('localhost', server.port, '/')
-          .then((request) => request.close())
-          .then((response) => response.drain())
-          .then((_) {
-        Expect.fail("Expected error");
-      }, onError: (e) {
-        // Expect error.
-      }));
+      futures.add(
+        client
+            .get('localhost', server.port, '/')
+            .then((request) => request.close())
+            .then((response) => response.drain())
+            .then(
+              (_) {
+                Expect.fail('Expected error');
+              },
+              onError: (e) {
+                // Expect error.
+              },
+            ),
+      );
     }
     Future.wait(futures).then((_) => server.close());
   });
@@ -63,7 +71,7 @@ void testDeadlineAndDetach(int connections) {
       request.response.contentLength = 5;
       request.response.persistentConnection = false;
       request.response.detachSocket().then((socket) {
-        new Timer(const Duration(milliseconds: 100), () {
+        Timer(const Duration(milliseconds: 100), () {
           socket.write('stuff');
           socket.close();
           socket.listen(null);
@@ -72,18 +80,23 @@ void testDeadlineAndDetach(int connections) {
     });
 
     var futures = <Future>[];
-    var client = new HttpClient();
+    var client = HttpClient();
     for (int i = 0; i < connections; i++) {
-      futures.add(client
-          .get('localhost', server.port, '/')
-          .then((request) => request.close())
-          .then((response) {
-        return response
-            .fold<BytesBuilder>(new BytesBuilder(), (b, d) => b..add(d))
-            .then((builder) {
-          Expect.equals('stuff', new String.fromCharCodes(builder.takeBytes()));
-        });
-      }));
+      futures.add(
+        client
+            .get('localhost', server.port, '/')
+            .then((request) => request.close())
+            .then((response) {
+              return response
+                  .fold<BytesBuilder>(BytesBuilder(), (b, d) => b..add(d))
+                  .then((builder) {
+                    Expect.equals(
+                      'stuff',
+                      String.fromCharCodes(builder.takeBytes()),
+                    );
+                  });
+            }),
+      );
     }
     Future.wait(futures).then((_) => server.close());
   });

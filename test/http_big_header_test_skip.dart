@@ -10,7 +10,7 @@ import 'expect.dart';
 
 Future<void> testClient(int limit) async {
   var server = await HttpServer.bind('127.0.0.1', 0);
-  var str = 'a' * (1000);
+  var str = 'a' * 1000;
   int size = 0;
   server.listen((request) async {
     for (int i = 0; i < 10000; i++) {
@@ -44,7 +44,7 @@ Future<void> client() async {
 }
 
 Future<void> testServer(int limit, int port) async {
-  var str = 'a' * (1000);
+  var str = 'a' * 1000;
   var client = HttpClient();
   var request = await client.get('127.0.0.1', port, '/');
   for (int size = 0; size < limit; size += 1000) {

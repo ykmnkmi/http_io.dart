@@ -14,7 +14,10 @@ base class _HttpHeaders implements HttpHeaders {
   }) : _headers = HashMap<String, List<String>>(),
        _defaultPortForScheme = defaultPortForScheme {
     if (initialHeaders != null) {
-      initialHeaders._headers.forEach((name, value) => _headers[name] = value);
+      initialHeaders._headers.forEach((name, value) {
+        _headers[name] = value;
+      });
+
       _contentLength = initialHeaders._contentLength;
       _persistentConnection = initialHeaders._persistentConnection;
       _chunkedTransferEncoding = initialHeaders._chunkedTransferEncoding;

@@ -7,29 +7,30 @@
 // VMOptions=--short_socket_write
 // VMOptions=--short_socket_read --short_socket_write
 
-import "dart:async";
-import "package:http_io/http_io.dart";
-import "package:expect/expect.dart";
+import 'dart:async';
+
+import 'package:expect/expect.dart';
+import 'package:http_io/http_io.dart';
 
 Future getData(HttpClient client, int port, bool chunked, int length) {
   return client
-      .get("127.0.0.1", port, "/?chunked=$chunked&length=$length")
+      .get('127.0.0.1', port, '/?chunked=$chunked&length=$length')
       .then((request) => request.close())
       .then((response) {
-    return response
-        .fold<int>(0, (bytes, data) => bytes + data.length)
-        .then((bytes) {
-      Expect.equals(length, bytes);
-    });
-  });
+        return response.fold<int>(0, (bytes, data) => bytes + data.length).then(
+          (bytes) {
+            Expect.equals(length, bytes);
+          },
+        );
+      });
 }
 
 Future<HttpServer> startServer() {
-  return HttpServer.bind("127.0.0.1", 0).then((server) {
+  return HttpServer.bind('127.0.0.1', 0).then((server) {
     server.listen((request) {
-      bool chunked = request.uri.queryParameters["chunked"] == "true";
-      int length = int.parse(request.uri.queryParameters["length"]!);
-      var buffer = new List<int>.filled(length, 0);
+      bool chunked = request.uri.queryParameters['chunked'] == 'true';
+      int length = int.parse(request.uri.queryParameters['length']!);
+      var buffer = List<int>.filled(length, 0);
       if (!chunked) request.response.contentLength = length;
       request.response.add(buffer);
       request.response.close();
@@ -40,7 +41,7 @@ Future<HttpServer> startServer() {
 
 testKeepAliveNonChunked() {
   startServer().then((server) {
-    var client = new HttpClient();
+    var client = HttpClient();
 
     getData(client, server.port, false, 100)
         .then((_) => getData(client, server.port, false, 100))
@@ -48,15 +49,15 @@ testKeepAliveNonChunked() {
         .then((_) => getData(client, server.port, false, 100))
         .then((_) => getData(client, server.port, false, 100))
         .then((_) {
-      server.close();
-      client.close();
-    });
+          server.close();
+          client.close();
+        });
   });
 }
 
 testKeepAliveChunked() {
   startServer().then((server) {
-    var client = new HttpClient();
+    var client = HttpClient();
 
     getData(client, server.port, true, 100)
         .then((_) => getData(client, server.port, true, 100))
@@ -64,15 +65,15 @@ testKeepAliveChunked() {
         .then((_) => getData(client, server.port, true, 100))
         .then((_) => getData(client, server.port, true, 100))
         .then((_) {
-      server.close();
-      client.close();
-    });
+          server.close();
+          client.close();
+        });
   });
 }
 
 testKeepAliveMixed() {
   startServer().then((server) {
-    var client = new HttpClient();
+    var client = HttpClient();
 
     getData(client, server.port, true, 100)
         .then((_) => getData(client, server.port, false, 100))
@@ -83,9 +84,9 @@ testKeepAliveMixed() {
         .then((_) => getData(client, server.port, true, 100))
         .then((_) => getData(client, server.port, false, 100))
         .then((_) {
-      server.close();
-      client.close();
-    });
+          server.close();
+          client.close();
+        });
   });
 }
 

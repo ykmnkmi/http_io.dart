@@ -7,32 +7,31 @@
 // VMOptions=--short_socket_write
 // VMOptions=--short_socket_read --short_socket_write
 
-import "dart:async";
-import "dart:isolate";
-import "package:http_io/http_io.dart";
-import "package:expect/expect.dart";
+import 'package:expect/expect.dart';
+import 'package:http_io/http_io.dart';
 
 // Test that a response line without any reason phrase is handled.
 void missingReasonPhrase(int statusCode, bool includeSpace) {
-  var client = new HttpClient();
-  ServerSocket.bind("127.0.0.1", 0).then((server) {
+  var client = HttpClient();
+  ServerSocket.bind('127.0.0.1', 0).then((server) {
     server.listen((client) {
       client.listen(null);
       if (includeSpace) {
-        client.write("HTTP/1.1 $statusCode \r\n\r\n");
+        client.write('HTTP/1.1 $statusCode \r\n\r\n');
       } else {
-        client.write("HTTP/1.1 $statusCode\r\n\r\n");
+        client.write('HTTP/1.1 $statusCode\r\n\r\n');
       }
       client.close();
     });
     client
-        .getUrl(Uri.parse("http://127.0.0.1:${server.port}/"))
+        .getUrl(Uri.parse('http://127.0.0.1:${server.port}/'))
         .then((request) => request.close())
         .then((response) {
-      Expect.equals(statusCode, response.statusCode);
-      Expect.equals("", response.reasonPhrase);
-      return response.drain();
-    }).whenComplete(() => server.close());
+          Expect.equals(statusCode, response.statusCode);
+          Expect.equals('', response.reasonPhrase);
+          return response.drain();
+        })
+        .whenComplete(() => server.close());
   });
 }
 

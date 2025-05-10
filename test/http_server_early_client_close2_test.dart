@@ -7,26 +7,23 @@
 // VMOptions=--short_socket_write
 // VMOptions=--short_socket_read --short_socket_write
 
-import "dart:async";
-import "package:http_io/http_io.dart";
-import "dart:isolate";
-import "package:expect/expect.dart";
+import 'package:http_io/http_io.dart';
 
 main() {
-  HttpServer.bind("127.0.0.1", 0).then((server) {
+  HttpServer.bind('127.0.0.1', 0).then((server) {
     server.listen((request) {
       String name = Platform.script.toFilePath();
-      new File(name)
-          .openRead()
-          .cast<List<int>>()
-          .pipe(request.response)
-          .catchError((e) {/* ignore */});
+      File(name).openRead().cast<List<int>>().pipe(request.response).catchError(
+        (e) {
+          /* ignore */
+        },
+      );
     });
 
     var count = 0;
     makeRequest() {
-      Socket.connect("127.0.0.1", server.port).then((socket) {
-        var data = "GET / HTTP/1.1\r\nContent-Length: 0\r\n\r\n";
+      Socket.connect('127.0.0.1', server.port).then((socket) {
+        var data = 'GET / HTTP/1.1\r\nContent-Length: 0\r\n\r\n';
         socket.write(data);
         socket.close();
         socket.done.then((_) {

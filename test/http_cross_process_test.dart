@@ -4,8 +4,9 @@
 //
 
 import 'dart:async';
+
+import 'package:expect/expect.dart';
 import 'package:http_io/http_io.dart';
-import "package:expect/expect.dart";
 
 const int NUM_SERVERS = 10;
 
@@ -24,7 +25,7 @@ void main(List<String> args) {
   }
 }
 
-Future makeServer() {
+Future<HttpServer> makeServer() {
   return HttpServer.bind(InternetAddress.loopbackIPv4, 0).then((server) {
     server.listen((request) {
       request.cast<List<int>>().pipe(request.response);
@@ -35,18 +36,19 @@ Future makeServer() {
 
 Future runClientProcess(int port) {
   return Process.run(
-          Platform.executable,
-          []
-            ..addAll(Platform.executableArguments)
-            ..add(Platform.script.toFilePath())
-            ..add('--client')
-            ..add(port.toString()))
-      .then((ProcessResult result) {
-    if (result.exitCode != 0 || !result.stdout.contains('SUCCESS')) {
-      print("Client failed, exit code ${result.exitCode}");
-      print("  stdout:");
+    Platform.executable,
+    []
+      ..addAll(Platform.executableArguments)
+      ..add(Platform.script.toFilePath())
+      ..add('--client')
+      ..add(port.toString()),
+  ).then((ProcessResult result) {
+    if (result.exitCode != 0 ||
+        !(result.stdout as String).contains('SUCCESS')) {
+      print('Client failed, exit code ${result.exitCode}');
+      print('  stdout:');
       print(result.stdout);
-      print("  stderr:");
+      print('  stderr:');
       print(result.stderr);
       Expect.fail('Client subprocess exit code: ${result.exitCode}');
     }
@@ -54,9 +56,9 @@ Future runClientProcess(int port) {
 }
 
 runClient(int port) {
-  var client = new HttpClient();
+  var client = HttpClient();
   client
-      .get('127.0.0.1', port, "/")
+      .get('127.0.0.1', port, '/')
       .then((request) => request.close())
       .then((response) => response.drain())
       .then((_) => client.close())

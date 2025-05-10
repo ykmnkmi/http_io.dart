@@ -10,30 +10,34 @@
 // OtherResources=certificates/server_key.pem
 // OtherResources=certificates/trusted_certs.pem
 
-import "dart:async";
-import "dart:convert";
-import "package:http_io/http_io.dart";
-// ignore: IMPORT_INTERNAL_LIBRARY
-import "package:http_io/http_io.dart" show TestingClass$_SHA1;
+import 'dart:async';
+import 'dart:convert';
 
-import "package:expect/async_helper.dart";
-import "package:expect/expect.dart";
+// ignore: IMPORT_INTERNAL_LIBRARY
+
+import 'package:expect/async_helper.dart';
+import 'package:expect/expect.dart';
+import 'package:http_io/http_io.dart';
 
 typedef _SHA1 = TestingClass$_SHA1;
 
-const String webSocketGUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+const String webSocketGUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 const String CERT_NAME = 'localhost_cert';
 const String HOST_NAME = 'localhost';
 
-String localFile(path) => Platform.script.resolve(path).toFilePath();
+String localFile(String path) => Platform.script.resolve(path).toFilePath();
 
-SecurityContext serverContext = new SecurityContext()
-  ..useCertificateChain(localFile('certificates/server_chain.pem'))
-  ..usePrivateKey(localFile('certificates/server_key.pem'),
-      password: 'dartdart');
+SecurityContext serverContext =
+    SecurityContext()
+      ..useCertificateChain(localFile('certificates/server_chain.pem'))
+      ..usePrivateKey(
+        localFile('certificates/server_key.pem'),
+        password: 'dartdart',
+      );
 
-SecurityContext clientContext = new SecurityContext()
-  ..setTrustedCertificates(localFile('certificates/trusted_certs.pem'));
+SecurityContext clientContext =
+    SecurityContext()
+      ..setTrustedCertificates(localFile('certificates/trusted_certs.pem'));
 
 /**
  * A SecurityConfiguration lets us run the tests over HTTP or HTTPS.
@@ -43,26 +47,28 @@ class SecurityConfiguration {
 
   SecurityConfiguration({required bool this.secure});
 
-  Future<HttpServer> createServer({int backlog = 0}) => secure
-      ? HttpServer.bindSecure(HOST_NAME, 0, serverContext, backlog: backlog)
-      : HttpServer.bind(HOST_NAME, 0, backlog: backlog);
+  Future<HttpServer> createServer({int backlog = 0}) =>
+      secure
+          ? HttpServer.bindSecure(HOST_NAME, 0, serverContext, backlog: backlog)
+          : HttpServer.bind(HOST_NAME, 0, backlog: backlog);
 
-  Future<WebSocket> createClient(int port) =>
-      WebSocket.connect('${secure ? "wss" : "ws"}://$HOST_NAME:$port/',
-          customClient: secure ? HttpClient(context: clientContext) : null);
+  Future<WebSocket> createClient(int port) => WebSocket.connect(
+    '${secure ? "wss" : "ws"}://$HOST_NAME:$port/',
+    customClient: secure ? HttpClient(context: clientContext) : null,
+  );
 
   void testForceCloseServerEnd(int totalConnections) {
     createServer().then((server) {
       server.listen((request) {
         var response = request.response;
         response.statusCode = HttpStatus.switchingProtocols;
-        response.headers.set(HttpHeaders.connectionHeader, "upgrade");
-        response.headers.set(HttpHeaders.upgradeHeader, "websocket");
-        String? key = request.headers.value("Sec-WebSocket-Key");
-        _SHA1 sha1 = new _SHA1();
+        response.headers.set(HttpHeaders.connectionHeader, 'upgrade');
+        response.headers.set(HttpHeaders.upgradeHeader, 'websocket');
+        String? key = request.headers.value('Sec-WebSocket-Key');
+        _SHA1 sha1 = _SHA1();
         sha1.add("$key$webSocketGUID".codeUnits);
         String accept = base64Encode(sha1.close());
-        response.headers.add("Sec-WebSocket-Accept", accept);
+        response.headers.add('Sec-WebSocket-Accept', accept);
         response.headers.contentLength = 0;
         response.detachSocket().then((socket) {
           socket.destroy();
@@ -72,15 +78,18 @@ class SecurityConfiguration {
       int closeCount = 0;
       for (int i = 0; i < totalConnections; i++) {
         createClient(server.port).then((webSocket) {
-          webSocket.add("Hello, world!");
-          webSocket.listen((message) {
-            Expect.fail("unexpected message");
-          }, onDone: () {
-            closeCount++;
-            if (closeCount == totalConnections) {
-              server.close();
-            }
-          });
+          webSocket.add('Hello, world!');
+          webSocket.listen(
+            (message) {
+              Expect.fail('unexpected message');
+            },
+            onDone: () {
+              closeCount++;
+              if (closeCount == totalConnections) {
+                server.close();
+              }
+            },
+          );
         });
       }
     });
@@ -93,7 +102,7 @@ class SecurityConfiguration {
 
 main() {
   asyncStart();
-  new SecurityConfiguration(secure: false).runTests();
-  new SecurityConfiguration(secure: true).runTests();
+  SecurityConfiguration(secure: false).runTests();
+  SecurityConfiguration(secure: true).runTests();
   asyncEnd();
 }

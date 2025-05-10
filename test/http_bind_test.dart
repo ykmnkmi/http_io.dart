@@ -3,19 +3,18 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'dart:async';
-import 'package:http_io/http_io.dart';
-import 'dart:convert';
 
 import 'package:expect/async_helper.dart';
 import 'package:expect/expect.dart';
+import 'package:http_io/http_io.dart';
 
-testBindShared(String host, bool v6Only) async {
+Future<void> testBindShared(String host, bool v6Only) async {
   asyncStart();
 
   // Sent a single request using a new HttpClient to ensure a new TCP
   // connection is used.
-  Future singleRequest(host, port, statusCode) async {
-    var client = new HttpClient();
+  Future singleRequest(String host, int port, int statusCode) async {
+    var client = HttpClient();
     var request = await client.open('GET', host, port, '/');
     var response = await request.close();
     await response.drain();
@@ -23,8 +22,8 @@ testBindShared(String host, bool v6Only) async {
     client.close(force: true);
   }
 
-  Completer server1Request = new Completer();
-  Completer server2Request = new Completer();
+  Completer server1Request = Completer();
+  Completer server2Request = Completer();
 
   var server1 = await HttpServer.bind(host, 0, v6Only: v6Only, shared: true);
   var port = server1.port;

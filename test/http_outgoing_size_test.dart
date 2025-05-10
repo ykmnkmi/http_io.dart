@@ -7,15 +7,15 @@
 // VMOptions=--short_socket_write
 // VMOptions=--short_socket_read --short_socket_write
 
-import 'package:http_io/http_io.dart';
 import 'dart:typed_data';
 
 import 'package:expect/expect.dart';
+import 'package:http_io/http_io.dart';
 
 void testChunkedBufferSizeMsg() {
   // Buffer of same size as our internal buffer, minus 4. Makes us hit the
   // boundary.
-  var sendData = new Uint8List(8 * 1024 - 4);
+  var sendData = Uint8List(8 * 1024 - 4);
   for (int i = 0; i < sendData.length; i++) sendData[i] = i % 256;
 
   HttpServer.bind('127.0.0.1', 0).then((server) {
@@ -32,20 +32,26 @@ void testChunkedBufferSizeMsg() {
       request.response.add(sendData);
       request.response.close();
     });
-    var client = new HttpClient();
-    client.get('127.0.0.1', server.port, '/').then((request) {
-      request.headers.set(HttpHeaders.acceptEncodingHeader, "");
-      return request.close();
-    }).then((response) {
-      var buffer = [];
-      response.listen((data) => buffer.addAll(data), onDone: () {
-        Expect.equals(sendData.length * 8, buffer.length);
-        for (int i = 0; i < buffer.length; i++) {
-          Expect.equals(sendData[i % sendData.length], buffer[i]);
-        }
-        server.close();
-      });
-    });
+    var client = HttpClient();
+    client
+        .get('127.0.0.1', server.port, '/')
+        .then((request) {
+          request.headers.set(HttpHeaders.acceptEncodingHeader, '');
+          return request.close();
+        })
+        .then((response) {
+          var buffer = [];
+          response.listen(
+            (data) => buffer.addAll(data),
+            onDone: () {
+              Expect.equals(sendData.length * 8, buffer.length);
+              for (int i = 0; i < buffer.length; i++) {
+                Expect.equals(sendData[i % sendData.length], buffer[i]);
+              }
+              server.close();
+            },
+          );
+        });
   });
 }
 
