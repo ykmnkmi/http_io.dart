@@ -7,6 +7,7 @@ export 'dart:io'
         HeaderValue,
         HttpClient,
         HttpClientBasicCredentials,
+        HttpClientBearerCredentials,
         HttpClientCredentials,
         HttpClientDigestCredentials,
         HttpClientRequest,

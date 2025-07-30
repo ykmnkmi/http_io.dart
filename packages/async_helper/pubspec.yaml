@@ -11,12 +11,12 @@ description: >-
 resolution: workspace
 
 environment:
-  sdk: ^3.7.1
+  sdk: ^3.8.2
 
 # Use 'any' constraints here; we get our versions from the DEPS file.
 dependencies:
-  expect: any
+  expect: ^0.0.0
 
 # Use 'any' constraints here; we get our versions from the DEPS file.
 dev_dependencies:
-  lints: ^5.1.1
+  lints: ^6.0.0
