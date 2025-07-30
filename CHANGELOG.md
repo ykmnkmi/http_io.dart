@@ -1,7 +1,7 @@
+## 0.0.25
+
+- Match changes in the current stable SDK.
+
 ## 0.0.24
 
-- SDK 3.8.2.
-
-## 0.0.23
-
-Re-sync.
+- Bump SDK to 3.8.2 version.
