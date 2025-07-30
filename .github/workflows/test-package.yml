@@ -4,6 +4,14 @@ on:
   push:
     branches:
       - main
+    paths:
+      - .github/workflows/**
+      - lib/**
+      - packages/**
+      - test/**
+      - tools/**
+      - analysis_options.yaml
+      - pubspec.yaml
   pull_request:
     branches:
       - main
