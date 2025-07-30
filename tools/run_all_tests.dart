@@ -16,13 +16,14 @@ Future<void> main() async {
       continue;
     }
 
+    await Future.delayed(const Duration(milliseconds: 10));
+
     String content = entity.readAsStringSync();
 
-    List<List<String>> vmOptions =
-        optionsRE
-            .allMatches(content)
-            .map<List<String>>(extractVMOptions)
-            .toList();
+    List<List<String>> vmOptions = optionsRE
+        .allMatches(content)
+        .map<List<String>>(extractVMOptions)
+        .toList();
 
     if (vmOptions.isEmpty) {
       stdout.writeln('dart ${entity.path}');
@@ -46,13 +47,14 @@ Future<void> main() async {
         if (message is List) {
           stderr.writeln(message[0]);
           stderr.writeln(message[1]);
+          break parent;
         }
       } catch (error, stackTrace) {
         stderr.writeln(error);
         stderr.writeln(stackTrace);
+      } finally {
+        receivePort.close();
       }
-
-      receivePort.close();
     } else {
       for (List<String> options in vmOptions) {
         options = <String>[...options, entity.path];

@@ -12,13 +12,7 @@
 // be 1006.
 
 import 'dart:async';
-import 'dart:io';
-
-import "package:http_io/http_io.dart"
-    show
-        TestingClass$_HttpRequest,
-        Testing$_HttpRequest,
-        Testing$_HttpConnection;
+import "package:http_io/http_io.dart";
 
 import "package:expect/async_helper.dart";
 import 'package:expect/expect.dart';
