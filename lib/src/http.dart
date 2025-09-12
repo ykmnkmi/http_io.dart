@@ -41,17 +41,17 @@ import 'dart:isolate' show Isolate;
 import 'dart:math';
 import 'dart:typed_data';
 
-part 'crypto.dart';
-part 'embedder_config.dart';
-part 'http_date.dart';
-part 'http_headers.dart';
-part 'http_impl.dart';
-part 'http_parser.dart';
-part 'http_session.dart';
-part 'http_testing.dart';
-part 'overrides.dart';
-part 'websocket.dart';
-part 'websocket_impl.dart';
+part 'http/crypto.dart';
+part 'http/embedder_config.dart';
+part 'http/http_date.dart';
+part 'http/http_headers.dart';
+part 'http/http_impl.dart';
+part 'http/http_parser.dart';
+part 'http/http_session.dart';
+part 'http/http_testing.dart';
+part 'http/overrides.dart';
+part 'http/websocket.dart';
+part 'http/websocket_impl.dart';
 
 /// A server that delivers content, such as web pages, using the HTTP protocol.
 ///
