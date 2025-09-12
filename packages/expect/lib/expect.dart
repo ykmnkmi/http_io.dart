@@ -217,10 +217,9 @@ class Expect {
     if (actual.isEmpty) return;
     String msg = _getMessage(reason);
     var sample = actual.take(4).toList();
-    var sampleString =
-        sample.length < 4
-            ? sample.join(", ")
-            : "${sample.take(3).join(", ")}, ...";
+    var sampleString = sample.length < 4
+        ? sample.join(", ")
+        : "${sample.take(3).join(", ")}, ...";
     _fail("Expect.isEmpty(actual: <$sampleString>$msg): Is not empty.");
   }
 
@@ -246,8 +245,9 @@ class Expect {
     if (_identical(expected, actual)) return;
     String msg = _getMessage(reason);
     if (expected is String && actual is String) {
-      String note =
-          (expected == actual) ? ' Strings equal but not identical.' : '';
+      String note = (expected == actual)
+          ? ' Strings equal but not identical.'
+          : '';
       _fail(
         "Expect.identical(expected: <${_escapeString(expected)}>"
         ", actual: <${_escapeString(actual)}>$msg) "
@@ -429,8 +429,9 @@ class Expect {
       var expectedValue = expected[i];
       var actualValue = actual[i];
       if (expectedValue != actualValue) {
-        var indexReason =
-            reason.isEmpty ? "at index $i" : "$reason, at index $i";
+        var indexReason = reason.isEmpty
+            ? "at index $i"
+            : "$reason, at index $i";
         _failNotEqual(expectedValue, actualValue, "listEquals", indexReason);
       }
     }
@@ -754,8 +755,9 @@ class Expect {
       var actualElements = actual.toList();
       var expectedLength = expectedElements.length;
       var actualLength = actualElements.length;
-      var minLength =
-          expectedLength < actualLength ? expectedLength : actualLength;
+      var minLength = expectedLength < actualLength
+          ? expectedLength
+          : actualLength;
       for (var i = 0; i < minLength; i++) {
         var expectedElement = expectedElements[i];
         var actualElement = actualElements[i];
@@ -764,10 +766,9 @@ class Expect {
         path.removeLast();
       }
       if (expectedLength != actualLength) {
-        var nextElement =
-            (expectedLength > actualLength
-                ? expectedElements
-                : actualElements)[minLength];
+        var nextElement = (expectedLength > actualLength
+            ? expectedElements
+            : actualElements)[minLength];
         _fail(
           "Expect.deepEquals(${_pathString(path)}.length, "
           "expected: <$expectedLength>, actual: <$actualLength>) "

@@ -1,7 +1,6 @@
 import 'dart:async';
-import 'dart:io' hide exitCode;
+import 'dart:io';
 import 'dart:io' as io show exitCode;
-import 'dart:isolate';
 
 final RegExp spaceRE = RegExp(r'\s+');
 
@@ -26,54 +25,17 @@ Future<void> main() async {
         .toList();
 
     if (vmOptions.isEmpty) {
-      stdout.writeln('dart ${entity.path}');
+      List<String> arguments = <String>[entity.path];
+      int exitCode = await run(arguments);
 
-      ReceivePort receivePort = ReceivePort();
-
-      try {
-        SendPort sendPort = receivePort.sendPort;
-
-        Isolate isolate = await Isolate.spawnUri(
-          Directory.current.uri.resolveUri(entity.uri),
-          <String>[],
-          null,
-          onExit: sendPort,
-          onError: sendPort,
-        );
-
-        Object? message = await receivePort.first;
-        isolate.kill(priority: Isolate.immediate);
-
-        if (message is List) {
-          stderr.writeln(message[0]);
-          stderr.writeln(message[1]);
-          break parent;
-        }
-      } catch (error, stackTrace) {
-        stderr.writeln(error);
-        stderr.writeln(stackTrace);
-      } finally {
-        receivePort.close();
+      if (exitCode != 0) {
+        io.exitCode = exitCode;
+        break parent;
       }
     } else {
       for (List<String> options in vmOptions) {
-        options = <String>[...options, entity.path];
-        stdout.writeln('dart ${options.join(' ')}');
-
-        Process process = await Process.start(Platform.executable, options);
-        StreamSubscription<List<int>> out = process.stdout.listen(stdout.add);
-        StreamSubscription<List<int>> err = process.stderr.listen(stderr.add);
-
-        int exitCode = await process.exitCode.timeout(
-          const Duration(seconds: 30),
-          onTimeout: () {
-            process.kill(ProcessSignal.sigterm);
-            return process.exitCode;
-          },
-        );
-
-        out.cancel();
-        err.cancel();
+        List<String> arguments = <String>[...options, entity.path];
+        int exitCode = await run(arguments);
 
         if (exitCode != 0) {
           io.exitCode = exitCode;
@@ -92,4 +54,24 @@ List<String> extractVMOptions(RegExpMatch match) {
   }
 
   return options.split(spaceRE);
+}
+
+Future<int> run(List<String> arguments) async {
+  stdout.writeln('dart ${arguments.join(' ')}');
+
+  Process process = await Process.start(Platform.executable, arguments);
+  StreamSubscription<List<int>> out = process.stdout.listen(stdout.add);
+  StreamSubscription<List<int>> err = process.stderr.listen(stderr.add);
+
+  int exitCode = await process.exitCode.timeout(
+    const Duration(seconds: 30),
+    onTimeout: () {
+      process.kill(ProcessSignal.sigterm);
+      return process.exitCode;
+    },
+  );
+
+  out.cancel();
+  err.cancel();
+  return exitCode;
 }

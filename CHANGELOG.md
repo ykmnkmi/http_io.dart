@@ -1,3 +1,7 @@
+## 0.0.27
+
+- Sync with 3.9.2.
+
 ## 0.0.26
 
 - Fix test import.

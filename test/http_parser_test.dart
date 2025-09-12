@@ -7,7 +7,8 @@ import "dart:isolate";
 import "dart:math";
 import "dart:typed_data";
 // ignore: IMPORT_INTERNAL_LIBRARY
-import "package:http_io/http_io.dart" show TestingClass$_HttpHeaders, TestingClass$_HttpParser;
+import "package:http_io/http_io.dart"
+    show TestingClass$_HttpHeaders, TestingClass$_HttpParser;
 
 import "package:expect/expect.dart";
 
