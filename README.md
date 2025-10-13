@@ -8,3 +8,6 @@ TODO:
 - Add related `sdk/tests/standalone/io/regress*` tests.
 - Add `Socket`, `SecureSocket`, `ServerSocket`, `SecureServerSocket` classes
   and tests.
+
+TESTING:
+- Run `dart run tools/run_all_tests.dart` to run all tests.
