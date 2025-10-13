@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:io' as io show exitCode;
 
 final RegExp spaceRE = RegExp(r'\s+');
 
@@ -9,7 +8,6 @@ final RegExp optionsRE = RegExp(r'^// VMOptions=(.*)$', multiLine: true);
 Future<void> main() async {
   List<FileSystemEntity> entities = Directory('test').listSync();
 
-  parent:
   for (FileSystemEntity entity in entities) {
     if (entity is! File || !entity.path.endsWith('_test.dart')) {
       continue;
@@ -29,8 +27,7 @@ Future<void> main() async {
       int exitCode = await run(arguments);
 
       if (exitCode != 0) {
-        io.exitCode = exitCode;
-        break parent;
+        exit(exitCode);
       }
     } else {
       for (List<String> options in vmOptions) {
@@ -38,8 +35,7 @@ Future<void> main() async {
         int exitCode = await run(arguments);
 
         if (exitCode != 0) {
-          io.exitCode = exitCode;
-          break parent;
+          exit(exitCode);
         }
       }
     }

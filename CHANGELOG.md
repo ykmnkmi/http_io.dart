@@ -1,3 +1,7 @@
+## 0.0.29
+
+- Sync with 3.9.4.
+
 ## 0.0.28
 
 - Move HTTP server implementation to `http` folder.
