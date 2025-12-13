@@ -24,7 +24,6 @@
     with
     ```dart
     bool get _previousWriteHasCompleted {
-    final rawSocket = socket._raw;
       // _RawSecureSocket has an internal buffering mechanism and it is going
       // to flush its buffer before it shutsdown.
       return true;
