@@ -2,6 +2,7 @@ export 'dart:io'
     hide
         BadCertificateCallback,
         CompressionOptions,
+        ConnectionTask,
         ContentType,
         Cookie,
         HeaderValue,
@@ -23,12 +24,18 @@ export 'dart:io'
         HttpResponse,
         HttpServer,
         HttpSession,
+        IOOverrides,
         RedirectException,
         RedirectInfo,
         SameSite,
+        SecureServerSocket,
+        SecureSocket,
+        ServerSocket,
+        Socket,
         WebSocket,
         WebSocketException,
         WebSocketStatus,
         WebSocketTransformer;
 
 export 'src/http.dart';
+export 'src/io.dart';

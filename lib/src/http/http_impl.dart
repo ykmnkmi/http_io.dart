@@ -3672,7 +3672,7 @@ class _HttpServer extends Stream<HttpRequest>
   // Indicated if the http server has been closed.
   bool closed = false;
 
-  final /* ServerSocketBase */ dynamic _serverSocket;
+  final ServerSocketBase _serverSocket;
   final bool _closeServer;
 
   // Set of currently connected clients.

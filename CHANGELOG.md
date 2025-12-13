@@ -1,3 +1,6 @@
+## 3.10.0+1
+- Add `ConnectionTask`, `SecureServerSocket`, `SecureSocket`, `ServerSocket`, `Socket` classes.
+
 ## 3.10.0
 - New versioning.
 - Sync with 3.10.0:

@@ -16,7 +16,6 @@ import 'dart:convert';
 import 'dart:developer' hide log;
 import 'dart:io'
     show
-        ConnectionTask,
         HandshakeException,
         HttpStatus,
         IOException,
@@ -26,11 +25,7 @@ import 'dart:io'
         Platform,
         RawSocketOption,
         RawZLibFilter,
-        SecureServerSocket,
-        SecureSocket,
         SecurityContext,
-        ServerSocket,
-        Socket,
         SocketException,
         SocketOption,
         TlsException,
@@ -40,6 +35,9 @@ import 'dart:io'
 import 'dart:isolate' show Isolate;
 import 'dart:math';
 import 'dart:typed_data';
+
+import 'package:http_io/src/io.dart'
+    show ConnectionTask, SecureServerSocket, SecureSocket, ServerSocket, Socket;
 
 part 'http/crypto.dart';
 part 'http/embedder_config.dart';
