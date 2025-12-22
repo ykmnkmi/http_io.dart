@@ -6,7 +6,7 @@
 
 import 'package:http_io/http_io.dart';
 
-import 'expect.dart';
+import 'package:expect/expect.dart';
 
 Future<void> testClient(int limit) async {
   var server = await HttpServer.bind('127.0.0.1', 0);

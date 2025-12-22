@@ -10,8 +10,8 @@ import 'package:http_io/http_io.dart' show Platform, Process, exit;
 
 import 'package:http_io/http_io.dart';
 
-import 'async_helper.dart';
-import 'expect.dart';
+import 'package:expect/async_helper.dart';
+import 'package:expect/expect.dart';
 
 String getFilename(String path) => Platform.script.resolve(path).toFilePath();
 

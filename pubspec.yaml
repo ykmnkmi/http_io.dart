@@ -18,3 +18,4 @@ dev_dependencies:
   crypto: ^3.0.7
   lints: ^6.0.0
   path: ^1.9.1
+  expect: any

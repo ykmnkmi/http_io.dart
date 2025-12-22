@@ -8,8 +8,8 @@ import 'dart:async';
 
 import 'package:http_io/http_io.dart';
 
-import 'async_helper.dart';
-import 'expect.dart';
+import 'package:expect/async_helper.dart';
+import 'package:expect/expect.dart';
 
 void main() {
   // A virtual tun/tap interface should be created with following instructions:

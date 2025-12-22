@@ -10,8 +10,8 @@ import 'dart:async';
 
 import 'package:http_io/http_io.dart';
 
-import 'async_helper.dart';
-import 'expect.dart';
+import 'package:expect/async_helper.dart';
+import 'package:expect/expect.dart';
 
 void log(String s) {
   print(s);
