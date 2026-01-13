@@ -36,8 +36,13 @@ import 'dart:isolate' show Isolate;
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:http_io/src/io.dart'
-    show ConnectionTask, SecureServerSocket, SecureSocket, ServerSocket, Socket;
+import 'io.dart'
+    show
+        ConnectionTask,
+        SecureServerSocket,
+        SecureSocket,
+        ServerSocket,
+        Socket;
 
 part 'http/crypto.dart';
 part 'http/embedder_config.dart';

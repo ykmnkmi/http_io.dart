@@ -21,7 +21,7 @@ import 'dart:io'
 import 'dart:isolate';
 import 'dart:typed_data';
 
-import 'package:http_io/src/http.dart' show ServerSocketBase;
+import 'http.dart' show ServerSocketBase;
 
 part 'io/overrides.dart';
 part 'io/secure_server_socket.dart';
