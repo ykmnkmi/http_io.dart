@@ -1,4 +1,8 @@
-## 3.10.0+1
+## 3.11.0
+
+- Bump to and sync with 3.11.0.
+
+## 3.10.0+2
 - Add `ConnectionTask`, `SecureServerSocket`, `SecureSocket`, `ServerSocket`, `Socket` classes.
 
 ## 3.10.0
