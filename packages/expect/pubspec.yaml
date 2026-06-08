@@ -16,4 +16,4 @@ environment:
 
 # Use 'any' constraints here; we get our versions from the DEPS file.
 dev_dependencies:
-  lints: ^6.0.0
+  lints: ^6.1.0
