@@ -1,3 +1,7 @@
+## 3.12.0
+
+- \[core/shared\] Allow http ContentType to work in isolategroup-bound callbacks.
+
 ## 3.11.0
 
 - Bump to and sync with 3.11.0.
