@@ -290,7 +290,6 @@ class _CopyingBytesBuilder implements BytesBuilder {
   // Start with 1024 bytes.
   static const int _INIT_SIZE = 1024;
 
-  // @pragma("vm:shared")
   static final _emptyList = Uint8List(0);
 
   int _length = 0;
@@ -3067,11 +3066,11 @@ class _HttpClient implements HttpClient {
 
   // Only visible for testing.
   static bool shouldCopyHeaderOnRedirect(
-    String headerKey,
-    Uri originalUrl,
-    Uri redirectUri,
-  ) {
-    if (_isSubdomain(redirectUri, originalUrl)) {
+    String headerKey, {
+    required Uri originalUrl,
+    required Uri redirectUrl,
+  }) {
+    if (_isSubdomain(redirectUrl, originalUrl)) {
       return true;
     }
 
@@ -3103,7 +3102,11 @@ class _HttpClient implements HttpClient {
       for (var header in previous.headers._headers.keys) {
         if (request.headers[header] == null &&
             (!isRedirect ||
-                shouldCopyHeaderOnRedirect(header, resolved, previous.uri))) {
+                shouldCopyHeaderOnRedirect(
+                  header,
+                  originalUrl: previous.uri,
+                  redirectUrl: resolved,
+                ))) {
           request.headers.set(header, previous.headers[header]!);
         }
       }

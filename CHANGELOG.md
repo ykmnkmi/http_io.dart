@@ -1,6 +1,7 @@
 ## 3.12.0
 
 - \[core/shared\] Allow http ContentType to work in isolategroup-bound callbacks.
+- \[beta\] \[io\]: Fixes a redirect credential leak and a HTTP request smuggling issue.
 
 ## 3.11.0
 
