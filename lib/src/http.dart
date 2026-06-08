@@ -37,12 +37,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'io.dart'
-    show
-        ConnectionTask,
-        SecureServerSocket,
-        SecureSocket,
-        ServerSocket,
-        Socket;
+    show ConnectionTask, SecureServerSocket, SecureSocket, ServerSocket, Socket;
 
 part 'http/crypto.dart';
 part 'http/embedder_config.dart';
