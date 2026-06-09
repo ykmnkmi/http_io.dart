@@ -8,7 +8,7 @@ final RegExp spaceRE = RegExp(r'\s+');
 
 final Uri git = Uri.parse(
   'https://raw.githubusercontent.com/'
-  'dart-lang/sdk/refs/tags/3.9.2/'
+  'dart-lang/sdk/refs/tags/3.12.0/'
   'tests/standalone/io/',
 );
 
