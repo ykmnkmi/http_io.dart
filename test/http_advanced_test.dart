@@ -8,7 +8,7 @@
 // VMOptions=--short_socket_read --short_socket_write
 
 import "package:expect/expect.dart";
-import 'package:expect/async_helper.dart';
+import "package:expect/async_helper.dart";
 import 'dart:async';
 import 'package:http_io/http_io.dart';
 import 'dart:isolate';
@@ -32,7 +32,7 @@ class IsolatedHttpServer {
     });
 
     // Handle status messages from the server.
-    _statusPort.listen((var status) {
+    _statusPort.listen((status) {
       if (status.isStarted) {
         _startedCallback(status.port);
       }

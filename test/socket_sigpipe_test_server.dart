@@ -6,7 +6,7 @@
 
 import "package:expect/expect.dart";
 import "dart:async";
-import "dart:io";
+import "package:http_io/http_io.dart";
 
 main() {
   HttpServer.bind("127.0.0.1", 0).then((server) {

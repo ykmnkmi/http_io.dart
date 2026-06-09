@@ -10,7 +10,7 @@
 // Test socket close events.
 
 import 'dart:async';
-import 'dart:io';
+import 'package:http_io/http_io.dart';
 import 'dart:isolate';
 import 'dart:typed_data';
 

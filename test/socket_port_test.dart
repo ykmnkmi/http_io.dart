@@ -3,7 +3,7 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import "package:expect/expect.dart";
-import "dart:io";
+import "package:http_io/http_io.dart";
 
 void testPort() {
   ServerSocket.bind("127.0.0.1", 0).then((server) {

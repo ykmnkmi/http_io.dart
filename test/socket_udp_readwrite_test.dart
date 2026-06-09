@@ -6,7 +6,7 @@
 
 import 'dart:async';
 import 'dart:typed_data';
-import 'dart:io';
+import 'package:http_io/http_io.dart';
 
 import "package:expect/expect.dart";
 

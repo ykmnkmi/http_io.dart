@@ -23,6 +23,7 @@ class Server {
     int? nonceStaleAfter,
     bool useNextNonce = false,
   }) {
+    asyncStart();
     return new Server()._start(algorithm, qop, nonceStaleAfter, useNextNonce);
   }
 
@@ -160,6 +161,7 @@ class Server {
 
   void shutdown() {
     server.close();
+    asyncEnd();
   }
 
   int get port => server.port;
@@ -465,6 +467,8 @@ void testLocalServerDigest() {
 }
 
 main() {
+  asyncStart();
+
   testNoCredentials(null, null);
   testNoCredentials("MD5", null);
   testNoCredentials("MD5", "auth");
@@ -484,4 +488,6 @@ main() {
   // These teste are not normally run. They can be used for locally
   // testing with another web server (e.g. Apache).
   //testLocalServerDigest();
+
+  asyncEnd();
 }

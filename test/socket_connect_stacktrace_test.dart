@@ -5,10 +5,12 @@
 // Tests stack trace on socket exceptions.
 
 import "dart:async";
-import "dart:io";
+import "package:http_io/http_io.dart";
 
 import "package:expect/async_helper.dart";
 import "package:expect/expect.dart";
+
+import 'package:http_io/http_io.dart';
 
 Future<void> main() async {
   asyncStart();

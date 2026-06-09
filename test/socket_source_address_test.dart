@@ -4,7 +4,7 @@
 //
 
 import "dart:async";
-import "dart:io";
+import "package:http_io/http_io.dart";
 
 import 'test_utils.dart' show retry, throws, withTempDir;
 

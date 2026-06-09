@@ -5,7 +5,7 @@
 // Formatting can break multitests, so don't format them.
 // dart format off
 
-import 'dart:io';
+import 'package:http_io/http_io.dart';
 import 'dart:async';
 
 import "package:expect/async_helper.dart";

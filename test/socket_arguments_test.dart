@@ -8,7 +8,7 @@
 // VMOptions=--short_socket_read --short_socket_write
 
 import "dart:async";
-import "dart:io";
+import "package:http_io/http_io.dart";
 
 import "package:expect/async_helper.dart";
 import "package:expect/expect.dart";
