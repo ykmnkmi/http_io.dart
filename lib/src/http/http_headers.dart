@@ -877,7 +877,7 @@ final class _HeaderValue implements HeaderValue {
   final String _value;
   final Map<String, String?> parameters;
 
-  external _HeaderValue(String value, Map<String, String?> parameters);
+  _HeaderValue(this._value, this.parameters);
 
   factory _HeaderValue.parse(
     String value, {
