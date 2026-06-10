@@ -3436,15 +3436,6 @@ final class _HttpConnection extends LinkedListEntry<_HttpConnection>
   bool get _isClosing => _state == _CLOSING;
 }
 
-// Common interface of [ServerSocket] and [SecureServerSocket] used by
-// [_HttpServer].
-abstract interface class ServerSocketBase<T extends Socket>
-    implements Stream<T> {
-  int get port;
-  InternetAddress get address;
-  Future<void> close();
-}
-
 // HTTP server waiting for socket connections.
 class _HttpServer extends Stream<HttpRequest>
     with _ServiceObject
@@ -3551,7 +3542,7 @@ class _HttpServer extends Stream<HttpRequest>
     void Function()? onDone,
     bool? cancelOnError,
   }) {
-    _serverSocket.listen(
+    (_serverSocket as Stream<Socket>).listen(
       (Socket socket) {
         if (socket.address.type != InternetAddressType.unix) {
           socket.setOption(SocketOption.tcpNoDelay, true);
@@ -3581,7 +3572,11 @@ class _HttpServer extends Stream<HttpRequest>
     closed = true;
     Future result;
     if (_closeServer) {
-      result = _serverSocket.close();
+      result = switch (_serverSocket) {
+        ServerSocket server => server.close(),
+        SecureServerSocket server => server.close(),
+        _ => throw TypeError(),
+      };
     } else {
       result = Future.value();
     }
@@ -3613,12 +3608,20 @@ class _HttpServer extends Stream<HttpRequest>
 
   int get port {
     if (closed) throw HttpException("HttpServer is not bound to a socket");
-    return _serverSocket.port;
+    return switch (_serverSocket) {
+      ServerSocket server => server.port,
+      SecureServerSocket server => server.port,
+      _ => throw TypeError(),
+    };
   }
 
   InternetAddress get address {
     if (closed) throw HttpException("HttpServer is not bound to a socket");
-    return _serverSocket.address;
+    return switch (_serverSocket) {
+      ServerSocket server => server.address,
+      SecureServerSocket server => server.address,
+      _ => throw TypeError(),
+    };
   }
 
   set sessionTimeout(int timeout) {
@@ -3676,7 +3679,7 @@ class _HttpServer extends Stream<HttpRequest>
   // Indicated if the http server has been closed.
   bool closed = false;
 
-  final ServerSocketBase _serverSocket;
+  final Object _serverSocket;
   final bool _closeServer;
 
   // Set of currently connected clients.

@@ -16,16 +16,21 @@ import 'dart:convert';
 import 'dart:developer' hide log;
 import 'dart:io'
     show
+        ConnectionTask,
         HandshakeException,
         HttpStatus,
-        IOException,
-        IOSink,
         InternetAddress,
         InternetAddressType,
+        IOException,
+        IOSink,
         Platform,
         RawSocketOption,
         RawZLibFilter,
+        SecureServerSocket,
+        SecureSocket,
         SecurityContext,
+        ServerSocket,
+        Socket,
         SocketException,
         SocketOption,
         TlsException,
@@ -35,9 +40,6 @@ import 'dart:io'
 import 'dart:isolate' show Isolate;
 import 'dart:math';
 import 'dart:typed_data';
-
-import 'io.dart'
-    show ConnectionTask, SecureServerSocket, SecureSocket, ServerSocket, Socket;
 
 part 'http/crypto.dart';
 part 'http/embedder_config.dart';
