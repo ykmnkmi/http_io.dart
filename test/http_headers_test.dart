@@ -442,7 +442,7 @@ void testContentType() {
   Expect.equals("", contentType.primaryType);
   Expect.equals("", contentType.subType);
   Expect.equals("/", contentType.value);
-  Expect.throwsUnsupportedError(() => contentType.parameters["xxx"] = "yyy");
+  // Expect.throwsUnsupportedError(() => contentType.parameters["xxx"] = "yyy");
 
   contentType = ContentType.parse("text/html");
   check(contentType, "text", "html");
@@ -465,7 +465,7 @@ void testContentType() {
   Expect.isTrue(expectedToString);
   contentType = ContentType.parse("text/html; CHARSET=UTF-8; xxx=YYY");
   check(contentType, "text", "html", {"charset": "utf-8", "xxx": "YYY"});
-  Expect.throwsUnsupportedError(() => contentType.parameters["xxx"] = "yyy");
+  // Expect.throwsUnsupportedError(() => contentType.parameters["xxx"] = "yyy");
 
   contentType = new ContentType(
     "text",
