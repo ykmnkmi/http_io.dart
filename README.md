@@ -1,4 +1,4 @@
-# http_io (3.10.0)
+# http_io (3.12.0)
 
 > The HTTP APIs in `dart:io` are pure Dart code not relying on native runtime calls.
 > To enable faster development and bug fixes, these APIs are moving out of `dart:io` into this package.
