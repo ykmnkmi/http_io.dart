@@ -13,6 +13,7 @@
 - Add Proxy-Authenticate to list of sensitive headers.
 - [dart:io] Add WebSocket timeline instrumentation(GSoC'26).
 - Roll the latest dart_style into the SDK.
+- Do not forward Proxy-Authorization  to the proxied request.
 
 ## 3.12.0
 

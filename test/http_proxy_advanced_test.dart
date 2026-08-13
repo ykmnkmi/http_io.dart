@@ -50,6 +50,10 @@ class Server {
   void requestHandler(HttpRequest request) {
     var response = request.response;
     requestCount++;
+
+    // Origin servers should never receive proxy authorization headers.
+    Expect.isNull(request.headers[HttpHeaders.proxyAuthorizationHeader]);
+
     // Check whether a proxy or direct connection is expected.
     bool direct = directRequestPaths.fold(
       false,
@@ -265,7 +269,9 @@ class ProxyServer {
                 // Forward all headers.
                 request.headers.forEach((String name, List<String> values) {
                   values.forEach((String value) {
-                    if (name != "content-length" && name != "via") {
+                    if (name != "content-length" &&
+                        name != "via" &&
+                        name != "proxy-authorization") {
                       clientRequest.headers.add(name, value);
                     }
                   });
