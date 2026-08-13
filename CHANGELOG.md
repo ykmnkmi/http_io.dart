@@ -8,6 +8,7 @@
 - fix: do not forward Authorization/Cookie to subdomains on redirect
 - fix: HTTP request smuggling via Transfer-Encoding token whitespace
 - fix: reject Set-Cookie with SameSite=None but no Secure attribute
+- fix: cap uncompressed WebSocket frame size to prevent peer-induced OOM
 
 ## 3.12.0
 
