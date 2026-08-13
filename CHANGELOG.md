@@ -14,6 +14,7 @@
 - [dart:io] Add WebSocket timeline instrumentation(GSoC'26).
 - Roll the latest dart_style into the SDK.
 - Do not forward Proxy-Authorization  to the proxied request.
+- Reject invalid RSV1 frames and preserve compression state during fragmentation
 
 ## 3.12.0
 
