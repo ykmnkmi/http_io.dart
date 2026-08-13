@@ -12,6 +12,7 @@
 - Clarify WebSocket.addError behavior
 - Add Proxy-Authenticate to list of sensitive headers.
 - [dart:io] Add WebSocket timeline instrumentation(GSoC'26).
+- Roll the latest dart_style into the SDK.
 
 ## 3.12.0
 

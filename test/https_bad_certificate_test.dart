@@ -9,6 +9,7 @@
 // This test verifies that the bad certificate callback works in HttpClient.
 
 import "dart:async";
+
 import "package:http_io/http_io.dart";
 
 import "package:expect/expect.dart";

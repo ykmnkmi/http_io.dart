@@ -9,8 +9,11 @@
 // OtherResources=http_server_response_test.dart
 
 import "package:expect/expect.dart";
+
 import "dart:async";
+
 import "package:http_io/http_io.dart";
+
 import "dart:typed_data";
 
 // Platform.script may refer to a AOT or JIT snapshot, which are significantly
@@ -74,11 +77,13 @@ void testResponseDone() {
   });
 
   testServerRequest((server, request) {
-    new File(
-      "__nonexistent_file_",
-    ).openRead().cast<List<int>>().pipe(request.response).catchError((e) {
-      server.close();
-    });
+    new File("__nonexistent_file_")
+        .openRead()
+        .cast<List<int>>()
+        .pipe(request.response)
+        .catchError((e) {
+          server.close();
+        });
   });
 
   testServerRequest((server, request) {
@@ -128,11 +133,13 @@ void testResponseAddStream() {
   });
 
   testServerRequest((server, request) {
-    new File(
-      "__nonexistent_file_",
-    ).openRead().cast<List<int>>().pipe(request.response).catchError((e) {
-      server.close();
-    });
+    new File("__nonexistent_file_")
+        .openRead()
+        .cast<List<int>>()
+        .pipe(request.response)
+        .catchError((e) {
+          server.close();
+        });
   });
 }
 

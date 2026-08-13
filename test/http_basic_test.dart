@@ -8,7 +8,9 @@
 // VMOptions=--trace_shutdown --short_socket_read --short_socket_write
 
 import "package:expect/expect.dart";
+
 import "dart:isolate";
+
 import "package:http_io/http_io.dart";
 
 class TestServerMain {

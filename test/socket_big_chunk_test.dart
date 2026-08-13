@@ -3,6 +3,7 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import "package:http_io/http_io.dart";
+
 import "dart:typed_data";
 
 import "package:expect/async_helper.dart";

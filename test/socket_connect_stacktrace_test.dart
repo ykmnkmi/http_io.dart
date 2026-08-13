@@ -5,6 +5,7 @@
 // Tests stack trace on socket exceptions.
 
 import "dart:async";
+
 import "package:http_io/http_io.dart";
 
 import "package:expect/async_helper.dart";

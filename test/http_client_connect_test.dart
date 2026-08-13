@@ -9,6 +9,7 @@
 
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:http_io/http_io.dart';
 
 import "package:expect/async_helper.dart";
@@ -206,11 +207,11 @@ void testOpenUrlEmptyRequest() {
       });
 
       Callback2 cb = method[0] as Callback2;
-      cb(
-        Uri.parse("http://127.0.0.1:${server.port}/"),
-      ).then((request) => request.close()).then((response) {
-        response.listen((data) {}, onDone: server.close);
-      });
+      cb(Uri.parse("http://127.0.0.1:${server.port}/"))
+          .then((request) => request.close())
+          .then((response) {
+            response.listen((data) {}, onDone: server.close);
+          });
     });
   }
 }

@@ -8,6 +8,7 @@
 // VMOptions=--short_socket_read --short_socket_write
 
 import "dart:isolate";
+
 import "package:http_io/http_io.dart";
 import "package:expect/expect.dart";
 
