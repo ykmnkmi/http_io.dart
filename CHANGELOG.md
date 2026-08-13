@@ -1,3 +1,7 @@
+## 3.13.0
+
+- Bump to and sync with 3.13.0.
+
 ## 3.12.0
 
 - Bump to and sync with 3.12.0.
