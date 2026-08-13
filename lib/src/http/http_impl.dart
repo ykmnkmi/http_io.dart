@@ -290,7 +290,7 @@ class _CopyingBytesBuilder implements BytesBuilder {
   // Start with 1024 bytes.
   static const int _INIT_SIZE = 1024;
 
-  // @pragma('vm:shared')
+  // @pragma("vm:shared")
   static final _emptyList = Uint8List(0);
 
   int _length = 0;
@@ -3061,11 +3061,8 @@ class _HttpClient implements HttpClient {
     );
   }
 
-  static bool _isSubdomain(Uri subdomain, Uri domain) {
-    return (subdomain.isScheme(domain.scheme) &&
-        subdomain.port == domain.port &&
-        (subdomain.host == domain.host ||
-            subdomain.host.endsWith("." + domain.host)));
+  static bool _isSameOrigin(Uri a, Uri b) {
+    return a.isScheme(b.scheme) && a.host == b.host && a.port == b.port;
   }
 
   // Only visible for testing.
@@ -3074,17 +3071,16 @@ class _HttpClient implements HttpClient {
     required Uri originalUrl,
     required Uri redirectUrl,
   }) {
-    if (_isSubdomain(redirectUrl, originalUrl)) {
-      return true;
-    }
-
-    const nonRedirectHeaders = [
+    // It is only safe to copy sensitive headers when redirecting to the
+    // same origin (RFC 6454 section 4).
+    const sensitiveHeaders = [
       "authorization",
       "www-authenticate",
       "cookie",
       "cookie2",
     ];
-    return !nonRedirectHeaders.contains(headerKey.toLowerCase());
+    return !sensitiveHeaders.contains(headerKey.toLowerCase()) ||
+        _isSameOrigin(redirectUrl, originalUrl);
   }
 
   Future<_HttpClientRequest> _openUrlFromRequest(

@@ -5,6 +5,7 @@
 - fix: getRandomBytes never produces byte value 0xff (off-by-one)
 - fix: reject HTTP requests with Transfer-Encoding not ending in chunked
 - fix: reject WebSocket close status codes outside RFC 6455 range (1000-4999)
+- fix: do not forward Authorization/Cookie to subdomains on redirect
 
 ## 3.12.0
 
