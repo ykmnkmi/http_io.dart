@@ -2,19 +2,19 @@
 
 - Bump to and sync with 3.13.0.
 - Fix cookie-date parsing to use the correct algorithm.
-- fix: getRandomBytes never produces byte value 0xff (off-by-one)
-- fix: reject HTTP requests with Transfer-Encoding not ending in chunked
-- fix: reject WebSocket close status codes outside RFC 6455 range (1000-4999)
-- fix: do not forward Authorization/Cookie to subdomains on redirect
-- fix: HTTP request smuggling via Transfer-Encoding token whitespace
-- fix: reject Set-Cookie with SameSite=None but no Secure attribute
-- fix: cap uncompressed WebSocket frame size to prevent peer-induced OOM
-- Clarify WebSocket.addError behavior
+- fix: getRandomBytes never produces byte value 0xff (off-by-one).
+- fix: reject HTTP requests with Transfer-Encoding not ending in chunked.
+- fix: reject WebSocket close status codes outside RFC 6455 range (1000-4999).
+- fix: do not forward Authorization/Cookie to subdomains on redirect.
+- fix: HTTP request smuggling via Transfer-Encoding token whitespace.
+- fix: reject Set-Cookie with SameSite=None but no Secure attribute.
+- fix: cap uncompressed WebSocket frame size to prevent peer-induced OOM.
+- Clarify WebSocket.addError behavior.
 - Add Proxy-Authenticate to list of sensitive headers.
 - [dart:io] Add WebSocket timeline instrumentation(GSoC'26).
 - Roll the latest dart_style into the SDK.
 - Do not forward Proxy-Authorization  to the proxied request.
-- Reject invalid RSV1 frames and preserve compression state during fragmentation
+- Reject invalid RSV1 frames and preserve compression state during fragmentation.
 
 ## 3.12.0
 
