@@ -4,8 +4,6 @@
 
 part of '../http.dart';
 
-final _digitsValidator = RegExp(r"^\d+$");
-
 class _HttpHeaders implements HttpHeaders {
   final Map<String, List<String>> _headers;
   // The original header names keyed by the lowercase header names.
@@ -872,7 +870,7 @@ class _ParameterParser {
   }
 }
 
-// @pragma('vm:deeply-immutable')
+@pragma('vm:deeply-immutable')
 final class _HeaderValue implements HeaderValue {
   final String _value;
   final Map<String, String?> parameters;
@@ -942,7 +940,7 @@ final class _HeaderValue implements HeaderValue {
   }
 }
 
-// @pragma('vm:deeply-immutable')
+@pragma('vm:deeply-immutable')
 final class _ContentType extends _HeaderValue implements ContentType {
   final String _primaryType;
   final String _subType;
@@ -1209,6 +1207,14 @@ class _Cookie implements Cookie {
       } else {
         // An extension-av, which is not validated or processed.
       }
+    }
+
+    // RFC-6265bis currently requires SameSite=None cookies to carry the
+    // Secure attribute.
+    if (sameSite == SameSite.none && !secure) {
+      throw HttpException(
+        "Cookie with 'SameSite=None' must also have the 'Secure' attribute.",
+      );
     }
   }
 
