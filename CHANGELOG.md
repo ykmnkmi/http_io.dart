@@ -2,6 +2,7 @@
 
 - Bump to and sync with 3.13.0.
 - Fix cookie-date parsing to use the correct algorithm.
+- fix: getRandomBytes never produces byte value 0xff (off-by-one)
 
 ## 3.12.0
 
