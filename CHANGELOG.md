@@ -6,6 +6,7 @@
 - fix: reject HTTP requests with Transfer-Encoding not ending in chunked
 - fix: reject WebSocket close status codes outside RFC 6455 range (1000-4999)
 - fix: do not forward Authorization/Cookie to subdomains on redirect
+- fix: HTTP request smuggling via Transfer-Encoding token whitespace
 
 ## 3.12.0
 
