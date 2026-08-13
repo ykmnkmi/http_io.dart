@@ -12,7 +12,7 @@ publish_to: none
 resolution: workspace
 
 environment:
-  sdk: ^3.8.2
+  sdk: ^3.13.0
 
 # Use 'any' constraints here; we get our versions from the DEPS file.
 dev_dependencies:
