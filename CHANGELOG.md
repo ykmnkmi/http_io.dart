@@ -1,6 +1,7 @@
 ## 3.13.0
 
 - Bump to and sync with 3.13.0.
+- Fix cookie-date parsing to use the correct algorithm.
 
 ## 3.12.0
 
