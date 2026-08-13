@@ -11,6 +11,7 @@
 - fix: cap uncompressed WebSocket frame size to prevent peer-induced OOM
 - Clarify WebSocket.addError behavior
 - Add Proxy-Authenticate to list of sensitive headers.
+- [dart:io] Add WebSocket timeline instrumentation(GSoC'26).
 
 ## 3.12.0
 
