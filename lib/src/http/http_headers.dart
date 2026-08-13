@@ -870,7 +870,6 @@ class _ParameterParser {
   }
 }
 
-@pragma('vm:deeply-immutable')
 final class _HeaderValue implements HeaderValue {
   final String _value;
   final Map<String, String?> parameters;
@@ -940,7 +939,6 @@ final class _HeaderValue implements HeaderValue {
   }
 }
 
-@pragma('vm:deeply-immutable')
 final class _ContentType extends _HeaderValue implements ContentType {
   final String _primaryType;
   final String _subType;
