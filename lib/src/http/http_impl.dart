@@ -2,7 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-part of '../http.dart';
+part of "../http.dart";
 
 abstract final class HttpProfiler {
   static final Map<String, _HttpProfileData> _profile = {};
@@ -290,7 +290,6 @@ class _CopyingBytesBuilder implements BytesBuilder {
   // Start with 1024 bytes.
   static const int _INIT_SIZE = 1024;
 
-  // @pragma("vm:shared")
   static final _emptyList = Uint8List(0);
 
   int _length = 0;
@@ -2771,11 +2770,8 @@ class _ConnectionTarget {
   }
 }
 
-typedef BadCertificateCallback = bool Function(
-  X509Certificate cr,
-  String host,
-  int port,
-);
+typedef BadCertificateCallback =
+    bool Function(X509Certificate cr, String host, int port);
 
 class _HttpClient implements HttpClient {
   bool _closing = false;
@@ -3076,6 +3072,8 @@ class _HttpClient implements HttpClient {
     const sensitiveHeaders = [
       "authorization",
       "www-authenticate",
+      "proxy-authorization",
+      "proxy-authenticate",
       "cookie",
       "cookie2",
     ];

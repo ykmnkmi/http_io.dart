@@ -10,6 +10,7 @@
 - fix: reject Set-Cookie with SameSite=None but no Secure attribute
 - fix: cap uncompressed WebSocket frame size to prevent peer-induced OOM
 - Clarify WebSocket.addError behavior
+- Add Proxy-Authenticate to list of sensitive headers.
 
 ## 3.12.0
 

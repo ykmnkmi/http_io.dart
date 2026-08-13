@@ -354,24 +354,16 @@ abstract interface class HttpHeaders {
   static const acceptEncodingHeader = "accept-encoding";
   static const acceptLanguageHeader = "accept-language";
   static const acceptRangesHeader = "accept-ranges";
-  // @Since("2.14")
   static const accessControlAllowCredentialsHeader =
       'access-control-allow-credentials';
-  // @Since("2.14")
   static const accessControlAllowHeadersHeader = 'access-control-allow-headers';
-  // @Since("2.14")
   static const accessControlAllowMethodsHeader = 'access-control-allow-methods';
-  // @Since("2.14")
   static const accessControlAllowOriginHeader = 'access-control-allow-origin';
-  // @Since("2.14")
   static const accessControlExposeHeadersHeader =
       'access-control-expose-headers';
-  // @Since("2.14")
   static const accessControlMaxAgeHeader = 'access-control-max-age';
-  // @Since("2.14")
   static const accessControlRequestHeadersHeader =
       'access-control-request-headers';
-  // @Since("2.14")
   static const accessControlRequestMethodHeader =
       'access-control-request-method';
   static const ageHeader = "age";
@@ -724,25 +716,21 @@ abstract interface class ContentType implements HeaderValue {
   /// Content type for plain text using UTF-8 encoding.
   ///
   ///     text/plain; charset=utf-8
-  // @pragma('vm:shared')
   static final text = ContentType("text", "plain", charset: "utf-8");
 
   /// Content type for HTML using UTF-8 encoding.
   ///
   ///    text/html; charset=utf-8
-  // @pragma('vm:shared')
   static final html = ContentType("text", "html", charset: "utf-8");
 
   /// Content type for JSON using UTF-8 encoding.
   ///
   ///    application/json; charset=utf-8
-  // @pragma('vm:shared')
   static final json = ContentType("application", "json", charset: "utf-8");
 
   /// Content type for binary data.
   ///
   ///    application/octet-stream
-  // @pragma('vm:shared')
   static final binary = ContentType("application", "octet-stream");
 
   /// Creates a new content type object setting the primary type and
@@ -1793,7 +1781,8 @@ abstract interface class HttpClientRequest implements IOSink {
   ///
   /// All headers added to the request will be added to the redirection
   /// request(s) except when forwarding sensitive headers like
-  /// "Authorization", "WWW-Authenticate", and "Cookie". Those headers
+  /// "Authorization", "WWW-Authenticate", "Proxy-Authorization",
+  /// "Proxy-Authenticate", and "Cookie". Those headers
   /// will be skipped if following a redirect to a domain that is not a
   /// subdomain match or exact match of the initial domain.
   /// For example, a redirect from "foo.com" to either "foo.com" or
