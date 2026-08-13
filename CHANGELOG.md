@@ -9,6 +9,7 @@
 - fix: HTTP request smuggling via Transfer-Encoding token whitespace
 - fix: reject Set-Cookie with SameSite=None but no Secure attribute
 - fix: cap uncompressed WebSocket frame size to prevent peer-induced OOM
+- Clarify WebSocket.addError behavior
 
 ## 3.12.0
 
