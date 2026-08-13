@@ -4,6 +4,7 @@
 - Fix cookie-date parsing to use the correct algorithm.
 - fix: getRandomBytes never produces byte value 0xff (off-by-one)
 - fix: reject HTTP requests with Transfer-Encoding not ending in chunked
+- fix: reject WebSocket close status codes outside RFC 6455 range (1000-4999)
 
 ## 3.12.0
 
