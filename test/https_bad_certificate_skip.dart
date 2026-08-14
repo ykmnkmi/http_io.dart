@@ -78,7 +78,7 @@ Future runClient(
     var request = await client.getUrl(Uri.parse('https://$HOST_NAME:$port/'));
     Expect.equals('pass', result);
     await request.close();
-  } catch (error) {
+  } catch (error, stackTrace) {
     Expect.notEquals(result, 'pass');
     if (result == 'fail') {
       Expect.isTrue(

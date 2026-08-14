@@ -3,12 +3,10 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'dart:async';
-
-import 'package:http_io/http_io.dart';
-
 import 'dart:convert';
 
 import 'package:expect/expect.dart';
+import 'package:http_io/http_io.dart';
 
 Future testHttpServer(String name) async {
   var sockname = "$name/sock";
@@ -32,7 +30,9 @@ Future testHttpServer(String name) async {
     "$sockname",
     "localhost",
   ]);
-  Expect.isTrue(result.stdout.toString().contains('Hello, world!'));
+  var output = result.stdout.toString();
+  print(output);
+  Expect.isTrue(output.contains('Hello, world!'));
 }
 
 main() async {
