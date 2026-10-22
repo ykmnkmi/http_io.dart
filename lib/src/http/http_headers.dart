@@ -877,7 +877,9 @@ final class _HeaderValue implements HeaderValue {
   final String _value;
   final Map<String, String?> parameters;
 
-  _HeaderValue(this._value, this.parameters);
+  _HeaderValue(this._value, Map<String, String?> parameters)
+    // Replacing `createConstMapFromMapOfDeeplyImmutables` with `Map.unmodifiableOf`
+    : parameters = Map.unmodifiableOf(parameters);
 
   factory _HeaderValue.parse(
     String value, {
