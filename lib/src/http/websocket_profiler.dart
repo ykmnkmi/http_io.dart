@@ -203,6 +203,7 @@ class _WebSocketProfileData {
       direction: direction.value,
       opcode: _WebSocketTimelineLogger.opcodeName(_WebSocketOpcode.CLOSE),
       payloadSize: 0,
+      // ignore: invalid_null_aware_operator
       arguments: <String, Object?>{?'closeCode': closeCode, ?'reason': reason},
     );
   }
