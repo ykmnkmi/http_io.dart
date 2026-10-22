@@ -52,6 +52,7 @@ part 'http/http_testing.dart';
 part 'http/overrides.dart';
 part 'http/websocket.dart';
 part 'http/websocket_impl.dart';
+part 'http/websocket_profiler.dart';
 
 /// A server that delivers content, such as web pages, using the HTTP protocol.
 ///
@@ -1261,12 +1262,11 @@ abstract interface class HttpClient {
 
   static const int defaultHttpsPort = 443;
 
-  /// Enable logging of HTTP requests from all [HttpClient]s to the developer
-  /// timeline.
+  /// Enable logging of HTTP requests and WebSocket connections
+  /// from all [HttpClient]s to the developer timeline.
   ///
   /// Default is `false`.
-  static set enableTimelineLogging(bool value) {
-    final enabled = value;
+  static set enableTimelineLogging(bool enabled) {
     if (enabled != _enableTimelineLogging) {
       if (!const bool.fromEnvironment("dart.vm.product")) {
         postEvent('HttpTimelineLoggingStateChange', {
@@ -1278,8 +1278,8 @@ abstract interface class HttpClient {
     _enableTimelineLogging = enabled;
   }
 
-  /// Current state of HTTP request logging from all [HttpClient]s to the
-  /// developer timeline.
+  /// Current state of HTTP request and WebSocket timeline logging
+  /// from all [HttpClient]s to the developer timeline.
   ///
   /// Default is `false`.
   static bool get enableTimelineLogging => _enableTimelineLogging;

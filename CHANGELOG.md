@@ -15,6 +15,13 @@
 - Roll the latest dart_style into the SDK.
 - Do not forward Proxy-Authorization  to the proxied request.
 - Reject invalid RSV1 frames and preserve compression state during fragmentation.
+- [dart:io] Update WebSocket timeline logging documentation (GSoC'26).
+- [dart:io] Add WebSocket profiling VM service support (GSoC'26).
+- generate the websocket handshake nonce with a secure prng.
+- [io] Accumulate HTTP header bytes in a Uint8List buffer.
+- Migrate the SDK off the old function-typed parameter syntax.
+- validate cr/lf in host and content-type header setters.
+- [cfe][enhanced-parts] Avoid adding patches to parts.
 
 ## 3.12.0
 
