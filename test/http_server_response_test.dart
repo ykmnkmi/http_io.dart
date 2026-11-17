@@ -11,9 +11,7 @@
 import "package:expect/expect.dart";
 
 import "dart:async";
-
 import "package:http_io/http_io.dart";
-
 import "dart:typed_data";
 
 // Platform.script may refer to a AOT or JIT snapshot, which are significantly

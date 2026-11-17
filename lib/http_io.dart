@@ -32,4 +32,4 @@ export 'dart:io'
         WebSocketStatus,
         WebSocketTransformer;
 
-export 'src/http.dart';
+export 'src/http/http.dart';

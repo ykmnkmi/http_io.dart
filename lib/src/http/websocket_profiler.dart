@@ -2,7 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-part of "../http.dart";
+part of "http.dart";
 
 /// Collects and manages WebSocket profiling information for DevTools.
 abstract final class WebSocketProfiler {
@@ -203,7 +203,6 @@ class _WebSocketProfileData {
       direction: direction.value,
       opcode: _WebSocketTimelineLogger.opcodeName(_WebSocketOpcode.CLOSE),
       payloadSize: 0,
-      // ignore: invalid_null_aware_operator
       arguments: <String, Object?>{?'closeCode': closeCode, ?'reason': reason},
     );
   }

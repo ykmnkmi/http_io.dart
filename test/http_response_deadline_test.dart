@@ -10,7 +10,6 @@
 import "package:expect/expect.dart";
 
 import "dart:async";
-
 import "package:http_io/http_io.dart";
 
 void testSimpleDeadline(int connections) {

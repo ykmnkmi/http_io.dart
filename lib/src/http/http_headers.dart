@@ -2,7 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-part of '../http.dart';
+part of "http.dart";
 
 class _HttpHeaders implements HttpHeaders {
   final Map<String, List<String>> _headers;
@@ -210,7 +210,7 @@ class _HttpHeaders implements HttpHeaders {
 
   void set host(String? host) {
     _checkMutable();
-    _host = _validateValue(host);
+    _host = host;
     _updateHostHeader();
   }
 
@@ -296,10 +296,7 @@ class _HttpHeaders implements HttpHeaders {
     if (contentType == null) {
       _headers.remove(HttpHeaders.contentTypeHeader);
     } else {
-      _set(
-        HttpHeaders.contentTypeHeader,
-        _validateValue(contentType.toString()),
-      );
+      _set(HttpHeaders.contentTypeHeader, contentType.toString());
     }
   }
 
@@ -688,7 +685,7 @@ class _HttpHeaders implements HttpHeaders {
     return field.toLowerCase();
   }
 
-  static T _validateValue<T>(T value) {
+  static Object _validateValue(Object value) {
     if (value is String) {
       var errorAt = _isValidValueString(value);
       if (errorAt >= 0) {

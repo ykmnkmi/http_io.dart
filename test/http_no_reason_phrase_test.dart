@@ -9,8 +9,8 @@
 
 import "dart:async";
 import "dart:isolate";
-
 import "package:http_io/http_io.dart";
+
 import "package:expect/expect.dart";
 
 // Test that a response line without any reason phrase is handled.

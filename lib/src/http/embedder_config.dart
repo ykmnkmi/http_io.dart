@@ -2,9 +2,9 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-part of '../http.dart';
+part of "http.dart";
 
-/// Embedder-specific `dart:_http` configuration.
+/// Embedder-specific `http_io.dart` configuration.
 
 /// Embedder hook for intercepting HTTP connections.
 ///

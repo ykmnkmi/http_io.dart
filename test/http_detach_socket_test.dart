@@ -9,8 +9,8 @@
 
 import "package:expect/async_helper.dart";
 import "package:expect/expect.dart";
-import "package:http_io/http_io.dart";
 
+import "package:http_io/http_io.dart";
 import "dart:isolate";
 
 void testServerDetachSocket() {

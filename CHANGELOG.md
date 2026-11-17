@@ -1,3 +1,11 @@
+## 3.14.0
+
+- Bump to and sync with 3.14.0.
+- [dart:io] Update WebSocket timeline logging documentation (GSoC'26).
+- [dart:io] Add WebSocket profiling VM service support (GSoC'26).
+- generate the websocket handshake nonce with a secure prng.
+- [io] Accumulate HTTP header bytes in a Uint8List buffer.
+
 ## 3.13.0
 
 - Bump to and sync with 3.13.0.
@@ -15,19 +23,12 @@
 - Roll the latest dart_style into the SDK.
 - Do not forward Proxy-Authorization  to the proxied request.
 - Reject invalid RSV1 frames and preserve compression state during fragmentation.
-- [dart:io] Update WebSocket timeline logging documentation (GSoC'26).
-- [dart:io] Add WebSocket profiling VM service support (GSoC'26).
-- generate the websocket handshake nonce with a secure prng.
-- [io] Accumulate HTTP header bytes in a Uint8List buffer.
-- Migrate the SDK off the old function-typed parameter syntax.
-- validate cr/lf in host and content-type header setters.
-- [cfe][enhanced-parts] Avoid adding patches to parts.
 
 ## 3.12.0
 
 - Bump to and sync with 3.12.0.
 - \[core/shared\] Allow http ContentType to work in isolategroup-bound callbacks.
-- \[beta\] \[io\]: Fixes a redirect credential leak and a HTTP request smuggling issue.
+- \[io\]: Fixes a redirect credential leak and a HTTP request smuggling issue.
 
 ## 3.11.0
 

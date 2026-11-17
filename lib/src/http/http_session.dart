@@ -2,7 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-part of '../http.dart';
+part of "http.dart";
 
 const String _DART_SESSION_ID = "DARTSESSID";
 
@@ -61,7 +61,7 @@ class _HttpSession implements HttpSession {
     _data.clear();
   }
 
-  void forEach(void Function(dynamic key, dynamic value) f) {
+  void forEach(void f(key, value)) {
     _data.forEach(f);
   }
 
@@ -71,19 +71,18 @@ class _HttpSession implements HttpSession {
     _data.addEntries(entries);
   }
 
-  Map<K, V> map<K, V>(
-    MapEntry<K, V> Function(dynamic key, dynamic value) transform,
-  ) => _data.map(transform);
+  Map<K, V> map<K, V>(MapEntry<K, V> transform(key, value)) =>
+      _data.map(transform);
 
-  void removeWhere(bool Function(dynamic key, dynamic value) test) {
+  void removeWhere(bool test(key, value)) {
     _data.removeWhere(test);
   }
 
   Map<K, V> cast<K, V>() => _data.cast<K, V>();
-  update(key, Function(dynamic value) update, {Function()? ifAbsent}) =>
+  update(key, update(value), {Function()? ifAbsent}) =>
       _data.update(key, update, ifAbsent: ifAbsent);
 
-  void updateAll(Function(dynamic key, dynamic value) update) {
+  void updateAll(update(key, value)) {
     _data.updateAll(update);
   }
 

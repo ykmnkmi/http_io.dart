@@ -6,14 +6,12 @@ library dart._http;
 
 import "dart:async";
 import "dart:convert";
-
 // ignore: IMPORT_INTERNAL_LIBRARY
 import "package:http_io/http_io.dart"
     show
         TestingClass$_WebSocketPerMessageDeflate,
         TestingClass$_WebSocketProtocolTransformer,
         Testing$_WebSocketProtocolTransformer;
-
 import "dart:math";
 import "dart:typed_data";
 

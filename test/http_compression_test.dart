@@ -8,8 +8,8 @@
 // VMOptions=--short_socket_read --short_socket_write
 
 import 'package:expect/expect.dart';
-import 'package:http_io/http_io.dart';
 
+import 'package:http_io/http_io.dart';
 import 'dart:typed_data';
 
 Future<void> testServerCompress({bool clientAutoUncompress = true}) async {

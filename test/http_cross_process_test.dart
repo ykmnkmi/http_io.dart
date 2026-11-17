@@ -4,8 +4,8 @@
 //
 
 import 'dart:async';
-
 import 'package:http_io/http_io.dart';
+
 import "package:expect/expect.dart";
 
 const int NUM_SERVERS = 10;

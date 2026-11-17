@@ -4,8 +4,8 @@
 //
 
 import "dart:isolate";
-
 import "package:http_io/http_io.dart";
+
 import "package:expect/expect.dart";
 
 void test(int totalConnections, [String? body]) {

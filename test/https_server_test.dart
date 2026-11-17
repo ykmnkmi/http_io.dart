@@ -7,9 +7,7 @@
 // OtherResources=certificates/trusted_certs.pem
 
 import "dart:async";
-
 import "package:http_io/http_io.dart";
-
 import "dart:isolate";
 
 import "package:expect/expect.dart";

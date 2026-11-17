@@ -6,7 +6,6 @@
 import "package:expect/expect.dart";
 
 import "dart:isolate";
-
 import "package:http_io/http_io.dart";
 
 void setConnectionHeaders(HttpHeaders headers) {

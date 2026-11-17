@@ -9,8 +9,8 @@
 
 import "dart:async";
 import "dart:isolate";
-
 import "package:http_io/http_io.dart";
+
 import "package:expect/expect.dart";
 
 // Client makes a HTTP 1.0 request without connection keep alive. The

@@ -6,11 +6,10 @@
 // invalid value.
 
 import "dart:async";
-
 import "package:http_io/http_io.dart";
 // ignore: IMPORT_INTERNAL_LIBRARY
-import "package:http_io/http_io.dart"
-    show TestingClass$_HttpHeaders, TestingClass$_HttpParser;
+import "package:http_io/http_io.dart" show TestingClass$_HttpHeaders, TestingClass$_HttpParser;
+
 import "package:expect/async_helper.dart";
 import "package:expect/expect.dart";
 

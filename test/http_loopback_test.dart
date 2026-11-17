@@ -3,8 +3,8 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import "dart:async";
-
 import "package:http_io/http_io.dart";
+
 import "package:expect/expect.dart";
 
 /// Creates a callback that listens for incoming connections.

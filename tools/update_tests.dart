@@ -7,9 +7,8 @@ const String package = 'package:http_io/http_io.dart';
 final RegExp spaceRE = RegExp(r'\s+');
 
 final Uri git = Uri.parse(
-  'https://raw.githubusercontent.com/'
-  'dart-lang/sdk/refs/tags/3.12.0/'
-  'tests/standalone/io/',
+  'https://raw.githubusercontent.com'
+  '/dart-lang/sdk/stable/tests/standalone/io/',
 );
 
 Future<void> main() async {

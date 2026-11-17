@@ -12,7 +12,6 @@
 // be 1006.
 
 import 'dart:async';
-
 import 'package:http_io/http_io.dart';
 
 // ignore: IMPORT_INTERNAL_LIBRARY

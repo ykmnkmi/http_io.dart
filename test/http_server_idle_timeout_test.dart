@@ -8,9 +8,7 @@
 // VMOptions=--short_socket_read --short_socket_write
 
 import "dart:async";
-
 import "package:http_io/http_io.dart";
-
 import "dart:isolate";
 
 void testTimeoutAfterRequest() {

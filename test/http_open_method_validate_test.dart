@@ -5,6 +5,7 @@
 // Verify that HttpClient open, openUrl method argument is validated.
 
 import "package:http_io/http_io.dart";
+
 import "package:expect/expect.dart";
 
 void testInvalidArgumentException(String method) {
